@@ -145,7 +145,18 @@ class SJMPWPoissonSolver(PWPoissonSolver):
     def solve(self, vHt_g, rhot_g):
         energy = super().solve(vHt_g, rhot_g)
         dipole = rhot_g.moment()[2]
-        slope = 4 * np.pi * dipole / rhot_g.desc.volume
+#        VHt_g = vHt_g.gather()
+#        VHt_z = VHt_g.data[:, :].mean() # Average over x and y
+        corr,slope=1.,1
+        while slope > 1e-10:
+            counter_field_strength = 4 * np.pi * dipole / rhot_g.desc.volume*corr
+            t=vHt_g.data.copy()
+            t += counter_field_strength * self.saw_tooth_g.data
+            T = t.gather()
+            slope = T[-10] - T[2] #/ (vHt_g.desc.h_cv[2, 2] * 8.0)
+
+            corr *= 0.5
+
         vHt_g.data += slope * self.saw_tooth_g.data
         # Shift potential so that it is zero above the slab:
         shift = 0.5 * slope * rhot_g.desc.cell_cv[2, 2]
