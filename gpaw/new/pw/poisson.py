@@ -272,6 +272,8 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         """
         super().__init__(pw, charge, strength)
         self.dielectric = dielectric
+#        print(dielectric.keys())
+#        exit()
         self.grid = grid
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
@@ -335,6 +337,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                rhot_g) -> float:
         vHt_g.data[:] = 4 * np.pi * self.strength * rhot_g.data
         eps_R = self.grid.from_data(self.dielectric.eps_gradeps[0])
+
         self.eps0_R = eps_R.gather()
 
         vHt0_g = vHt_g.gather()
@@ -351,6 +354,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                                dtype=complex)
             vHt0_g.data[:], info = cg(
                 op, vHt0_g.data, maxiter=self.maxiter, M=M, **{RTOL: self.eps})
+#            print('CG iterations:', info)
             if info != 0:
                 warnings.warn(
                     f'Conjugate gradient did not converge (info={info})')
@@ -360,6 +364,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         if self.zero_vacuum:
             self.zero_vacuum = False
             dphi_g = self.pw.zeros()
+#            print('Correcting potential to have zero average in vacuum region', self.pw.comm.rank)
             self._solve(dphi_g, self.drho_g)
             v0s, v1s = xy_average_at_boundary(dphi_g)
             v0, v1 = xy_average_at_boundary(vHt_g)
