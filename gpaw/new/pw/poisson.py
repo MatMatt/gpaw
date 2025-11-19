@@ -334,7 +334,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
             grad_R.data *= self.eps0_R.data
             #Transform back to G-space and multiply with G-vector again
             # Is this overal a ket-bra operation?
-            ophi_G += grad_R.fft(pw=pw).data * G_G
+            ophi_G +=  grad_R.fft(pw=pw).data * G_G
 
         return ophi_G
 
@@ -342,12 +342,8 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                vHt_g,
                rhot_g) -> float:
         vHt_g.data[:] = 4 * np.pi * self.strength * rhot_g.data
-        #import json
-        #json.dump(open('rhot.json', 'wb'), rhot_g.data.tolist())
 
         eps_R = self.grid.from_data(self.dielectric.eps_gradeps[0])
-        #print('strength',self.strength, eps_R.data.min(), eps_R.data.max())
-        #dd
         self.eps0_R = eps_R.gather()
 
         vHt0_g = vHt_g.gather()
@@ -355,7 +351,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
         rhot0_z = np.sum(rhot0_r.data,axis=(0, 1))
         out=open('rhot_pw.txt','w')
-        #for i in rhot0_r.data.tolist():
+
         for i,rh in enumerate(rhot0_z):
             out.write(f'{i}  {rh}\n')
         out.close()
@@ -372,11 +368,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
             M = LinearOperator((N, N),
                                matvec=lambda x: 0.5 * x / self.ekin_g,
                                dtype=complex)
-
-            residuals = []
-            def store_residual(xk):
-                r = op - vHt0_g.data @ xk
-                residuals.append(np.linalg.norm(r))
 
             vHt0_g.data[:], info = cg(
                 op, vHt0_g.data, maxiter=self.maxiter, M=M, **{RTOL: self.eps})
