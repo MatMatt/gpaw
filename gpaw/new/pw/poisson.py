@@ -346,7 +346,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         #json.dump(open('rhot.json', 'wb'), rhot_g.data.tolist())
 
         eps_R = self.grid.from_data(self.dielectric.eps_gradeps[0])
-        print('strength',self.strength, eps_R.data.min(), eps_R.data.max())
+        #print('strength',self.strength, eps_R.data.min(), eps_R.data.max())
         #dd
         self.eps0_R = eps_R.gather()
 
@@ -382,7 +382,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                 op, vHt0_g.data, maxiter=self.maxiter, M=M, **{RTOL: self.eps})
             #vHt0_g.data[:], info = cg(
             #    op, vHt0_g.data, maxiter=self.maxiter, **{RTOL: self.eps})
-            print(vHt0_g.data.shape)
+            #print(vHt0_g.data.shape)
             print('CG iterations:', info)
             print('self.eps:', self.eps)
             print('Residual:', np.linalg.norm(vHt0_g.data - op @ vHt0_g.data))
