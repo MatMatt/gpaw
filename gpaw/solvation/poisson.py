@@ -82,6 +82,13 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
               maxcharge=1e-6,
               zero_initial_phi=False, timer=None):
         self._init()
+
+        rho_z = np.sum(rho,axis=(0, 1))
+        out=open('rhot_fd.txt','w')
+        #for i in rhot0_r.data.tolist():
+        for i,rh in enumerate(rho_z):
+            out.write(f'{i}  {rh}\n')
+
         if self.gd.pbc_c.all():
             actual_charge = self.gd.integrate(rho)
             if abs(actual_charge) > maxcharge:

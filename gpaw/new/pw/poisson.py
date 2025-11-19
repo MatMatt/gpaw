@@ -253,8 +253,8 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                  charge: float = 0.0,
                  strength: float = 1.0,
                  eps=1e-4,
-                 maxiter=15,
-                 zero_vacuum=False):
+                 maxiter=350,
+                 zero_vacuum=True):
         """Initialize the conjugate gradient Poisson solver.
 
         Parameters:
@@ -272,8 +272,8 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         """
         super().__init__(pw, charge, strength)
         self.dielectric = dielectric
-#        print(dielectric.keys())
-#        exit()
+        #print(dielectric)
+        #exit()
         self.grid = grid
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
@@ -321,13 +321,18 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         """
         pw = self.pw0
         grid = self.grid0
+
         G_vG = pw.G_plus_k_Gv.T
 
         ophi_G = np.zeros_like(phi_G)
         for G_G in G_vG:
+            # Gradient in G-space is pw coefficient multiplied by potential?
             grad_G = pw.from_data(G_G * phi_G)
+            #Transform to real space and multiply with dielectric function
             grad_R = grad_G.ifft(grid=grid)
             grad_R.data *= self.eps0_R.data
+            #Transform back to G-space and multiply with G-vector again
+            # Is this overal a ket-bra operation?
             ophi_G += grad_R.fft(pw=pw).data * G_G
 
         return ophi_G
@@ -336,11 +341,23 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                vHt_g,
                rhot_g) -> float:
         vHt_g.data[:] = 4 * np.pi * self.strength * rhot_g.data
-        eps_R = self.grid.from_data(self.dielectric.eps_gradeps[0])
+        #import json
+        #json.dump(open('rhot.json', 'wb'), rhot_g.data.tolist())
 
+        eps_R = self.grid.from_data(self.dielectric.eps_gradeps[0])
+        print('strength',self.strength, eps_R.data.min(), eps_R.data.max())
+        #dd
         self.eps0_R = eps_R.gather()
 
         vHt0_g = vHt_g.gather()
+        rhot0_g = rhot_g.gather()
+        rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
+        rhot0_z = np.sum(rhot0_r.data,axis=(0, 1))
+        out=open('rhot_pw.txt','w')
+        #for i in rhot0_r.data.tolist():
+        for i,rh in enumerate(rhot0_z):
+            out.write(f'{i}  {rh}\n')
+        out.close()
 
         if self.pw.comm.rank == 0:
             vHt0_g.data[0] = 0.0
@@ -349,12 +366,25 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
             op = LinearOperator((N, N),
                                 matvec=self.operator,
                                 dtype=complex)
+
+            # M is the preconditioner to help convergence
             M = LinearOperator((N, N),
                                matvec=lambda x: 0.5 * x / self.ekin_g,
                                dtype=complex)
+
+            residuals = []
+            def store_residual(xk):
+                r = op - vHt0_g.data @ xk
+                residuals.append(np.linalg.norm(r))
+
             vHt0_g.data[:], info = cg(
                 op, vHt0_g.data, maxiter=self.maxiter, M=M, **{RTOL: self.eps})
-#            print('CG iterations:', info)
+            #vHt0_g.data[:], info = cg(
+            #    op, vHt0_g.data, maxiter=self.maxiter, **{RTOL: self.eps})
+            print(vHt0_g.data.shape)
+            print('CG iterations:', info)
+            print('self.eps:', self.eps)
+            print('Residual:', np.linalg.norm(vHt0_g.data - op @ vHt0_g.data))
             if info != 0:
                 warnings.warn(
                     f'Conjugate gradient did not converge (info={info})')
@@ -376,6 +406,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         return epot
 
     def correct_slope(self, vHt_g: PWArray):
+        # GK: Never called.
         from gpaw.new.sjm import modified_saw_tooth
         eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
         eps0_r = eps_r.gather()

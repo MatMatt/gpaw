@@ -52,11 +52,13 @@ class SolvationExtension(Extension):
                  setups, grid, relpos_ac, log, comm):
         self.cavity = cavity
         self.dielectric = dielectric
+        #print(dielectric)
         self.interactions = interactions or []
         finegd = grid._gd
         self.grid = grid
         self.comm = comm
         self.cavity.set_grid_descriptor(finegd)
+        #print((self.cavity))
         self.dielectric.set_grid_descriptor(finegd)
         for ia in self.interactions:
             ia.set_grid_descriptor(finegd)
@@ -89,17 +91,29 @@ class SolvationExtension(Extension):
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
             from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+            #print(self.dielectric.eps_gradeps[0])
             return ConjugateGradientPoissonSolver(
-                pw, grid, self.dielectric, zero_vacuum=True)
+                #pw, grid, self.dielectric, zero_vacuum=True)
+                pw, grid, self.dielectric, zero_vacuum=False)
 
         psolver = WeightedFDPoissonSolver()
         psolver.set_dielectric(self.dielectric)
         psolver.set_grid_descriptor(grid._gd)
         return PoissonSolverWrapper(psolver)
 
+    def update1pw(self, nt_g, kin_en_using_band=True):
+        #grid = self.dielectric.mask_r.desc
+        nt_r = self.grid.empty()
+        nt_r.scatter_from(nt_g.ifft(grid=self.grid.new(comm=None))
+                          if nt_g is not None else None)
+#        self.solvation.update1(nt_r)
+        self.update1(nt_r, kin_en_using_band)
+
     def update1(self, nt_r, kin_en_using_band=True):
         density = DensityWrapper(nt_r)
         self.cavity_changed = self.cavity.update(self.atoms, density)
+        #print('Cavity g_g:',self.cavity_changed)
+        #print(self.cavity.g_g.mean(axis=(0,1))) #__dict__.keys())
         if self.cavity_changed:
             self.cavity.update_vol_surf()
             self.dielectric.update(self.cavity)

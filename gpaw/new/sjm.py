@@ -40,6 +40,7 @@ class SJM(Solvation):
         R_rv = grid.xyz()
         mask_r.data[:] = np.logical_and(R_rv[:, :, :, 2] > z1 / Bohr,
                                         R_rv[:, :, :, 2] < z2 / Bohr)
+        print(self.excess_electrons,)
         if self.target_potential is None:
             jellium = JelliumExtension(
                 mask_r,
@@ -151,6 +152,7 @@ class SJMPWPoissonSolver(PWPoissonSolver):
 
     def solve(self, vHt_g, rhot_g):
         energy = super().solve(vHt_g, rhot_g)
+        ff
         if 0:
             dipole = rhot_g.moment()[2]
             slope = 4 * np.pi * dipole / rhot_g.desc.volume
@@ -170,7 +172,7 @@ class SJMPWPoissonSolver(PWPoissonSolver):
             # Shift potential so that it is zero above the slab:
             shift = 0.5 * slope * rhot_g.desc.cell_cv[2, 2]
             v0 = vHt_g.boundary_value(2)
-            vHt_g.data[0] -= shift + v0
+#            vHt_g.data[0] -= shift + v0
         return energy
 
 
