@@ -94,15 +94,15 @@ class SolvationExtension(Extension):
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
             if self.psolver is None:
-                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver\
-                    as PSolver
+                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+                return ConjugateGradientPoissonSolver(
+                    pw, grid, self.dielectric, zero_vacuum=True)
             elif self.psolver == 'FDsolver':
-                from gpaw.new.pw.poisson import FDPWsolver as PSolver
+                from gpaw.new.pw.poisson import FDPWsolver
+                return FDPWsolver(
+                    pw, grid, self.dielectric, zero_vacuum=True)
             else:
                 raise ValueError(f'Unknown psolver: {self.psolver}')
-
-            return PSolver(
-                pw, grid, self.dielectric, zero_vacuum=True)
 
         psolver = WeightedFDPoissonSolver()
         psolver.set_dielectric(self.dielectric)
