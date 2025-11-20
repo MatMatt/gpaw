@@ -17,11 +17,12 @@ from gpaw.solvation.poisson import WeightedFDPoissonSolver
 class Solvation(ExtensionInput):
     name = 'solvation'
 
-    def __init__(self, cavity, dielectric, interactions=None):
+    def __init__(self, cavity, dielectric, interactions=None,psolver=None):
         self.cavity = Cavity.from_dict(cavity)
         self.dielectric = Dielectric.from_dict(dielectric)
         self.interactions = [Interaction.from_dict(i)
                              for i in interactions or []]
+        self.psolver=psolver
 
     def todict(self):
         return {'cavity': self.cavity.todict(),
@@ -39,6 +40,7 @@ class Solvation(ExtensionInput):
             grid=builder.fine_grid,
             relpos_ac=builder.relpos_ac,
             log=builder.log,
+            psolver=self.psolver,
             comm=builder.communicators['w'])
 
 
@@ -50,8 +52,10 @@ class SolvationExtension(Extension):
                  cavity,
                  dielectric,
                  interactions=None,
+                 psolver=None,
                  setups, grid, relpos_ac, log, comm):
         self.cavity = cavity
+        self.psolver=psolver
         self.dielectric = dielectric
         #print(dielectric)
         self.interactions = interactions or []
@@ -91,8 +95,10 @@ class SolvationExtension(Extension):
                               charge,
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
-            #from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
-            from gpaw.new.pw.poisson import FDPWsolver as ConjugateGradientPoissonSolver
+            if self.psolver is None:
+                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+            else:
+                from gpaw.new.pw.poisson import FDPWsolver as ConjugateGradientPoissonSolver
             #print(self.dielectric.eps_gradeps[0])
             return ConjugateGradientPoissonSolver(
                 #pw, grid, self.dielectric, zero_vacuum=True)

@@ -291,6 +291,7 @@ class FDPWsolver(PWPoissonSolver):
                rhot_g) -> float:
         rhot_r = self.grid.new(comm=None).empty()
         vHt_r = self.grid.new(comm=None).empty()
+        rhot0_g = self.pw.new(comm=None).empty()
         vHt0_g = vHt_g.gather()
         rhot0_g = rhot_g.gather()
         vHt0_r = self.grid.new(comm=None).empty()
