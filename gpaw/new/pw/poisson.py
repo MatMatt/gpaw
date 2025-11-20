@@ -296,7 +296,7 @@ class FDPWsolver(PWPoissonSolver):
         txt = ('fd poissonsolver for pw mode:\n'
                f'  ecut: {self.pw.ecut * Ha}  # eV\n'
                f'  eps: {self.eps}\n'
-               f'  real space solver: {self.real_space_solver}\n',
+               f'  real space solver: {self.real_space_solver}\n'
                f'  maxiter: {self.maxiter}\n')
 
         if self.strength != 1.0:
