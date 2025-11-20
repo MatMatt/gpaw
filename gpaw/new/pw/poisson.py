@@ -242,7 +242,7 @@ class DipoleLayerPWPoissonSolver(PoissonSolver):
         result_g.scatter_from(sawtooth_g)
         return result_g
 
-from gpaw.solvation.poisson import WeightedFDPoissonSolver
+
 class FDPWsolver(PWPoissonSolver):
     def __init__(self,
                  pw: PWDesc,
@@ -250,15 +250,22 @@ class FDPWsolver(PWPoissonSolver):
                  dielectric,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps=1e-4,
-                 maxiter=350,
-                 real_space_solver=WeightedFDPoissonSolver(),
+                 eps=1e-9,
+                 maxiter=1000,
+                 real_space_solver=None,
                  zero_vacuum=False):
         """Initialize the finite-difference Poisson solver.
         Parameters:
         """
 
         super().__init__(pw, charge, strength)
+        if real_space_solver is None:
+            from gpaw.solvation.poisson import WeightedFDPoissonSolver
+            # I need to make eps 1e-9 to get convergence, equally I need
+            # to set maxcharge to 1e-5 when solving. I think they are
+            # connected
+            real_space_solver = WeightedFDPoissonSolver(eps=eps,
+                                                        maxiter=maxiter)
 
         self.dielectric = dielectric
         self.grid = grid
@@ -273,44 +280,65 @@ class FDPWsolver(PWPoissonSolver):
         self.maxiter = maxiter
 
         self.eps0_R = None
-
         self.drho_g = None
+
         self.zero_vacuum = zero_vacuum
         self.real_space_solver = real_space_solver
         self.real_space_solver.set_dielectric(self.dielectric)
         self.real_space_solver.set_grid_descriptor(grid._gd)
-        #self.real_space_solver.set_grid_descriptor(grid.ifft)
         if zero_vacuum:
             self.drho_g = dipole_layer(grid).fft(pw=pw)
 
     def get_description(self):
-        return 'FD Conjugate Gradient Poisson Solver'
+        return 'FD Poisson Solver for PW mode'
+
+    def __str__(self) -> str:
+        txt = ('fd poissonsolver for pw mode:\n'
+               f'  ecut: {self.pw.ecut * Ha}  # eV\n'
+               f'  eps: {self.eps}\n'
+               f'  real space solver: {self.real_space_solver}\n',
+               f'  maxiter: {self.maxiter}\n')
+
+        if self.strength != 1.0:
+            txt += f'  strength: {self.strength}\n'
+        if self.charge != 0.0:
+            txt += f'  uniform background charge: {self.charge}  # electrons\n'
+        return txt
 
     def _solve(self,
                vHt_g,
                rhot_g) -> float:
-        rhot_r = self.grid.new(comm=None).empty()
-        vHt_r = self.grid.new(comm=None).empty()
-        rhot0_g = self.pw.new(comm=None).empty()
+        rhot_r = self.grid.new(comm=self.grid.comm).empty()
+        vHt_r = self.grid.new(comm=self.grid.comm).empty()
+        rhot0_r, vHt0_r = None, None
+
         vHt0_g = vHt_g.gather()
         rhot0_g = rhot_g.gather()
-        vHt0_r = self.grid.new(comm=None).empty()
-#        if self.pw.comm.rank == 0:
-        print(self.grid._gd)
-        if 1:
+
+        if rhot0_g is not None:
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
-            rhot_r.scatter_from(rhot0_r)
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
-            self.real_space_solver.solve(vHt_r.data,rhot_r.data)
-            #THE following fails dont know why
-            vHt0_r = vHt_r.gather()
-            vHt0_g = vHt0_r.fft(pw=self.pw)
-            rhot0_g = rhot0_r.fft(pw=self.pw)
+
+        rhot_r.scatter_from(rhot0_r)
+        vHt_r.scatter_from(vHt0_r)
+
+        self.real_space_solver.solve(vHt_r.data, rhot_r.data,
+                                     maxcharge=1e-5)
+
+        vHt0_r = vHt_r.gather()
+        rhot0_r = rhot_r.gather()
+
+        # The following still fails in parallel
+        if vHt0_r is not None:
+            vHt0_g = vHt0_r.fft(pw=self.pw.new(comm=None))
+            rhot0_g = rhot0_r.fft(pw=self.pw.new(comm=None))
+
         rhot_g.scatter_from(rhot0_g)
-        #vHt_r.scatter_from(vHt0_r)
         vHt_g.scatter_from(vHt0_g)
+
         epot = 0.5 * vHt_g.integrate(rhot_g)
         return epot
+
 
 class ConjugateGradientPoissonSolver(PWPoissonSolver):
     """Poisson solver using conjugate gradient method in reciprocal space.
@@ -323,7 +351,7 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
                  charge: float = 0.0,
                  strength: float = 1.0,
                  eps=1e-4,
-                 maxiter=350,
+                 maxiter=15,
                  zero_vacuum=False):
         """Initialize the conjugate gradient Poisson solver.
 
@@ -342,8 +370,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         """
         super().__init__(pw, charge, strength)
         self.dielectric = dielectric
-        #print(dielectric)
-        #exit()
         self.grid = grid
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
@@ -398,10 +424,10 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         for G_G in G_vG:
             # Gradient in G-space is pw coefficient multiplied by potential?
             grad_G = pw.from_data(G_G * phi_G)
-            #Transform to real space and multiply with dielectric function
+            # Transform to real space and multiply with dielectric function
             grad_R = grad_G.ifft(grid=grid)
             grad_R.data *= self.eps0_R.data
-            #Transform back to G-space and multiply with G-vector again
+            # Transform back to G-space and multiply with G-vector again
             # Is this overal a ket-bra operation?
             ophi_G += grad_R.fft(pw=pw).data * G_G
 
@@ -416,14 +442,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         self.eps0_R = eps_R.gather()
 
         vHt0_g = vHt_g.gather()
-        rhot0_g = rhot_g.gather()
-        rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
-        rhot0_z = np.sum(rhot0_r.data,axis=(0, 1))
-        out=open('rhot_pw.txt','w')
-
-        for i,rh in enumerate(rhot0_z):
-            out.write(f'{i}  {rh}\n')
-        out.close()
 
         if self.pw.comm.rank == 0:
             vHt0_g.data[0] = 0.0
@@ -440,16 +458,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
 
             vHt0_g.data[:], info = cg(
                 op, vHt0_g.data, maxiter=self.maxiter, M=M, **{RTOL: self.eps})
-            #vHt0_g.data[:], info = cg(
-            #    op,
-            #    4 * np.pi * self.strength * rhot_g.data,
-            #    maxiter=self.maxiter, M=M, **{RTOL: self.eps})
-            #vHt0_g.data[:], info = cg(
-            #    op, vHt0_g.data, maxiter=self.maxiter, **{RTOL: self.eps})
-            #print(vHt0_g.data.shape)
-            print('CG iterations:', info)
-            print('self.eps:', self.eps)
-            print('Residual:', np.linalg.norm(vHt0_g.data - op @ vHt0_g.data))
             if info != 0:
                 warnings.warn(
                     f'Conjugate gradient did not converge (info={info})')
@@ -459,7 +467,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         if self.zero_vacuum:
             self.zero_vacuum = False
             dphi_g = self.pw.zeros()
-#            print('Correcting potential to have zero average in vacuum region', self.pw.comm.rank)
             self._solve(dphi_g, self.drho_g)
             v0s, v1s = xy_average_at_boundary(dphi_g)
             v0, v1 = xy_average_at_boundary(vHt_g)
@@ -471,7 +478,6 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         return epot
 
     def correct_slope(self, vHt_g: PWArray):
-        # GK: Never called.
         from gpaw.new.sjm import modified_saw_tooth
         eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
         eps0_r = eps_r.gather()

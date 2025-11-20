@@ -68,12 +68,7 @@ class Dielectric(NeedsGD):
     def update(self, cavity):
         """Calculate eps_gradeps and del_eps_del_g_g from the cavity."""
         self.cavity = cavity
-        #print(cavity)
-        #print(self.eps_gradeps[0])
         self.update_eps_only()
-        #print('after update_eps_only:')
-        #print(self.eps_gradeps[0])
-        #ff
         for i in (0, 1, 2):
             np.multiply(
                 self.del_eps_del_g_g,

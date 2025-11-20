@@ -17,12 +17,12 @@ from gpaw.solvation.poisson import WeightedFDPoissonSolver
 class Solvation(ExtensionInput):
     name = 'solvation'
 
-    def __init__(self, cavity, dielectric, interactions=None,psolver=None):
+    def __init__(self, cavity, dielectric, interactions=None, psolver=None):
         self.cavity = Cavity.from_dict(cavity)
         self.dielectric = Dielectric.from_dict(dielectric)
         self.interactions = [Interaction.from_dict(i)
                              for i in interactions or []]
-        self.psolver=psolver
+        self.psolver = psolver
 
     def todict(self):
         return {'cavity': self.cavity.todict(),
@@ -55,15 +55,13 @@ class SolvationExtension(Extension):
                  psolver=None,
                  setups, grid, relpos_ac, log, comm):
         self.cavity = cavity
-        self.psolver=psolver
+        self.psolver = psolver
         self.dielectric = dielectric
-        #print(dielectric)
         self.interactions = interactions or []
         finegd = grid._gd
         self.grid = grid
         self.comm = comm
         self.cavity.set_grid_descriptor(finegd)
-        #print((self.cavity))
         self.dielectric.set_grid_descriptor(finegd)
         for ia in self.interactions:
             ia.set_grid_descriptor(finegd)
@@ -96,13 +94,15 @@ class SolvationExtension(Extension):
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
             if self.psolver is None:
-                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver\
+                    as PSolver
+            elif self.psolver == 'FDsolver':
+                from gpaw.new.pw.poisson import FDPWsolver as PSolver
             else:
-                from gpaw.new.pw.poisson import FDPWsolver as ConjugateGradientPoissonSolver
-            #print(self.dielectric.eps_gradeps[0])
-            return ConjugateGradientPoissonSolver(
-                #pw, grid, self.dielectric, zero_vacuum=True)
-                pw, grid, self.dielectric, zero_vacuum=False)
+                raise ValueError(f'Unknown psolver: {self.psolver}')
+
+            return PSolver(
+                pw, grid, self.dielectric, zero_vacuum=True)
 
         psolver = WeightedFDPoissonSolver()
         psolver.set_dielectric(self.dielectric)
@@ -110,18 +110,14 @@ class SolvationExtension(Extension):
         return PoissonSolverWrapper(psolver)
 
     def update1pw(self, nt_g, kin_en_using_band=True):
-        #grid = self.dielectric.mask_r.desc
         nt_r = self.grid.empty()
         nt_r.scatter_from(nt_g.ifft(grid=self.grid.new(comm=None))
                           if nt_g is not None else None)
-#        self.solvation.update1(nt_r)
         self.update1(nt_r, kin_en_using_band)
 
     def update1(self, nt_r, kin_en_using_band=True):
         density = DensityWrapper(nt_r)
         self.cavity_changed = self.cavity.update(self.atoms, density)
-        #print('Cavity g_g:',self.cavity_changed)
-        #print(self.cavity.g_g.mean(axis=(0,1))) #__dict__.keys())
         if self.cavity_changed:
             self.cavity.update_vol_surf()
             self.dielectric.update(self.cavity)
