@@ -253,6 +253,7 @@ class FDPWsolver(PWPoissonSolver):
                  eps=1e-9,
                  maxiter=1000,
                  real_space_solver=None,
+                 dipolelayer: bool = True,
                  zero_vacuum=False):
         """Initialize the finite-difference Poisson solver.
         Parameters:
@@ -272,9 +273,18 @@ class FDPWsolver(PWPoissonSolver):
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
         self.grid0 = grid.new(comm=None)
+        self.dipolelayer = dipolelayer
+        self.correction = np.nan
+
         if pw.comm.rank == 0:
             self.ekin_g = self.pw0.ekin_G.copy()
             self.ekin_g[0] = 1.0
+
+        if self.dipolelayer:
+            self.corrterm = 1
+            self.elcorr = None
+            self.last_corrterm = None
+            self.dirichlet = False #dirichlet
 
         self.eps = eps
         self.maxiter = maxiter
@@ -305,9 +315,123 @@ class FDPWsolver(PWPoissonSolver):
             txt += f'  uniform background charge: {self.charge}  # electrons\n'
         return txt
 
+    def dipole_layer_correction(self) -> float:
+        return self.correction
+
     def _solve(self,
                vHt_g,
                rhot_g) -> float:
+        rhot_r = self.grid.new(comm=self.grid.comm).empty()
+        vHt_r = self.grid.new(comm=self.grid.comm).empty()
+        rhot0_r, vHt0_r = None, None
+
+        vHt0_g = vHt_g.gather()
+        rhot0_g = rhot_g.gather()
+
+        if rhot0_g is not None:
+            rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
+            vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
+
+        rhot_r.scatter_from(rhot0_r)
+        vHt_r.scatter_from(vHt0_r)
+
+        if self.dipolelayer:
+            gd = self.grid
+            print(gd.__dict__.items())
+            print(gd.cell_cv)
+            print(gd.dv**(1/3))
+            slope_lim = 1e-13
+            slope = slope_lim * 10
+
+            def calculate_dipole_moment(rho_r, center=False, origin_c=None):
+                    """Calculate dipole moment of density."""
+                    r_cz = [np.arange(gd.start_c[c], gd.end_c[c]) for c in range(3)]
+                    if center:
+                        assert origin_c is None
+                        r_cz = [r_cz[c] - 0.5 * self.N_c[c] for c in range(3)]
+                    elif origin_c is not None:
+                        r_cz = [r_cz[c] - origin_c[c] for c in range(3)]
+
+                    rho_01 = rho_r.data.sum(axis=2)
+                    rho_02 = rho_r.data.sum(axis=1)
+                    rho_cz = [rho_01.sum(axis=1), rho_01.sum(axis=0), rho_02.sum(axis=0)]
+                    rhog_c = [np.dot(r_cz[c], rho_cz[c]) for c in range(3)]
+                    #FIGURE OUT how to get h_cv or dipole moment directly
+                    gd.h_cv = np.array([gd.cell_cv[c] / gd.size_c[c] for c in range(3)])
+                    d_c = -np.dot(rhog_c, gd.h_cv) * gd.dv
+                    gd.comm.sum(d_c)
+                    return d_c
+
+            dipmom = calculate_dipole_moment(rhot_r)[2]
+            print(f'Initial dipole moment: {dipmom} e·Bohr')
+
+            if self.elcorr is not None:
+                vHt_r.data[:, :] -= self.elcorr
+
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
+                                     maxcharge=1e-5)
+#            iters2 = self.solve(vHt_g, rhot_g, **kwargs)
+
+            from gpaw.new.sjm import modified_saw_tooth
+            eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
+            eps0_r = eps_r.gather(broadcast=True)
+            sawtooth_z = modified_saw_tooth(eps0_r) #sjm_sawtooth(dirichlet=self.dirichlet)
+            L = gd.cell_cv[2, 2]
+            count = 0
+            while abs(slope) > slope_lim:
+                count += 1
+                vHt_r2 = vHt_r.copy()
+                self.correction = 2 * np.pi * dipmom * L / \
+                    gd.volume * self.corrterm
+
+                elcorr = -2 * self.correction * sawtooth_z
+                elcorr2 = elcorr[gd.start_c[2]:gd.end_c[2]]
+                vHt_r2.data[:, :] += elcorr2
+
+                vHt0_r = vHt_r2.gather(broadcast=True)
+                if vHt0_r is not None:
+                    vHt0_z = vHt0_r.data.mean(0).mean(0)
+
+                    slope = (vHt0_z[3] - vHt0_z[8]) / (gd.h_cv[2][2] * Bohr)
+
+                    print(f'FD Poisson dipole correction iteration {count}: '
+                          f'slope = {slope}, corrterm = {self.corrterm}')
+                    if abs(slope) > slope_lim:
+                        if self.last_corrterm is None:
+                            self.last_corrterm = self.corrterm
+                            self.corrterm -= slope * 10.
+                        else:
+                            ds = (slope - self.last_slope) / \
+                                (self.corrterm - self.last_corrterm)
+                            con = slope - (ds * self.corrterm)
+                            self.last_corrterm = self.corrterm
+                            self.corrterm = -con / ds
+                        self.last_slope = slope
+                    else:
+                        vHt_r.data[:, :] += elcorr2
+                        self.elcorr = elcorr2
+                self.corrterm
+        else:
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
+                                     maxcharge=1e-5)
+
+        vHt0_r = vHt_r.gather()
+        rhot0_r = rhot_r.gather()
+
+        # The following still fails in parallel
+        if vHt0_r is not None:
+            vHt0_g = vHt0_r.fft(pw=self.pw.new(comm=None))
+            rhot0_g = rhot0_r.fft(pw=self.pw.new(comm=None))
+
+        rhot_g.scatter_from(rhot0_g)
+        vHt_g.scatter_from(vHt0_g)
+
+        epot = 0.5 * vHt_g.integrate(rhot_g)
+        return epot
+
+    def asolve(self,
+              vHt_g: PWArray,
+              rhot_g: PWArray) -> float:
         rhot_r = self.grid.new(comm=self.grid.comm).empty()
         vHt_r = self.grid.new(comm=self.grid.comm).empty()
         rhot0_r, vHt0_r = None, None
