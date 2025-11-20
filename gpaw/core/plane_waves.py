@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from math import pi
 from typing import TYPE_CHECKING, Literal
+from functools import cached_property
 
 import numpy as np
 from ase.units import Ha
@@ -109,9 +110,15 @@ class PWDesc(Domain['PWArray']):
         """Tuple with one element: number of plane waves."""
         return self.shape
 
-    def reciprocal_vectors(self) -> Array2D:
+    def reciprocal_vectors(self, xp=np) -> Array2D:
         """Returns reciprocal lattice vectors, G + k, in xyz coordinates."""
-        return self.G_plus_k_Gv
+        if xp is np:
+            return self.G_plus_k_Gv
+        return self._cupy_G_plus_k_Gv
+
+    @cached_property
+    def _cupy_G_plus_k_Gv(self):
+        return cp.asarray(self.G_plus_k_Gv)
 
     def kinetic_energies(self) -> Array1D:
         """Kinetic energy of plane waves.
@@ -832,15 +839,18 @@ class PWArray(DistributedArrays[PWDesc]):
                 taut_R: UGArray) -> None:
         psit_nG = self
         pw = psit_nG.desc
+        xp = psit_nG.xp
         domain_comm = pw.comm
 
         # Undistributed work arrays:
-        dpsit1_R = taut_R.desc.new(comm=None, dtype=pw.dtype).empty()
+        dpsit1_R = taut_R.desc.new(comm=None, dtype=pw.dtype).empty(xp=xp)
         pw1 = pw.new(comm=None)
-        psit1_G = pw1.empty()
-        iGpsit1_G = pw1.empty()
-        taut1_R = taut_R.desc.new(comm=None).zeros()
+        psit1_G = pw1.empty(xp=xp)
+        iGpsit1_G = pw1.empty(xp=xp)
+        taut1_R = taut_R.desc.new(comm=None).zeros(xp=xp)
         Gplusk1_Gv = pw1.reciprocal_vectors()
+        from gpaw.gpu import as_xp
+        Gplusk1_Gv = as_xp(Gplusk1_Gv, xp=xp)
 
         (N,) = psit_nG.mydims
         for n1 in range(0, N, domain_comm.size):
@@ -856,7 +866,12 @@ class PWArray(DistributedArrays[PWDesc]):
                 iGpsit1_G.data[:] = psit1_G.data
                 iGpsit1_G.data *= 1j * Gplusk1_Gv[:, v]
                 iGpsit1_G.ifft(out=dpsit1_R)
-                add_to_density(0.5 * f, dpsit1_R.data, taut1_R.data)
+                if xp is np:
+                    add_to_density(0.5 * f, dpsit1_R.data, taut1_R.data)
+                else:
+                    add_to_density_gpu(cp.array([0.5 * f]),
+                                       dpsit1_R.data[np.newaxis],
+                                       taut1_R.data)
         domain_comm.sum(taut1_R.data)
         tmp_R = taut_R.new()
         tmp_R.scatter_from(taut1_R)
