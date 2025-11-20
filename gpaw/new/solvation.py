@@ -91,7 +91,8 @@ class SolvationExtension(Extension):
                               charge,
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
-            from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+            #from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+            from gpaw.new.pw.poisson import FDPWsolver as ConjugateGradientPoissonSolver
             #print(self.dielectric.eps_gradeps[0])
             return ConjugateGradientPoissonSolver(
                 #pw, grid, self.dielectric, zero_vacuum=True)

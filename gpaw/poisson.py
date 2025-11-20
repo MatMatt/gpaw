@@ -505,7 +505,6 @@ class FDPoissonSolver(BasePoissonSolver):
         self._init()
 
         residual = self.residuals[level]
-
         if level < self.levels:
             self.operators[level].relax(self.relax_method,
                                         self.phis[level],
@@ -537,6 +536,7 @@ class FDPoissonSolver(BasePoissonSolver):
             # How about this instead:
             # error = self.gd.comm.max(abs(residual).max())
 
+            print(error)
             return error
 
     def estimate_memory(self, mem):

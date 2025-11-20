@@ -19,7 +19,7 @@ class SolvationPoissonSolver(FDPoissonSolver):
     is solved.
     """
 
-    def __init__(self, nn=3, relax='J', eps=2e-10, maxiter=1000,
+    def __init__(self, nn=3, relax='J', eps=2e-9, maxiter=1000,
                  remove_moment=None, use_charge_center=False):
         if remove_moment is not None:
             raise NotImplementedError(
@@ -79,10 +79,9 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
         return WeightedFDOperator(operators)
 
     def solve(self, phi, rho, charge=None,
-              maxcharge=1e-6,
+              maxcharge=1e-3,
               zero_initial_phi=False, timer=None):
         self._init()
-
         rho_z = np.sum(rho,axis=(0, 1))
         out=open('rhot_fd.txt','w')
         #for i in rhot0_r.data.tolist():
@@ -91,6 +90,8 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
 
         if self.gd.pbc_c.all():
             actual_charge = self.gd.integrate(rho)
+#            print(actual_charge)
+#            dd
             if abs(actual_charge) > maxcharge:
                 raise NotImplementedError(
                     'charged periodic systems are not implemented')
