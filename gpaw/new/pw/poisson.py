@@ -317,28 +317,27 @@ class FDPWsolver(PWPoissonSolver):
     def dipole_layer_correction(self) -> float:
         return self.correction
 
-    def modified_saw_tooth(self, eps_r, discontinuity_index=None) -> np.ndarray:
+    def modified_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
         a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
         saw_tooth_z = np.add.accumulate(a_z)
 
-        if discontinuity_index is None:
-            discontinuity_index = saw_tooth_z.size // 10
+        if idisc is None:
+            idisc = saw_tooth_z.size // 10
 
         # Reference to the mean value to no add a net potenial
         # I think this is not really needed
-        saw_tooth_z -= saw_tooth_z.mean() #0.5 * a_z  # +0.5 from z=0.0 ???
+        saw_tooth_z -= saw_tooth_z.mean()
 
         # Move the discontinuity away from the edge
-        #TODO: make this more flexible
-        saw_tooth_z = np.roll(saw_tooth_z, discontinuity_index)
+        saw_tooth_z = np.roll(saw_tooth_z, idisc)
 
         # Fuse the discontinuity by adding an error function ramp
         from scipy.special import erf
         ramp = np.zeros_like(saw_tooth_z)
-        w=2
-        ramp[discontinuity_index//2:discontinuity_index] = erf(np.linspace(-w, w, discontinuity_index//2)) * \
-            (saw_tooth_z[discontinuity_index] - saw_tooth_z[discontinuity_index//2]) / 2 + \
-            (saw_tooth_z[discontinuity_index] - saw_tooth_z[discontinuity_index//2]) / 2
+        w = 2
+        ramp[idisc // 2:idisc] = erf(np.linspace(-w, w, idisc // 2)) * \
+            (saw_tooth_z[idisc] - saw_tooth_z[idisc // 2]) / 2 + \
+            (saw_tooth_z[idisc] - saw_tooth_z[idisc // 2]) / 2
         saw_tooth_z += ramp
         return saw_tooth_z
 
@@ -358,58 +357,58 @@ class FDPWsolver(PWPoissonSolver):
 
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
-        print(self.grid.pbc_c)
-        #dd
 
-        #write rhot_r and vHt_r to file for debugging
-        if rhot0_r is not None:
+        # write rhot_r and vHt_r to file for debugging
+        if rhot0_r is not None and 0:
             with open('rhot_r.out', 'w') as f:
-                d = rhot0_r.data.mean(axis=(0,1))
+                d = rhot0_r.data.mean(axis=(0, 1))
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
 
             with open('vHt_r.out', 'w') as f:
-                d = vHt0_r.data.mean(axis=(0,1))
+                d = vHt0_r.data.mean(axis=(0, 1))
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
 
             with open('eps_gradeps.out', 'w') as f:
-                d = self.dielectric.eps_gradeps[0].mean(axis=(0,1))
+                d = self.dielectric.eps_gradeps[0].mean(axis=(0, 1))
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
 
-         # Dipole layer correction
-
+        # Dipole layer correction
         if self.dipolelayer:
             gd = self.grid
             slope_lim = 1e-13
             slope = slope_lim * 10
 
             def calculate_dipole_moment(rho_r, center=False, origin_c=None):
-                    """Calculate dipole moment of density."""
-                    r_cz = [np.arange(gd.start_c[c], gd.end_c[c]) for c in range(3)]
-                    if center:
-                        assert origin_c is None
-                        r_cz = [r_cz[c] - 0.5 * self.N_c[c] for c in range(3)]
-                    elif origin_c is not None:
-                        r_cz = [r_cz[c] - origin_c[c] for c in range(3)]
+                """Calculate dipole moment of density."""
+                r_cz = [np.arange(gd.start_c[c], gd.end_c[c])
+                        for c in range(3)]
+                if center:
+                    assert origin_c is None
+                    r_cz = [r_cz[c] - 0.5 * self.N_c[c]
+                            for c in range(3)]
+                elif origin_c is not None:
+                    r_cz = [r_cz[c] - origin_c[c] for c in range(3)]
 
-                    rho_01 = rho_r.data.sum(axis=2)
-                    rho_02 = rho_r.data.sum(axis=1)
-                    rho_cz = [rho_01.sum(axis=1), rho_01.sum(axis=0), rho_02.sum(axis=0)]
-                    rhog_c = [np.dot(r_cz[c], rho_cz[c]) for c in range(3)]
-                    #FIGURE OUT how to get h_cv or dipole moment directly
-                    gd.h_cv = np.array([gd.cell_cv[c] / gd.size_c[c] for c in range(3)])
-                    d_c = -np.dot(rhog_c, gd.h_cv) * gd.dv
-                    gd.comm.sum(d_c)
-                    return d_c
+                rho_01 = rho_r.data.sum(axis=2)
+                rho_02 = rho_r.data.sum(axis=1)
+                rho_cz = [rho_01.sum(axis=1), rho_01.sum(axis=0),
+                          rho_02.sum(axis=0)]
+                rhog_c = [np.dot(r_cz[c], rho_cz[c]) for c in range(3)]
+                gd.h_cv = np.array([gd.cell_cv[c] / gd.size_c[c]
+                                    for c in range(3)])
+                d_c = -np.dot(rhog_c, gd.h_cv) * gd.dv
+                gd.comm.sum(d_c)
+                return d_c
 
+            # TODO: There must be an easier way to calculate the dipole moment
             dipmom = calculate_dipole_moment(rhot_r)[2]
             print(f'Initial dipole moment: {dipmom} e·Bohr')
 
             if self.elcorr is not None:
                 vHt_r.data[:, :] -= self.elcorr
-
 
             self.real_space_solver.solve(vHt_r.data, rhot_r.data,
                                          maxcharge=1e-5)
