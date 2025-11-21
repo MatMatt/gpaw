@@ -322,7 +322,7 @@ class FDPWsolver(PWPoissonSolver):
         saw_tooth_z = np.add.accumulate(a_z)
 
         if idisc is None:
-            idisc = saw_tooth_z.size // 10
+            idisc = saw_tooth_z.size // 8
 
         # Reference to the mean value to no add a net potenial
         # I think this is not really needed
@@ -411,7 +411,7 @@ class FDPWsolver(PWPoissonSolver):
                 vHt_r.data[:, :] -= self.elcorr
 
             self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                         maxcharge=1e-5)
+                                         maxcharge=2e-5)
 
             eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
             eps0_r = eps_r.gather(broadcast=True)
