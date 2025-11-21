@@ -553,13 +553,9 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
 
         ophi_G = np.zeros_like(phi_G)
         for G_G in G_vG:
-            # Gradient in G-space is pw coefficient multiplied by potential?
             grad_G = pw.from_data(G_G * phi_G * 1j)
-            # Transform to real space and multiply with dielectric function
             grad_R = grad_G.ifft(grid=grid)
             grad_R.data *= self.eps0_R.data
-            # Transform back to G-space and multiply with G-vector again
-            # Is this overal a ket-bra operation?
             ophi_G -= grad_R.fft(pw=pw).data * G_G * 1j
 
         return ophi_G
