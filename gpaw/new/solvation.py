@@ -101,6 +101,8 @@ class SolvationExtension(Extension):
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
                     pw, grid, self.dielectric, zero_vacuum=True)
+            elif isinstance(self.psolver, PoissonSolver):
+                return self.psolver
             else:
                 raise ValueError(f'Unknown psolver: {self.psolver}')
 

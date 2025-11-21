@@ -23,11 +23,13 @@ class SJM(Solvation):
                  jelliumregion: dict | None = None,
                  target_potential: float | None = None,  # eV
                  excess_electrons: float = 0.0,
+                 psolver: str | None = None,
                  tol: float = 0.001):  # eV
         super().__init__(cavity, dielectric, interactions)
         self.jelliumregion = jelliumregion or {}
         self.target_potential = target_potential
         self.excess_electrons = excess_electrons
+        self.psolver = psolver
         self.tol = tol
 
     def build(self, builder: DFTComponentsBuilder) -> SJMExtension:
@@ -78,9 +80,15 @@ class SJMExtension(Extension):
 
     def create_poisson_solver(self, grid, pw, charge, xp):
         if isinstance(pw, PWDesc):
-            from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
-            return ConjugateGradientPoissonSolver(
-                pw, grid, self.dielectric, zero_vacuum=True)
+            if self.solvation.psolver in [None, 'FDsolver']:
+                from gpaw.new.pw.poisson import FDPWsolver
+                return FDPWsolver(
+                    pw, grid, self.dielectric, dipolelayer=True,
+                    zero_vacuum=True)
+            else:
+                from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
+                return ConjugateGradientPoissonSolver(
+                    pw, grid, self.dielectric, zero_vacuum=True)
             # from gpaw.new.sjm import SJMPWPoissonSolver
             # return SJMPWPoissonSolver(pw, environment.dielectric, grid)
 

@@ -254,12 +254,14 @@ class FDPWsolver(PWPoissonSolver):
                  maxiter=1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
-                 zero_vacuum=False):
+                 zero_vacuum=True):
         """Initialize the finite-difference Poisson solver.
         Parameters:
         """
 
         super().__init__(pw, charge, strength)
+        self.dielectric = dielectric
+        self.grid = grid
         if real_space_solver is None:
             from gpaw.solvation.poisson import WeightedFDPoissonSolver
             # I need to make eps 1e-9 to get convergence, equally I need
@@ -268,8 +270,6 @@ class FDPWsolver(PWPoissonSolver):
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter)
 
-        self.dielectric = dielectric
-        self.grid = grid
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
         self.grid0 = grid.new(comm=None)
@@ -284,7 +284,6 @@ class FDPWsolver(PWPoissonSolver):
             self.corrterm = 1
             self.elcorr = None
             self.last_corrterm = None
-            self.dirichlet = False #dirichlet
 
         self.eps = eps
         self.maxiter = maxiter
@@ -295,7 +294,7 @@ class FDPWsolver(PWPoissonSolver):
         self.zero_vacuum = zero_vacuum
         self.real_space_solver = real_space_solver
         self.real_space_solver.set_dielectric(self.dielectric)
-        self.real_space_solver.set_grid_descriptor(grid._gd)
+        self.real_space_solver.set_grid_descriptor(self.grid._gd)
         if zero_vacuum:
             self.drho_g = dipole_layer(grid).fft(pw=pw)
 
@@ -318,6 +317,31 @@ class FDPWsolver(PWPoissonSolver):
     def dipole_layer_correction(self) -> float:
         return self.correction
 
+    def modified_saw_tooth(self, eps_r, discontinuity_index=None) -> np.ndarray:
+        a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
+        saw_tooth_z = np.add.accumulate(a_z)
+
+        if discontinuity_index is None:
+            discontinuity_index = saw_tooth_z.size // 10
+
+        # Reference to the mean value to no add a net potenial
+        # I think this is not really needed
+        saw_tooth_z -= saw_tooth_z.mean() #0.5 * a_z  # +0.5 from z=0.0 ???
+
+        # Move the discontinuity away from the edge
+        #TODO: make this more flexible
+        saw_tooth_z = np.roll(saw_tooth_z, discontinuity_index)
+
+        # Fuse the discontinuity by adding an error function ramp
+        from scipy.special import erf
+        ramp = np.zeros_like(saw_tooth_z)
+        w=2
+        ramp[discontinuity_index//2:discontinuity_index] = erf(np.linspace(-w, w, discontinuity_index//2)) * \
+            (saw_tooth_z[discontinuity_index] - saw_tooth_z[discontinuity_index//2]) / 2 + \
+            (saw_tooth_z[discontinuity_index] - saw_tooth_z[discontinuity_index//2]) / 2
+        saw_tooth_z += ramp
+        return saw_tooth_z
+
     def _solve(self,
                vHt_g,
                rhot_g) -> float:
@@ -334,12 +358,30 @@ class FDPWsolver(PWPoissonSolver):
 
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
+        print(self.grid.pbc_c)
+        #dd
+
+        #write rhot_r and vHt_r to file for debugging
+        if rhot0_r is not None:
+            with open('rhot_r.out', 'w') as f:
+                d = rhot0_r.data.mean(axis=(0,1))
+                for i, v in enumerate(d):
+                    f.writelines(f'{i} {v}\n')
+
+            with open('vHt_r.out', 'w') as f:
+                d = vHt0_r.data.mean(axis=(0,1))
+                for i, v in enumerate(d):
+                    f.writelines(f'{i} {v}\n')
+
+            with open('eps_gradeps.out', 'w') as f:
+                d = self.dielectric.eps_gradeps[0].mean(axis=(0,1))
+                for i, v in enumerate(d):
+                    f.writelines(f'{i} {v}\n')
+
+         # Dipole layer correction
 
         if self.dipolelayer:
             gd = self.grid
-            print(gd.__dict__.items())
-            print(gd.cell_cv)
-            print(gd.dv**(1/3))
             slope_lim = 1e-13
             slope = slope_lim * 10
 
@@ -368,14 +410,13 @@ class FDPWsolver(PWPoissonSolver):
             if self.elcorr is not None:
                 vHt_r.data[:, :] -= self.elcorr
 
-            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                     maxcharge=1e-5)
-#            iters2 = self.solve(vHt_g, rhot_g, **kwargs)
 
-            from gpaw.new.sjm import modified_saw_tooth
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
+                                         maxcharge=1e-5)
+
             eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
             eps0_r = eps_r.gather(broadcast=True)
-            sawtooth_z = modified_saw_tooth(eps0_r) #sjm_sawtooth(dirichlet=self.dirichlet)
+            sawtooth_z = self.modified_saw_tooth(eps0_r)
             L = gd.cell_cv[2, 2]
             count = 0
             while abs(slope) > slope_lim:
@@ -392,7 +433,7 @@ class FDPWsolver(PWPoissonSolver):
                 if vHt0_r is not None:
                     vHt0_z = vHt0_r.data.mean(0).mean(0)
 
-                    slope = (vHt0_z[3] - vHt0_z[8]) / (gd.h_cv[2][2] * Bohr)
+                    slope = (vHt0_z[-8] - vHt0_z[-3]) / (gd.h_cv[2][2] * Bohr)
 
                     print(f'FD Poisson dipole correction iteration {count}: '
                           f'slope = {slope}, corrterm = {self.corrterm}')
@@ -413,46 +454,14 @@ class FDPWsolver(PWPoissonSolver):
                 self.corrterm
         else:
             self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                     maxcharge=1e-5)
+                                         maxcharge=1e-5)
 
         vHt0_r = vHt_r.gather()
         rhot0_r = rhot_r.gather()
 
         if vHt0_r is not None:
-            vHt0_g = vHt0_r.fft(pw=self.pw.new(comm=None))
-            rhot0_g = rhot0_r.fft(pw=self.pw.new(comm=None))
-
-        rhot_g.scatter_from(rhot0_g)
-        vHt_g.scatter_from(vHt0_g)
-
-        epot = 0.5 * vHt_g.integrate(rhot_g)
-        return epot
-
-    def asolve(self,
-              vHt_g: PWArray,
-              rhot_g: PWArray) -> float:
-        rhot_r = self.grid.new(comm=self.grid.comm).empty()
-        vHt_r = self.grid.new(comm=self.grid.comm).empty()
-        rhot0_r, vHt0_r = None, None
-
-        vHt0_g = vHt_g.gather()
-        rhot0_g = rhot_g.gather()
-
-        if rhot0_g is not None:
-            rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
-            vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
-
-        rhot_r.scatter_from(rhot0_r)
-        vHt_r.scatter_from(vHt0_r)
-
-        self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                     maxcharge=1e-5)
-
-        vHt0_r = vHt_r.gather()
-        rhot0_r = rhot_r.gather()
-
-        # The following still fails in parallel
-        if vHt0_r is not None:
+            if self.zero_vacuum:
+                vHt0_r.data -= vHt0_r.data.mean(axis=(0, 1))[-1]
             vHt0_g = vHt0_r.fft(pw=self.pw.new(comm=None))
             rhot0_g = rhot0_r.fft(pw=self.pw.new(comm=None))
 
@@ -546,13 +555,13 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         ophi_G = np.zeros_like(phi_G)
         for G_G in G_vG:
             # Gradient in G-space is pw coefficient multiplied by potential?
-            grad_G = pw.from_data(G_G * phi_G)
+            grad_G = pw.from_data(G_G * phi_G * 1j)
             # Transform to real space and multiply with dielectric function
             grad_R = grad_G.ifft(grid=grid)
             grad_R.data *= self.eps0_R.data
             # Transform back to G-space and multiply with G-vector again
             # Is this overal a ket-bra operation?
-            ophi_G += grad_R.fft(pw=pw).data * G_G
+            ophi_G -= grad_R.fft(pw=pw).data * G_G * 1j
 
         return ophi_G
 
