@@ -418,7 +418,6 @@ class FDPWsolver(PWPoissonSolver):
         vHt0_r = vHt_r.gather()
         rhot0_r = rhot_r.gather()
 
-        # The following still fails in parallel
         if vHt0_r is not None:
             vHt0_g = vHt0_r.fft(pw=self.pw.new(comm=None))
             rhot0_g = rhot0_r.fft(pw=self.pw.new(comm=None))
