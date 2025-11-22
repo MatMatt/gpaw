@@ -335,10 +335,10 @@ class FDPWsolver(PWPoissonSolver):
         ramp = np.zeros_like(saw_tooth_z)
         w = 2
 
-        erf_vals = erf(np.linspace(-w, w, idisc // 2))
-        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, idisc // 2]) / 2
+        erf_vals = erf(np.linspace(-w, w, 3*idisc // 4))
+        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, idisc // 4]) / 2
 
-        ramp[:, :, idisc // 2:idisc] = erf_vals[None, None, :] * \
+        ramp[:, :, idisc // 4:idisc] = erf_vals[None, None, :] * \
                 delta[:, :, None] + delta[:, :, None]
         saw_tooth_z += ramp
         return saw_tooth_z
