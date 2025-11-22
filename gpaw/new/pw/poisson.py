@@ -250,7 +250,7 @@ class FDPWsolver(PWPoissonSolver):
                  dielectric,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps=1e-9,
+                 eps=1e-8,
                  maxiter=1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
@@ -421,12 +421,12 @@ class FDPWsolver(PWPoissonSolver):
             while abs(slope) > slope_lim:
                 count += 1
                 vHt_r2 = vHt_r.copy()
-                self.correction = 2 * np.pi * dipmom * L / \
-                    gd.volume * self.corrterm
+                #self.correction = 2 * np.pi * dipmom * L / \
+                self.correction = self.corrterm
 
-                elcorr = -2 * self.correction * sawtooth_z
-                elcorr2 = elcorr[gd.start_c[2]:gd.end_c[2]]
-                vHt_r2.data[:, :] += elcorr2
+                elcorr0 = self.correction * sawtooth_z
+                elcorr = elcorr0[gd.start_c[2]:gd.end_c[2]]
+                vHt_r2.data[:, :] += elcorr
 
                 vHt0_r = vHt_r2.gather(broadcast=True)
                 if vHt0_r is not None:
