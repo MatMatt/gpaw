@@ -254,6 +254,7 @@ class FDPWsolver(PWPoissonSolver):
                  maxiter=1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
+                 dipcorr_style: str = 'new',
                  zero_vacuum=True):
         """Initialize the finite-difference Poisson solver.
         Parameters:
@@ -274,6 +275,7 @@ class FDPWsolver(PWPoissonSolver):
         self.pwg0 = self.pw0
         self.grid0 = grid.new(comm=None)
         self.dipolelayer = dipolelayer
+        self.dipcorr_style = dipcorr_style
         self.correction = np.nan
 
         if pw.comm.rank == 0:
@@ -316,6 +318,31 @@ class FDPWsolver(PWPoissonSolver):
 
     def dipole_layer_correction(self) -> float:
         return self.correction
+
+    def modified_3d_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
+        a_z = 1.0 / eps_r.data
+        saw_tooth_z = np.add.accumulate(a_z, axis = 2)
+
+        if idisc is None:
+            idisc = saw_tooth_z.shape[2] // 8
+
+        # Reference to the mean value to no add a net potenial
+        # I think this is not really needed
+        saw_tooth_z -= saw_tooth_z.mean()
+
+        # Move the discontinuity away from the edge
+        saw_tooth_z = np.roll(saw_tooth_z, idisc, axis = 2)
+
+        # Fuse the discontinuity by adding an error function ramp
+        from scipy.special import erf
+        ramp = np.zeros_like(saw_tooth_z)
+        w = 2
+        erf_vals = erf(np.linspace(-w, w, idisc // 2))
+        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, idisc // 2]) / 2
+
+        ramp[:, :, idisc // 2:idisc] = erf_vals[None, None, :] * delta[:, :, None] + delta[:, :, None]
+        saw_tooth_z += ramp
+        return saw_tooth_z
 
     def modified_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
         a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
@@ -408,14 +435,19 @@ class FDPWsolver(PWPoissonSolver):
             print(f'Initial dipole moment: {dipmom} e·Bohr')
 
             if self.elcorr is not None:
-                vHt_r.data[:, :] -= self.elcorr
+                vHt_r.data -= self.elcorr
 
             self.real_space_solver.solve(vHt_r.data, rhot_r.data,
                                          maxcharge=2e-5)
 
             eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
             eps0_r = eps_r.gather(broadcast=True)
-            sawtooth_z = self.modified_saw_tooth(eps0_r)
+
+            if self.dipcorr_style == 'old':
+                sawtooth_z = self.modified_saw_tooth(eps0_r)
+            else:
+                sawtooth_z = self.modified_3d_saw_tooth(eps0_r)
+
             L = gd.cell_cv[2, 2]
             count = 0
             while abs(slope) > slope_lim:
@@ -425,12 +457,18 @@ class FDPWsolver(PWPoissonSolver):
                 self.correction = self.corrterm
 
                 elcorr0 = self.correction * sawtooth_z
-                elcorr = elcorr0[gd.start_c[2]:gd.end_c[2]]
-                vHt_r2.data[:, :] += elcorr
+                if self.dipcorr_style == 'old':
+                    elcorr = elcorr0[gd.start_c[2]:gd.end_c[2]]
+                else:
+                    slices = tuple(slice(start, end)
+                        for start, end in zip(gd.start_c, gd.end_c))
+                    elcorr = elcorr0[slices]
+
+                vHt_r2.data += elcorr
 
                 vHt0_r = vHt_r2.gather(broadcast=True)
                 if vHt0_r is not None:
-                    vHt0_z = vHt0_r.data.mean(0).mean(0)
+                    vHt0_z = vHt0_r.data.mean(axis=(0,1))
 
                     slope = (vHt0_z[-8] - vHt0_z[-3]) / (gd.h_cv[2][2] * Bohr)
 
@@ -448,9 +486,8 @@ class FDPWsolver(PWPoissonSolver):
                             self.corrterm = -con / ds
                         self.last_slope = slope
                     else:
-                        vHt_r.data[:, :] += elcorr2
-                        self.elcorr = elcorr2
-                self.corrterm
+                        vHt_r.data += elcorr
+                        self.elcorr = elcorr
         else:
             self.real_space_solver.solve(vHt_r.data, rhot_r.data,
                                          maxcharge=1e-5)
