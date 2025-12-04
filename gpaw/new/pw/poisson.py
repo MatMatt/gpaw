@@ -80,6 +80,11 @@ class PWPoissonSolver(PoissonSolver):
             self.ekin_g = vHt_g.xp.array(self.ekin_g)
         vHt_g.data /= self.ekin_g
         epot = 0.5 * vHt_g.integrate(rhot_g)
+        test = rhot_g.integrate()
+        from ase.parallel import world
+        if world.rank == 0:
+            print('rho_g in vacuum poissonsolver', test)
+#            print('rho_r',rhot0_r.integrate())
         return epot
 
 
@@ -334,11 +339,11 @@ class FDPWsolver(PWPoissonSolver):
         from scipy.special import erf
         ramp = np.zeros_like(saw_tooth_z)
         w = 2
+        er_start, er_width = int(np.round(idisc / 4)), int(np.round(idisc * 3 / 4))
 
-        erf_vals = erf(np.linspace(-w, w, 3*idisc // 4))
-        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, idisc // 4]) / 2
-
-        ramp[:, :, idisc // 4:idisc] = erf_vals[None, None, :] * \
+        erf_vals = erf(np.linspace(-w, w, er_width))
+        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, er_start]) / 2
+        ramp[:, :, er_start:idisc] = erf_vals[None, None, :] * \
                 delta[:, :, None] + delta[:, :, None]
         saw_tooth_z += ramp
         return saw_tooth_z
@@ -380,6 +385,13 @@ class FDPWsolver(PWPoissonSolver):
         if rhot0_g is not None:
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
+
+        from ase.parallel import world
+        if world.rank == 0:
+            print('pw.G_plus_k_Gv.T',self.pw.G_plus_k_Gv.T)
+            print('rho_g in solvation psolver',rhot0_g.integrate())
+            print('rho_r in solvation psolver',rhot0_r.integrate())
+
 
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
@@ -449,8 +461,8 @@ class FDPWsolver(PWPoissonSolver):
                     slope = (vHt0_z[-8] - vHt0_z[-3]) * gd.size_c[2] / \
                             (gd.cell_cv[2][2] * Bohr)
 
-                    print(f'FD Poisson dipole correction iteration {count}: '
-                          f'slope = {slope}, correction = {self.correction}')
+                    #print(f'FD Poisson dipole correction iteration {count}: '
+                    #      f'slope = {slope}, correction = {self.correction}')
                     if abs(slope) > slope_lim:
                         if self.last_corrterm is None:
                             self.last_corrterm = self.correction

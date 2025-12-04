@@ -52,7 +52,7 @@ class SolvationExtension(Extension):
                  cavity,
                  dielectric,
                  interactions=None,
-                 psolver=None,
+                 psolver='PWsolver',
                  setups, grid, relpos_ac, log, comm):
         self.cavity = cavity
         self.psolver = psolver
@@ -93,7 +93,7 @@ class SolvationExtension(Extension):
                               charge,
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
-            if self.psolver is None:
+            if self.psolver == 'PWsolver':
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
                     pw, grid, self.dielectric, zero_vacuum=True)

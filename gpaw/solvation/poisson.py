@@ -79,9 +79,10 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
         return WeightedFDOperator(operators)
 
     def solve(self, phi, rho, charge=None,
-              maxcharge=1e-6,
+              maxcharge=1e-2,
               zero_initial_phi=False, timer=None):
         self._init()
+        #self.gd.pbc_c = np.array([1,1,0])
         if self.gd.pbc_c.all():
             actual_charge = self.gd.integrate(rho)
             if abs(actual_charge) > maxcharge:

@@ -536,8 +536,8 @@ class FDPoissonSolver(BasePoissonSolver):
 
             # How about this instead:
             # error = self.gd.comm.max(abs(residual).max())
-            from ase.parallel import parprint
-            parprint('Poisson iteration %d: error = %e' % (self.step, error))
+            #from ase.parallel import parprint
+            #parprint('Poisson iteration %d: error = %e' % (self.step, error))
             return error
 
     def estimate_memory(self, mem):
