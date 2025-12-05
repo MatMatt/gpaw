@@ -79,7 +79,7 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
         return WeightedFDOperator(operators)
 
     def solve(self, phi, rho, charge=None,
-              maxcharge=1e-2,
+              maxcharge=1e-6,
               zero_initial_phi=False, timer=None):
         self._init()
         #self.gd.pbc_c = np.array([1,1,0])

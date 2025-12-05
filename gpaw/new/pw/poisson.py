@@ -383,12 +383,14 @@ class FDPWsolver(PWPoissonSolver):
         rhot0_g = rhot_g.gather()
 
         if rhot0_g is not None:
+            #rhot0_g.data[0] = 0
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
 
         from ase.parallel import world
         if world.rank == 0:
             print('pw.G_plus_k_Gv.T',self.pw.G_plus_k_Gv.T)
+            print(rhot0_g.data[0])
             print('rho_g in solvation psolver',rhot0_g.integrate())
             print('rho_r in solvation psolver',rhot0_r.integrate())
 
@@ -412,6 +414,7 @@ class FDPWsolver(PWPoissonSolver):
                 d = self.dielectric.eps_gradeps[0].mean(axis=(0, 1))
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
+            exit()
 
         # Dipole layer correction
         if not self.dipolelayer:
