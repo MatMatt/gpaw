@@ -84,7 +84,7 @@ class SJMExtension(Extension):
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
                     pw, grid, self.dielectric, dipolelayer=True,
-                    zero_vacuum=False)#True)
+                    zero_vacuum=False)
             else:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(

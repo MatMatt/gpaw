@@ -328,23 +328,24 @@ class FDPWsolver(PWPoissonSolver):
 
     def modified_3d_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
         a_z = 1.0 / eps_r.data
-        saw_tooth_z = np.add.accumulate(a_z, axis = 2)
+        saw_tooth_z = np.add.accumulate(a_z, axis=2)
 
         # Move the discontinuity away from the edge
         if idisc is None:
             idisc = saw_tooth_z.shape[2] // 8
-        saw_tooth_z = np.roll(saw_tooth_z, idisc, axis = 2)
+        saw_tooth_z = np.roll(saw_tooth_z, idisc, axis=2)
 
         # Fuse the discontinuity by adding an error function ramp
         from scipy.special import erf
         ramp = np.zeros_like(saw_tooth_z)
         w = 2
-        er_start, er_width = int(np.round(idisc / 4)), int(np.round(idisc * 3 / 4))
+        er_start, er_width = int(np.round(idisc / 4))
+        er_width = int(np.round(idisc * 3 / 4))
 
         erf_vals = erf(np.linspace(-w, w, er_width))
         delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, er_start]) / 2
         ramp[:, :, er_start:idisc] = erf_vals[None, None, :] * \
-                delta[:, :, None] + delta[:, :, None]
+            delta[:, :, None] + delta[:, :, None]
         saw_tooth_z += ramp
         return saw_tooth_z
 
@@ -383,17 +384,15 @@ class FDPWsolver(PWPoissonSolver):
         rhot0_g = rhot_g.gather()
 
         if rhot0_g is not None:
-            #rhot0_g.data[0] = 0
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
 
         from ase.parallel import world
         if world.rank == 0:
-            print('pw.G_plus_k_Gv.T',self.pw.G_plus_k_Gv.T)
+            print('pw.G_plus_k_Gv.T', self.pw.G_plus_k_Gv.T)
             print(rhot0_g.data[0])
-            print('rho_g in solvation psolver',rhot0_g.integrate())
-            print('rho_r in solvation psolver',rhot0_r.integrate())
-
+            print('rho_g in solvation psolver', rhot0_g.integrate())
+            print('rho_r in solvation psolver', rhot0_r.integrate())
 
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
@@ -439,33 +438,28 @@ class FDPWsolver(PWPoissonSolver):
             else:
                 sawtooth_z = self.modified_3d_saw_tooth(eps0_r)
 
-            L = gd.cell_cv[2, 2]
             count = 0
             while abs(slope) > slope_lim:
                 count += 1
                 vHt_r2 = vHt_r.copy()
-                #self.correction = 2 * np.pi * dipmom * L / \
-                #self.correction = self.corrterm
 
                 elcorr0 = -2 * self.correction * sawtooth_z
                 if self.dipcorr_style == 'old':
                     elcorr = elcorr0[gd.start_c[2]:gd.end_c[2]]
                 else:
                     slices = tuple(slice(start, end)
-                        for start, end in zip(gd.start_c, gd.end_c))
+                                   for start, end in zip(gd.start_c, gd.end_c))
                     elcorr = elcorr0[slices]
 
                 vHt_r2.data += elcorr
 
                 vHt0_r = vHt_r2.gather(broadcast=True)
                 if vHt0_r is not None:
-                    vHt0_z = vHt0_r.data.mean(axis=(0,1))
+                    vHt0_z = vHt0_r.data.mean(axis=(0, 1))
 
                     slope = (vHt0_z[-8] - vHt0_z[-3]) * gd.size_c[2] / \
                             (gd.cell_cv[2][2] * Bohr)
 
-                    #print(f'FD Poisson dipole correction iteration {count}: '
-                    #      f'slope = {slope}, correction = {self.correction}')
                     if abs(slope) > slope_lim:
                         if self.last_corrterm is None:
                             self.last_corrterm = self.correction
