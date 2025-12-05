@@ -339,7 +339,7 @@ class FDPWsolver(PWPoissonSolver):
         from scipy.special import erf
         ramp = np.zeros_like(saw_tooth_z)
         w = 2
-        er_start, er_width = int(np.round(idisc / 4))
+        er_start = int(np.round(idisc / 4))
         er_width = int(np.round(idisc * 3 / 4))
 
         erf_vals = erf(np.linspace(-w, w, er_width))
