@@ -255,7 +255,7 @@ class FDPWsolver(PWPoissonSolver):
                  dielectric,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps=1e-8,
+                 eps=2e-8,
                  maxiter=1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
