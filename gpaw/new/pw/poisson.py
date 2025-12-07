@@ -287,7 +287,7 @@ class FDPWsolver(PWPoissonSolver):
         if real_space_solver is None:
             from gpaw.solvation.poisson import WeightedFDPoissonSolver
             # I need to make eps 2e-8 to get convergence,
-            #TODO: investigate why
+            # TODO: investigate why
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter)
 
@@ -356,7 +356,7 @@ class FDPWsolver(PWPoissonSolver):
         saw_tooth_z = np.add.accumulate(a_z, axis=2)
 
         # Move the discontinuity away from the edge
-        ## TODO: Make the position fixed in space, not in grid points
+        # TODO: Make the position fixed in space, not in grid points
         if idisc is None:
             idisc = saw_tooth_z.shape[2] // 8
         saw_tooth_z = np.roll(saw_tooth_z, idisc, axis=2)
@@ -416,14 +416,13 @@ class FDPWsolver(PWPoissonSolver):
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
 
-        ### DEBUGGING OUTPUT
+        # DEBUGGING OUTPUT
         from ase.parallel import world
         if world.rank == 0:
             print('pw.G_plus_k_Gv.T', self.pw.G_plus_k_Gv.T)
             print(rhot0_g.data[0])
             print('rho_g in solvation psolver', rhot0_g.integrate())
             print('rho_r in solvation psolver', rhot0_r.integrate())
-
 
         # write rhot_r and vHt_r to file for debugging
         if rhot0_r is not None and 0:
