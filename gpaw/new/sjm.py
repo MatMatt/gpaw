@@ -78,17 +78,17 @@ class SJMExtension(Extension):
         self.charge = jellium.charge
         self.dielectric = solvation.dielectric
 
-    def create_poisson_solver(self, grid, pw, charge, xp):
+    def create_poisson_solver(self, grid, pw, charge, xp, zero_vacuum=True):
         if isinstance(pw, PWDesc):
             if self.solvation.psolver in [None, 'FDsolver']:
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
                     pw, grid, self.dielectric, dipolelayer=True,
-                    zero_vacuum=False)
+                    zero_vacuum=zero_vacuum)
             else:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
-                    pw, grid, self.dielectric, zero_vacuum=True)
+                    pw, grid, self.dielectric, zero_vacuum=zero_vacuum)
             # from gpaw.new.sjm import SJMPWPoissonSolver
             # return SJMPWPoissonSolver(pw, environment.dielectric, grid)
 

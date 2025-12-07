@@ -249,30 +249,45 @@ class DipoleLayerPWPoissonSolver(PoissonSolver):
 
 
 class FDPWsolver(PWPoissonSolver):
+    """Poisson solver using the multigrid real space solver for planewave
+    mode. This solver is mainly intended for solvation calculations. It also
+    contains a dipole layer correction for slab calculations.
+
+    Parameters
+    ----------
+    real_space_solver : RealSpacePoissonSolver object
+        Real space Poisson solver to be used.
+        default is WeightedFDPoissonSolver.
+    dipolelayer : bool
+        Whether to apply dipole layer correction for slab calculations.
+    dipcorr_style : str
+        Style of dipole layer correction. 'old' or 'new'. 'new' is the
+        recommended one. 'old' is the one used in previous versions of GPAW.
+    zero_vacuum : bool
+        Whether to set the vacuum region potential to zero.
+    -----------
+    """
+
     def __init__(self,
                  pw: PWDesc,
-                 grid,
-                 dielectric,
+                 grid: UGDesc,
+                 dielectric: object,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps=2e-8,
-                 maxiter=1000,
+                 eps: float = 2e-8,
+                 maxiter: float = 1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
                  dipcorr_style: str = 'new',
                  zero_vacuum=True):
-        """Initialize the finite-difference Poisson solver.
-        Parameters:
-        """
 
         super().__init__(pw, charge, strength)
         self.dielectric = dielectric
         self.grid = grid
         if real_space_solver is None:
             from gpaw.solvation.poisson import WeightedFDPoissonSolver
-            # I need to make eps 1e-9 to get convergence, equally I need
-            # to set maxcharge to 1e-5 when solving. I think they are
-            # connected
+            # I need to make eps 2e-8 to get convergence,
+            #TODO: investigate why
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter)
 
@@ -282,14 +297,13 @@ class FDPWsolver(PWPoissonSolver):
         self.dipolelayer = dipolelayer
         self.dipcorr_style = dipcorr_style
         self.correction = np.nan
-        if dipolelayer:
-            self.correction = 1
 
         if pw.comm.rank == 0:
             self.ekin_g = self.pw0.ekin_G.copy()
             self.ekin_g[0] = 1.0
 
         if self.dipolelayer:
+            self.correction = 1
             self.corrterm = 1
             self.elcorr = None
             self.last_corrterm = None
@@ -327,10 +341,22 @@ class FDPWsolver(PWPoissonSolver):
         return self.correction
 
     def modified_3d_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
+        """Create a modified saw tooth potential in 3D.
+        The saw tooth potential is created by integrating 1/eps_r
+        along the z direction.
+
+        Parameters:
+        eps_r : PWArray
+            Relative permittivity in real space
+        idisc : int, optional
+            Upper index of the discontinuity in the saw tooth potential.
+        """
+
         a_z = 1.0 / eps_r.data
         saw_tooth_z = np.add.accumulate(a_z, axis=2)
 
         # Move the discontinuity away from the edge
+        ## TODO: Make the position fixed in space, not in grid points
         if idisc is None:
             idisc = saw_tooth_z.shape[2] // 8
         saw_tooth_z = np.roll(saw_tooth_z, idisc, axis=2)
@@ -341,8 +367,8 @@ class FDPWsolver(PWPoissonSolver):
         w = 2
         er_start = int(np.round(idisc / 4))
         er_width = int(np.round(idisc * 3 / 4))
-
         erf_vals = erf(np.linspace(-w, w, er_width))
+
         delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, er_start]) / 2
         ramp[:, :, er_start:idisc] = erf_vals[None, None, :] * \
             delta[:, :, None] + delta[:, :, None]
@@ -387,6 +413,10 @@ class FDPWsolver(PWPoissonSolver):
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
 
+        rhot_r.scatter_from(rhot0_r)
+        vHt_r.scatter_from(vHt0_r)
+
+        ### DEBUGGING OUTPUT
         from ase.parallel import world
         if world.rank == 0:
             print('pw.G_plus_k_Gv.T', self.pw.G_plus_k_Gv.T)
@@ -394,8 +424,6 @@ class FDPWsolver(PWPoissonSolver):
             print('rho_g in solvation psolver', rhot0_g.integrate())
             print('rho_r in solvation psolver', rhot0_r.integrate())
 
-        rhot_r.scatter_from(rhot0_r)
-        vHt_r.scatter_from(vHt0_r)
 
         # write rhot_r and vHt_r to file for debugging
         if rhot0_r is not None and 0:
@@ -414,11 +442,11 @@ class FDPWsolver(PWPoissonSolver):
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
             exit()
+        #####
 
         # Dipole layer correction
         if not self.dipolelayer:
-            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                         maxcharge=1e-5)
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data)
         else:
             gd = self.grid
             slope_lim = 1e-13
@@ -427,8 +455,7 @@ class FDPWsolver(PWPoissonSolver):
             if self.elcorr is not None:
                 vHt_r.data -= self.elcorr
 
-            self.real_space_solver.solve(vHt_r.data, rhot_r.data,
-                                         maxcharge=2e-5)
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data)
 
             eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
             eps0_r = eps_r.gather(broadcast=True)
