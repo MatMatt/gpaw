@@ -279,7 +279,7 @@ class FDPWsolver(PWPoissonSolver):
                  real_space_solver=None,
                  dipolelayer: bool = True,
                  dipcorr_style: str = 'new',
-                 zero_vacuum=True):
+                 zero_vacuum: bool = True):
 
         super().__init__(pw, charge, strength)
         self.dielectric = dielectric
@@ -354,6 +354,8 @@ class FDPWsolver(PWPoissonSolver):
 
         a_z = 1.0 / eps_r.data
         saw_tooth_z = np.add.accumulate(a_z, axis=2)
+        # Make sawtooth integrate to zero
+        saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
 
         # Move the discontinuity away from the edge
         # TODO: Make the position fixed in space, not in grid points
@@ -419,7 +421,6 @@ class FDPWsolver(PWPoissonSolver):
         # DEBUGGING OUTPUT
         from ase.parallel import world
         if world.rank == 0:
-            print('pw.G_plus_k_Gv.T', self.pw.G_plus_k_Gv.T)
             print(rhot0_g.data[0])
             print('rho_g in solvation psolver', rhot0_g.integrate())
             print('rho_r in solvation psolver', rhot0_r.integrate())

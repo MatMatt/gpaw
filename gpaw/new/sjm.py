@@ -24,7 +24,7 @@ class SJM(Solvation):
                  target_potential: float | None = None,  # eV
                  excess_electrons: float = 0.0,
                  psolver: str | None = None,
-                 tol: float = 0.001):  # eV
+                 tol: float = 0.01):  # eV
         super().__init__(cavity, dielectric, interactions)
         self.jelliumregion = jelliumregion or {}
         self.target_potential = target_potential
@@ -64,6 +64,7 @@ class SJM(Solvation):
             target_potential=self.target_potential,
             excess_electrons=self.excess_electrons,
             tol=self.tol)
+        print('todict SJM:', dct)
         return dct
 
 
@@ -75,7 +76,7 @@ class SJMExtension(Extension):
                  jellium: JelliumExtension):
         self.solvation = solvation
         self.jellium = jellium
-        self.charge = jellium.charge
+        self.excess_electrons = jellium.charge
         self.dielectric = solvation.dielectric
 
     def create_poisson_solver(self, grid, pw, charge, xp, zero_vacuum=True):
@@ -104,7 +105,10 @@ class SJMExtension(Extension):
                              log) -> bool:
         converged = self.jellium.post_scf_convergence(
             ibzwfs, nelectrons, occ_calc, mixer, log)
+        self.excess_electrons = self.jellium.charge
+        print(f'SJM excess electrons: {self.excess_electrons:.6f}')
         self.charge = self.jellium.charge
+
         return converged
 
     def update1(self, nt_r):
@@ -121,6 +125,17 @@ class SJMExtension(Extension):
 
     def update2(self, nt_r, vHt_r, vt_sr) -> float:
         return self.solvation.update2(nt_r, vHt_r, vt_sr)
+
+    def todict(self):
+        dct = super().todict()
+        dct.update(
+            jelliumregion=self.jelliumregion,
+            target_potential=self.target_potential,
+            excess_electrons=self.excess_electrons,
+            tol=self.tol)
+        print('todict SJMext:', dct)
+        return dct
+
 
 
 class SJMPoissonSolver(PoissonSolverWrapper):

@@ -482,11 +482,17 @@ class FDPoissonSolver(BasePoissonSolver):
 
         niter = 1
         maxiter = self.maxiter
-        while self.iterate2(self.step) > eps and niter < maxiter:
+        current_eps = 1
+        while current_eps > eps and niter < maxiter:
+            current_eps = self.iterate2(self.step)
             niter += 1
         if niter == maxiter:
             msg = 'Poisson solver did not converge in %d iterations!' % maxiter
-            raise PoissonConvergenceError(msg)
+            if current_eps > 10 * eps:
+                raise PoissonConvergenceError(msg)
+            else:
+                msg += ' (but reached acceptable accuracy %e)' % current_eps
+                warnings.warn(msg)
 
         # Set the average potential to zero in periodic systems
         if (self.gd.pbc_c).all():
