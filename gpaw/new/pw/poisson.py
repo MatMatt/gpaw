@@ -274,11 +274,11 @@ class FDPWsolver(PWPoissonSolver):
                  dielectric: object,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps: float = 2e-8,
+                 eps: float = 2e-08,
                  maxiter: float = 1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
-                 dipcorr_style: str = 'old',
+                 backwards_compatible: bool = False,
                  zero_vacuum: bool = True):
 
         super().__init__(pw, charge, strength)
@@ -290,23 +290,29 @@ class FDPWsolver(PWPoissonSolver):
             # TODO: investigate why
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter)
+        real_space_solver.set_dielectric(self.dielectric)
+        real_space_solver.set_grid_descriptor(self.grid._gd)
+        self.real_space_solver = real_space_solver
+
+        if dipolelayer:
+                from gpaw.new.sjm import SJMPoissonSolver
+                self.real_space_solver =
+                    SJMPoissonSolver(real_space_solver,
+                                     self.dielectric,
+                                     dipolelayer,
+                                     True,
+                                     backwards_compatible)
 
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
         self.grid0 = grid.new(comm=None)
         self.dipolelayer = dipolelayer
-        self.dipcorr_style = dipcorr_style
+        self.backwards_compatible = backwards_compatible
         self.correction = np.nan
 
         if pw.comm.rank == 0:
             self.ekin_g = self.pw0.ekin_G.copy()
             self.ekin_g[0] = 1.0
-
-        if self.dipolelayer:
-            self.correction = 1
-            self.corrterm = 1
-            self.elcorr = None
-            self.last_corrterm = None
 
         self.eps = eps
         self.maxiter = maxiter
@@ -315,9 +321,6 @@ class FDPWsolver(PWPoissonSolver):
         self.drho_g = None
 
         self.zero_vacuum = zero_vacuum
-        self.real_space_solver = real_space_solver
-        self.real_space_solver.set_dielectric(self.dielectric)
-        self.real_space_solver.set_grid_descriptor(self.grid._gd)
         if zero_vacuum:
             self.drho_g = dipole_layer(grid).fft(pw=pw)
 
@@ -338,68 +341,9 @@ class FDPWsolver(PWPoissonSolver):
         return txt
 
     def dipole_layer_correction(self) -> float:
-        return self.correction
-
-    def modified_3d_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
-        """Create a modified saw tooth potential in 3D.
-        The saw tooth potential is created by integrating 1/eps_r
-        along the z direction.
-
-        Parameters:
-        eps_r : PWArray
-            Relative permittivity in real space
-        idisc : int, optional
-            Upper index of the discontinuity in the saw tooth potential.
-        """
-
-        a_z = 1.0 / eps_r.data
-        saw_tooth_z = np.add.accumulate(a_z, axis=2)
-        # Make sawtooth integrate to zero
-        saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
-
-        # Move the discontinuity away from the edge
-        # TODO: Make the position fixed in space, not in grid points
-        if idisc is None:
-            idisc = saw_tooth_z.shape[2] // 8
-        saw_tooth_z = np.roll(saw_tooth_z, idisc, axis=2)
-
-        # Fuse the discontinuity by adding an error function ramp
-        from scipy.special import erf
-        ramp = np.zeros_like(saw_tooth_z)
-        w = 2
-        er_start = int(np.round(idisc / 4))
-        er_width = int(np.round(idisc * 3 / 4))
-        erf_vals = erf(np.linspace(-w, w, er_width))
-
-        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, er_start]) / 2
-        ramp[:, :, er_start:idisc] = erf_vals[None, None, :] * \
-            delta[:, :, None] + delta[:, :, None]
-        saw_tooth_z += ramp
-        return saw_tooth_z
-
-    def modified_saw_tooth(self, eps_r, idisc=None) -> np.ndarray:
-        a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
-        saw_tooth_z = np.add.accumulate(a_z)
-
-        if idisc is None:
-            idisc = saw_tooth_z.size // 8
-
-        # Reference to the mean value to no add a net potenial
-        # I think this is not really needed
-        saw_tooth_z -= saw_tooth_z.mean()
-
-        # Move the discontinuity away from the edge
-        saw_tooth_z = np.roll(saw_tooth_z, idisc)
-
-        # Fuse the discontinuity by adding an error function ramp
-        from scipy.special import erf
-        ramp = np.zeros_like(saw_tooth_z)
-        w = 2
-        ramp[idisc // 2:idisc] = erf(np.linspace(-w, w, idisc // 2)) * \
-            (saw_tooth_z[idisc] - saw_tooth_z[idisc // 2]) / 2 + \
-            (saw_tooth_z[idisc] - saw_tooth_z[idisc // 2]) / 2
-        saw_tooth_z += ramp
-        return saw_tooth_z
+        if self.dipolelayer:
+            return self.correction
+        return np.nan
 
     def _solve(self,
                vHt_g,
@@ -444,67 +388,11 @@ class FDPWsolver(PWPoissonSolver):
             exit()
         #####
 
-        if self.dipcorr_style == 'old':
-            from gpaw.new.sjm import SJMPoissonSolver
-            SJMPoissonSolver(self.real_space_solver, self.dielectric,self.dipolelayer).solve(vHt_r, rhot_r)
-        # Dipole layer correction
-        else:
-            if not self.dipolelayer:
-                self.real_space_solver.solve(vHt_r.data, rhot_r.data)
-            else:
-                gd = self.grid
-                slope_lim = 1e-13
-                slope = slope_lim * 10
-
-                if self.elcorr is not None:
-                    vHt_r.data -= self.elcorr
-
-                self.real_space_solver.solve(vHt_r.data, rhot_r.data)
-
-                eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
-                eps0_r = eps_r.gather(broadcast=True)
-
-                if self.dipcorr_style == 'old':
-                    sawtooth_z = self.modified_saw_tooth(eps0_r)
-                else:
-                    sawtooth_z = self.modified_3d_saw_tooth(eps0_r)
-
-                count = 0
-                while abs(slope) > slope_lim:
-                    count += 1
-                    vHt_r2 = vHt_r.copy()
-
-                    elcorr0 = -2 * self.correction * sawtooth_z
-                    if self.dipcorr_style == 'old':
-                        elcorr = elcorr0[gd.start_c[2]:gd.end_c[2]]
-                    else:
-                        slices = tuple(slice(start, end)
-                                       for start, end in zip(gd.start_c, gd.end_c))
-                        elcorr = elcorr0[slices]
-
-                    vHt_r2.data += elcorr
-
-                    vHt0_r = vHt_r2.gather(broadcast=True)
-                    if vHt0_r is not None:
-                        vHt0_z = vHt0_r.data.mean(axis=(0, 1))
-
-                        slope = (vHt0_z[-8] - vHt0_z[-3]) * gd.size_c[2] / \
-                                (gd.cell_cv[2][2] * Bohr)
-
-                        if abs(slope) > slope_lim:
-                            if self.last_corrterm is None:
-                                self.last_corrterm = self.correction
-                                self.correction -= slope * 10.
-                            else:
-                                ds = (slope - self.last_slope) / \
-                                    (self.correction - self.last_corrterm)
-                                con = slope - (ds * self.correction)
-                                self.last_corrterm = self.correction
-                                self.correction = -con / ds
-                            self.last_slope = slope
-                        else:
-                            vHt_r.data += elcorr
-                            self.elcorr = elcorr
+        #if self.dipolelayer:
+        #    from gpaw.new.sjm import SJMPoissonSolver
+        #    SJMPoissonSolver(self.real_space_solver, self.dielectric,self.dipolelayer).solve(vHt_r, rhot_r)
+        #else:
+        self.correction = self.real_space_solver.solve(vHt_r, rhot_r)
 
         vHt0_r = vHt_r.gather()
         rhot0_r = rhot_r.gather()

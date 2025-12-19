@@ -24,14 +24,14 @@ class SJM(Solvation):
                  target_potential: float | None = None,  # eV
                  excess_electrons: float = 0.0,
                  dipolelayer: bool = True,
-                 #psolver: str | None = None,
+                 backwards_compatible: bool = True, # Only applies if fd mode is used
                  tol: float = 0.01):  # eV
         super().__init__(cavity, dielectric, interactions)
         self.jelliumregion = jelliumregion or {}
         self.target_potential = target_potential
         self.excess_electrons = excess_electrons
-        #self.psolver = psolver
         self.dipolelayer = dipolelayer
+        self.backwards_compatible = backwards_compatible
         self.tol = tol
 
     def build(self, builder: DFTComponentsBuilder) -> SJMExtension:
@@ -57,7 +57,8 @@ class SJM(Solvation):
                 excess_electrons_guess=self.excess_electrons,
                 tolerance=self.tol,
                 pw=builder.interpolation_desc)
-        return SJMExtension(solvation, jellium, dipolelayer=self.dipolelayer)
+        return SJMExtension(solvation, jellium, dipolelayer=self.dipolelayer,
+                            backwards_compatible=self.backwards_compatible)
 
     def todict(self):
         dct = super().todict()
@@ -76,13 +77,15 @@ class SJMExtension(Extension):
     def __init__(self,
                  solvation: SolvationExtension,
                  jellium: JelliumExtension,
-                 dipolelayer: bool = True):
+                 dipolelayer: bool = True,
+                 backwards_compatible: bool = True):
         self.solvation = solvation
         self.jellium = jellium
         self.charge = jellium.charge
         self.excess_electrons = jellium.charge
         self.dielectric = solvation.dielectric
         self.dipolelayer = dipolelayer
+        self.backwards_compatible = backwards_compatible
 
     def create_poisson_solver(self, grid, pw, charge, xp, zero_vacuum=True):
         if isinstance(pw, PWDesc):
@@ -100,7 +103,8 @@ class SJMExtension(Extension):
 
         ps = self.solvation.create_poisson_solver(
             grid, pw, charge=charge, xp=xp).solver
-        return SJMPoissonSolver(ps, self.solvation.dielectric,self.dipolelayer)
+        return SJMPoissonSolver(ps, self.solvation.dielectric,self.dipolelayer, False,
+                                self.backwards_compatible)#, basis='fd')
 
     def post_scf_convergence(self,
                              ibzwfs,
@@ -145,10 +149,13 @@ class SJMExtension(Extension):
 
 class SJMPoissonSolver(PoissonSolverWrapper):
     def __init__(self, solver, dielectric,
-                 pw: PWDesc = None,
-                 dipolelayer: bool = True):
+                 dipolelayer: bool = True,
+                 pw: bool = True,
+                 backwards_compatible: bool = True):
         super().__init__(solver)
         self.dipolelayer = dipolelayer
+        self.backwards_compatible = backwards_compatible
+        self.pw = pw
 
     def solve(self,
               vHt_r,
@@ -159,54 +166,96 @@ class SJMPoissonSolver(PoissonSolverWrapper):
             eps0_r = eps_r.gather()
             vHt0_r = vHt_r.gather()
             if eps0_r is not None:
-                saw_tooth_z = modified_saw_tooth(eps0_r)
-                #s1, s2 = saw_tooth_z[[2, 10]]
-                s1, s2 = saw_tooth_z[[-10, -2]]
                 v1, v2 = vHt0_r.data[:, :, [-10, -2]].mean(axis=(0, 1))
-                vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth_z[np.newaxis,
-                                                                   np.newaxis]
+                if self.backwards_compatible:
+                    if self.pw:
+                        saw_tooth = pw_modified_saw_tooth(eps0_r)
+                    else:
+                        saw_tooth = fd_modified_saw_tooth(eps0_r)
+
+                    s1, s2 = saw_tooth[[-10, -2]]
+                    vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth[np.newaxis,
+                                                                     np.newaxis]
+                else:
+                    saw_tooth = modified_3d_saw_tooth(eps0_r)
+                    s1, s2 = saw_tooth[:,:, [-10, -2]].mean(axis=(0,1))
+                    vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth
                 vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
             vHt_r.scatter_from(vHt0_r)
-        return np.nan
+        # TODO: We need to return self.correction which is
+        # (v2 - v1) / (s2 - s1) / 2
+        return 1
 
-def modified_saw_tooth(eps_r, idisc=None) -> np.ndarray:
+def modified_3d_saw_tooth(eps_r, idisc=None) -> np.ndarray:
+        """Create a modified saw tooth potential in 3D.
+        The saw tooth potential is created by integrating 1/eps_r
+        along the z direction.
+
+        Parameters:
+        eps_r : GDArray
+            Relative permittivity in real space
+        idisc : int, optional
+            Upper index of the discontinuity in the saw tooth potential.
+        """
+
         if idisc is None:
             idisc = eps_r.data.mean(axis=(0, 1)).size // 8
-        a_z = np.ones_like(eps_r.data.mean(axis=(0, 1)))
-        a_z = np.roll(a_z,idisc)
-        a_z = 1.0 / np.roll(eps_r.data.mean(axis=(0, 1)),-idisc)
-        saw_tooth_z = np.add.accumulate(a_z)
-        saw_tooth_z = np.roll(saw_tooth_z, idisc)
 
-
-        # Reference to the mean value to no add a net potenial
-        # I think this is not really needed
-        saw_tooth_z -= saw_tooth_z.mean()
-
-        # Move the discontinuity away from the edge
-        ## THIS LINE WAS MAKING THE DIPOLECORRECTION FAIL, WHY???
-        #print(saw_tooth_z)
-        #saw_tooth_z /= eps_r.data.mean(axis=(0, 1))
-        #print(saw_tooth_z)
-        #exit()
+        a_z = 1.0 / np.roll(eps_r.data, -idisc, axis=2)
+        saw_tooth_z = np.add.accumulate(a_z, axis=2)
+        # Make sawtooth integrate to zero
+        #saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
+        saw_tooth_z = np.roll(saw_tooth_z, idisc, axis=2)
 
         # Fuse the discontinuity by adding an error function ramp
         from scipy.special import erf
         ramp = np.zeros_like(saw_tooth_z)
-        w = 2.0 # erf spans -0.995 to 0.995 at 2
+        w = 2
+        er_start = 0 #int(np.round(idisc / 4))
+        er_grid = int(np.round(idisc - er_start))
+        erf_vals = erf(np.linspace(-w, w, er_grid))
+
+        delta = (saw_tooth_z[:, :, idisc] - saw_tooth_z[:, :, er_start]) / 2
+        ramp[:, :, er_start:idisc] = erf_vals[None, None, :] * \
+            delta[:, :, None] + delta[:, :, None]
+        saw_tooth_z += ramp
+        #from matplotlib import pyplot as plt
+        #plt.plot(saw_tooth_z.mean(axis=(0,1)))
+        #plt.plot(ramp.mean(axis=(0,1)))
+        #plt.show()
+        return saw_tooth_z
+
+def pw_modified_saw_tooth(eps_r, idisc=None) -> np.ndarray:
+        if idisc is None:
+            idisc = eps_r.data.mean(axis=(0, 1)).size // 8
+        a_z = 1.0 / np.roll(eps_r.data.mean(axis=(0, 1)),-idisc)
+        saw_tooth_z = np.add.accumulate(a_z)
+        saw_tooth_z = np.roll(saw_tooth_z, idisc)
+
+        # Reference to the mean value to no add a net potenial
+        # I think this is not really needed
+        # saw_tooth_z -= saw_tooth_z.mean()
+
+        # Fuse the discontinuity by adding an error function ramp
+        from scipy.special import erf
+        ramp = np.zeros_like(saw_tooth_z)
+
+        # erf spans -0.995 to 0.995 at w=2 smaller values makes it steeper
+        # larger values create discontinuities at the edges
+        w = 2.0
         ramp[:idisc] = erf(np.linspace(-w, w, idisc)) * \
             (saw_tooth_z[idisc] - saw_tooth_z[0]) / 2 + \
             (saw_tooth_z[idisc] - saw_tooth_z[0]) / 2
         saw_tooth_z += ramp
         return saw_tooth_z
 
-#def modified_saw_tooth(eps_r: UGArray) -> np.ndarray:
-#    a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
-#    saw_tooth_z = np.add.accumulate(a_z)
-#    saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
-#    return saw_tooth_z
+def fd_modified_saw_tooth(eps_r: UGArray) -> np.ndarray:
+    a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
+    saw_tooth_z = np.add.accumulate(a_z)
+    saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
+    return saw_tooth_z
 
-
+# BELOW IS the TRASHBIN AND NEVER USED
 class SJMPWPoissonSolver(PWPoissonSolver):
     def __init__(self, pw, dielectric):
         super().__init__(pw)
