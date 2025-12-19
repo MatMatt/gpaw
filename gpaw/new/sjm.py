@@ -144,7 +144,9 @@ class SJMExtension(Extension):
 
 
 class SJMPoissonSolver(PoissonSolverWrapper):
-    def __init__(self, solver, dielectric, dipolelayer: bool = True):
+    def __init__(self, solver, dielectric,
+                 pw: PWDesc = None,
+                 dipolelayer: bool = True):
         super().__init__(solver)
         self.dipolelayer = dipolelayer
 
@@ -158,20 +160,51 @@ class SJMPoissonSolver(PoissonSolverWrapper):
             vHt0_r = vHt_r.gather()
             if eps0_r is not None:
                 saw_tooth_z = modified_saw_tooth(eps0_r)
-                s1, s2 = saw_tooth_z[[2, 10]]
-                v1, v2 = vHt0_r.data[:, :, [2, 10]].mean(axis=(0, 1))
+                #s1, s2 = saw_tooth_z[[2, 10]]
+                s1, s2 = saw_tooth_z[[-10, -2]]
+                v1, v2 = vHt0_r.data[:, :, [-10, -2]].mean(axis=(0, 1))
                 vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth_z[np.newaxis,
                                                                    np.newaxis]
                 vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
             vHt_r.scatter_from(vHt0_r)
         return np.nan
 
+def modified_saw_tooth(eps_r, idisc=None) -> np.ndarray:
+        if idisc is None:
+            idisc = eps_r.data.mean(axis=(0, 1)).size // 8
+        a_z = np.ones_like(eps_r.data.mean(axis=(0, 1)))
+        a_z = np.roll(a_z,idisc)
+        a_z = 1.0 / np.roll(eps_r.data.mean(axis=(0, 1)),-idisc)
+        saw_tooth_z = np.add.accumulate(a_z)
+        saw_tooth_z = np.roll(saw_tooth_z, idisc)
 
-def modified_saw_tooth(eps_r: UGArray) -> np.ndarray:
-    a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
-    saw_tooth_z = np.add.accumulate(a_z)
-    saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
-    return saw_tooth_z
+
+        # Reference to the mean value to no add a net potenial
+        # I think this is not really needed
+        saw_tooth_z -= saw_tooth_z.mean()
+
+        # Move the discontinuity away from the edge
+        ## THIS LINE WAS MAKING THE DIPOLECORRECTION FAIL, WHY???
+        #print(saw_tooth_z)
+        #saw_tooth_z /= eps_r.data.mean(axis=(0, 1))
+        #print(saw_tooth_z)
+        #exit()
+
+        # Fuse the discontinuity by adding an error function ramp
+        from scipy.special import erf
+        ramp = np.zeros_like(saw_tooth_z)
+        w = 2.0 # erf spans -0.995 to 0.995 at 2
+        ramp[:idisc] = erf(np.linspace(-w, w, idisc)) * \
+            (saw_tooth_z[idisc] - saw_tooth_z[0]) / 2 + \
+            (saw_tooth_z[idisc] - saw_tooth_z[0]) / 2
+        saw_tooth_z += ramp
+        return saw_tooth_z
+
+#def modified_saw_tooth(eps_r: UGArray) -> np.ndarray:
+#    a_z = 1.0 / eps_r.data.mean(axis=(0, 1))
+#    saw_tooth_z = np.add.accumulate(a_z)
+#    saw_tooth_z -= 0.5 * a_z  # +0.5 from z=0.0 ???
+#    return saw_tooth_z
 
 
 class SJMPWPoissonSolver(PWPoissonSolver):
