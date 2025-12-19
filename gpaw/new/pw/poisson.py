@@ -278,7 +278,7 @@ class FDPWsolver(PWPoissonSolver):
                  maxiter: float = 1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
-                 dipcorr_style: str = 'new',
+                 dipcorr_style: str = 'old',
                  zero_vacuum: bool = True):
 
         super().__init__(pw, charge, strength)

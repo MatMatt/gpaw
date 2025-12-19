@@ -23,13 +23,15 @@ class SJM(Solvation):
                  jelliumregion: dict | None = None,
                  target_potential: float | None = None,  # eV
                  excess_electrons: float = 0.0,
-                 psolver: str | None = None,
+                 dipolelayer: bool = True,
+                 #psolver: str | None = None,
                  tol: float = 0.01):  # eV
         super().__init__(cavity, dielectric, interactions)
         self.jelliumregion = jelliumregion or {}
         self.target_potential = target_potential
         self.excess_electrons = excess_electrons
-        self.psolver = psolver
+        #self.psolver = psolver
+        self.dipolelayer = dipolelayer
         self.tol = tol
 
     def build(self, builder: DFTComponentsBuilder) -> SJMExtension:
@@ -55,7 +57,7 @@ class SJM(Solvation):
                 excess_electrons_guess=self.excess_electrons,
                 tolerance=self.tol,
                 pw=builder.interpolation_desc)
-        return SJMExtension(solvation, jellium)
+        return SJMExtension(solvation, jellium, dipolelayer=self.dipolelayer)
 
     def todict(self):
         dct = super().todict()
@@ -73,18 +75,21 @@ class SJMExtension(Extension):
 
     def __init__(self,
                  solvation: SolvationExtension,
-                 jellium: JelliumExtension):
+                 jellium: JelliumExtension,
+                 dipolelayer: bool = True):
         self.solvation = solvation
         self.jellium = jellium
+        self.charge = jellium.charge
         self.excess_electrons = jellium.charge
         self.dielectric = solvation.dielectric
+        self.dipolelayer = dipolelayer
 
     def create_poisson_solver(self, grid, pw, charge, xp, zero_vacuum=True):
         if isinstance(pw, PWDesc):
             if self.solvation.psolver in [None, 'FDsolver']:
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
-                    pw, grid, self.dielectric, dipolelayer=True,
+                    pw, grid, self.dielectric, dipolelayer=self.dipolelayer,
                     zero_vacuum=zero_vacuum)
             else:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
@@ -95,7 +100,7 @@ class SJMExtension(Extension):
 
         ps = self.solvation.create_poisson_solver(
             grid, pw, charge=charge, xp=xp).solver
-        return SJMPoissonSolver(ps, self.solvation.dielectric)
+        return SJMPoissonSolver(ps, self.solvation.dielectric,self.dipolelayer)
 
     def post_scf_convergence(self,
                              ibzwfs,
@@ -139,24 +144,26 @@ class SJMExtension(Extension):
 
 
 class SJMPoissonSolver(PoissonSolverWrapper):
-    def __init__(self, solver, dielectric):
+    def __init__(self, solver, dielectric, dipolelayer: bool = True):
         super().__init__(solver)
+        self.dipolelayer = dipolelayer
 
     def solve(self,
               vHt_r,
               rhot_r) -> float:
         self.solver.solve(vHt_r.data, rhot_r.data)
-        eps_r = vHt_r.desc.from_data(self.solver.dielectric.eps_gradeps[0])
-        eps0_r = eps_r.gather()
-        vHt0_r = vHt_r.gather()
-        if eps0_r is not None:
-            saw_tooth_z = modified_saw_tooth(eps0_r)
-            s1, s2 = saw_tooth_z[[2, 10]]
-            v1, v2 = vHt0_r.data[:, :, [2, 10]].mean(axis=(0, 1))
-            vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth_z[np.newaxis,
-                                                               np.newaxis]
-            vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
-        vHt_r.scatter_from(vHt0_r)
+        if self.dipolelayer:
+            eps_r = vHt_r.desc.from_data(self.solver.dielectric.eps_gradeps[0])
+            eps0_r = eps_r.gather()
+            vHt0_r = vHt_r.gather()
+            if eps0_r is not None:
+                saw_tooth_z = modified_saw_tooth(eps0_r)
+                s1, s2 = saw_tooth_z[[2, 10]]
+                v1, v2 = vHt0_r.data[:, :, [2, 10]].mean(axis=(0, 1))
+                vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth_z[np.newaxis,
+                                                                   np.newaxis]
+                vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
+            vHt_r.scatter_from(vHt0_r)
         return np.nan
 
 
