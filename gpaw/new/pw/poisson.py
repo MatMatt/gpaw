@@ -296,7 +296,7 @@ class FDPWsolver(PWPoissonSolver):
 
         if dipolelayer:
                 from gpaw.new.sjm import SJMPoissonSolver
-                self.real_space_solver =
+                self.real_space_solver = \
                     SJMPoissonSolver(real_space_solver,
                                      self.dielectric,
                                      dipolelayer,
