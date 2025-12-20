@@ -295,13 +295,13 @@ class FDPWsolver(PWPoissonSolver):
         self.real_space_solver = real_space_solver
 
         if dipolelayer:
-                from gpaw.new.sjm import SJMPoissonSolver
-                self.real_space_solver = \
-                    SJMPoissonSolver(real_space_solver,
-                                     self.dielectric,
-                                     dipolelayer,
-                                     True,
-                                     backwards_compatible)
+            from gpaw.new.sjm import SJMPoissonSolver
+            self.real_space_solver = \
+                SJMPoissonSolver(real_space_solver,
+                                 self.dielectric,
+                                 dipolelayer,
+                                 True,
+                                 backwards_compatible)
 
         self.pw0 = pw.new(comm=None)
         self.pwg0 = self.pw0
@@ -386,12 +386,7 @@ class FDPWsolver(PWPoissonSolver):
                 for i, v in enumerate(d):
                     f.writelines(f'{i} {v}\n')
             exit()
-        #####
 
-        #if self.dipolelayer:
-        #    from gpaw.new.sjm import SJMPoissonSolver
-        #    SJMPoissonSolver(self.real_space_solver, self.dielectric,self.dipolelayer).solve(vHt_r, rhot_r)
-        #else:
         self.correction = self.real_space_solver.solve(vHt_r, rhot_r)
 
         vHt0_r = vHt_r.gather()
