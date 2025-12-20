@@ -80,11 +80,6 @@ class PWPoissonSolver(PoissonSolver):
             self.ekin_g = vHt_g.xp.array(self.ekin_g)
         vHt_g.data /= self.ekin_g
         epot = 0.5 * vHt_g.integrate(rhot_g)
-        test = rhot_g.integrate()
-        from ase.parallel import world
-        if world.rank == 0:
-            print('rho_g in vacuum poissonsolver', test)
-#            print('rho_r',rhot0_r.integrate())
         return epot
 
 
@@ -362,31 +357,6 @@ class FDPWsolver(PWPoissonSolver):
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
 
-        # DEBUGGING OUTPUT
-        from ase.parallel import world
-        if world.rank == 0:
-            print(rhot0_g.data[0])
-            print('rho_g in solvation psolver', rhot0_g.integrate())
-            print('rho_r in solvation psolver', rhot0_r.integrate())
-
-        # write rhot_r and vHt_r to file for debugging
-        if rhot0_r is not None and 0:
-            with open('rhot_r.out', 'w') as f:
-                d = rhot0_r.data.mean(axis=(0, 1))
-                for i, v in enumerate(d):
-                    f.writelines(f'{i} {v}\n')
-
-            with open('vHt_r.out', 'w') as f:
-                d = vHt0_r.data.mean(axis=(0, 1))
-                for i, v in enumerate(d):
-                    f.writelines(f'{i} {v}\n')
-
-            with open('eps_gradeps.out', 'w') as f:
-                d = self.dielectric.eps_gradeps[0].mean(axis=(0, 1))
-                for i, v in enumerate(d):
-                    f.writelines(f'{i} {v}\n')
-            exit()
-
         self.correction = self.real_space_solver.solve(vHt_r, rhot_r)
 
         vHt0_r = vHt_r.gather()
@@ -539,12 +509,12 @@ class ConjugateGradientPoissonSolver(PWPoissonSolver):
         return epot
 
     def correct_slope(self, vHt_g: PWArray):
-        from gpaw.new.sjm import modified_saw_tooth
+        from gpaw.new.sjm import pw_modified_saw_tooth
         eps_r = self.grid.from_data(self.dielectric.eps_gradeps[0])
         eps0_r = eps_r.gather()
         vHt0_g = vHt_g.gather()
         if eps0_r is not None:
-            saw_tooth_z = modified_saw_tooth(eps0_r)
+            saw_tooth_z = pw_modified_saw_tooth(eps0_r)
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
             s1, s2 = saw_tooth_z[[2, 10]]
             v1, v2 = vHt0_r.data[:, :, [2, 10]].mean(axis=(0, 1))
