@@ -52,13 +52,23 @@ class SkewHermitian:
         self._rotation_mat = None  # U = exp(A)
         self._representation = "full"
 
+
+        # take the number of occupied
+        self.n_occ = n_occ #EITHER MAKE HERE OR GET AS INPUT
+
         # Indices of the independent parameters:
         # - if real → strictly upper triangle
         # - if complex → include diagonal
-        if self._dtype == float:
-            self.ind_up = np.triu_indices(self.ndim, 1)
-        elif self._dtype == complex:
-            self.ind_up = np.triu_indices(self.ndim)
+        if representation == "full": # M*M
+            if self._dtype == float:
+                self.ind_up = np.triu_indices(self.ndim, 1)
+            elif self._dtype == complex:
+                self.ind_up = np.triu_indices(self.ndim)
+        if representation == "u-invar": #(M-N) * N
+            ind_up_uinv1, ind_up_uinv2  = np.indices((self.n_occ, (self.ndim-self.n_occ)))
+            self.ind_up = ( list(np.concatenate(ind_up_uinv1)), list(np.concatenate(ind_up_uinv2+self.n_occ)) )
+        if representation == "sparse": # M*N
+            self.ind_up = np.triu_indices(self.n_occ, 1, self.ndim) 
 
         # Number of independent parameters
         self._len = len(self.ind_up[0])
