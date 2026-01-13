@@ -68,7 +68,6 @@ class SJM(Solvation):
             target_potential=self.target_potential,
             excess_electrons=self.excess_electrons,
             tol=self.tol)
-        print('todict SJM:', dct)
         return dct
 
 

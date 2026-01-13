@@ -269,7 +269,7 @@ class FDPWsolver(PWPoissonSolver):
                  dielectric: object,
                  charge: float = 0.0,
                  strength: float = 1.0,
-                 eps: float = 2e-08,
+                 eps: float = 1e-10,
                  maxiter: float = 1000,
                  real_space_solver=None,
                  dipolelayer: bool = True,
@@ -281,10 +281,12 @@ class FDPWsolver(PWPoissonSolver):
         self.grid = grid
         if real_space_solver is None:
             from gpaw.solvation.poisson import WeightedFDPoissonSolver
-            # I need to make eps 2e-8 to get convergence,
+            # Convergence is thougher with the default parameters
             # TODO: investigate why
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
-                                                        maxiter=maxiter)
+                                                        maxiter=maxiter,
+                                                        relax='GS',
+                                                        nn=4)
         real_space_solver.set_dielectric(self.dielectric)
         real_space_solver.set_grid_descriptor(self.grid._gd)
         self.real_space_solver = real_space_solver
