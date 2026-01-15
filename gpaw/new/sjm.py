@@ -93,7 +93,7 @@ class SJMExtension(Extension):
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
                     pw, grid, self.dielectric, dipolelayer=self.dipolelayer,
-                    zero_vacuum=zero_vacuum)
+                    zero_vacuum=zero_vacuum, backwards_compatible=self.backwards_compatible)
             else:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
@@ -116,7 +116,7 @@ class SJMExtension(Extension):
         converged = self.jellium.post_scf_convergence(
             ibzwfs, nelectrons, occ_calc, mixer, log)
         self.excess_electrons = self.jellium.charge
-        print(f'SJM excess electrons: {self.excess_electrons:.6f}')
+        #print(f'SJM excess electrons: {self.excess_electrons:.6f}')
         self.charge = self.jellium.charge
 
         return converged

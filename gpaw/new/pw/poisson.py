@@ -292,7 +292,7 @@ class FDPWsolver(PWPoissonSolver):
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter,
                                                         relax='J',
-                                                        nn=5)
+                                                        nn=4)
         real_space_solver.set_dielectric(self.dielectric)
         real_space_solver.set_grid_descriptor(self.grid._gd)
         self.real_space_solver = real_space_solver
