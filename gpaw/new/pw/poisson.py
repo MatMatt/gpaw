@@ -359,7 +359,6 @@ class FDPWsolver(PWPoissonSolver):
         rhot0_g = rhot_g.gather()
 
         if rhot0_g is not None:
-        #    rhot0_g.data[0]= 0.0
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
 
