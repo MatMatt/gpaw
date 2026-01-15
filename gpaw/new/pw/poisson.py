@@ -285,8 +285,8 @@ class FDPWsolver(PWPoissonSolver):
             # TODO: investigate why
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter,
-                                                        relax='GS',
-                                                        nn=4)
+                                                        relax='J',
+                                                        nn=5)
         real_space_solver.set_dielectric(self.dielectric)
         real_space_solver.set_grid_descriptor(self.grid._gd)
         self.real_space_solver = real_space_solver
@@ -353,13 +353,17 @@ class FDPWsolver(PWPoissonSolver):
         rhot0_g = rhot_g.gather()
 
         if rhot0_g is not None:
+        #    rhot0_g.data[0]= 0.0
             rhot0_r = rhot0_g.ifft(grid=self.grid.new(comm=None))
             vHt0_r = vHt0_g.ifft(grid=self.grid.new(comm=None))
 
         rhot_r.scatter_from(rhot0_r)
         vHt_r.scatter_from(vHt0_r)
 
-        self.correction = self.real_space_solver.solve(vHt_r, rhot_r)
+        if self.dipolelayer:
+            self.correction = self.real_space_solver.solve(vHt_r, rhot_r)
+        else:
+            self.real_space_solver.solve(vHt_r.data, rhot_r.data)
 
         vHt0_r = vHt_r.gather()
         rhot0_r = rhot_r.gather()
