@@ -1,6 +1,6 @@
 import numpy as np
-from gpaw.directmin.tools import d_matrix, expm_ed
-
+from gpaw.directmin.tools import (d_matrix, expm_ed)
+from gpaw.new.etdm.tools2 import (get_ndim, get_n_occ)
 
 class SkewHermitian:
     """
@@ -25,15 +25,16 @@ class SkewHermitian:
         all upper-triangular entries.
     """
 
-    def __init__(self, ndim: int, dtype: type,
+    def __init__(self, ibzwfs, dtype: type,
                  data: np.ndarray = None, representation="full"):
         """
         Initialize a SkewHermitian object.
 
         Parameters
-        ----------
-        ndim : int
-            Dimension of the full matrix.
+        ----------.
+
+        ibzwfs : WRITE
+
         dtype : type
             Either float or complex.
         data : np.ndarray
@@ -41,8 +42,7 @@ class SkewHermitian:
         representation : str
             Only 'full' is currently implemented.
         """
-
-        self.ndim = ndim
+        self.ibzwfs = ibzwfs
         self._dtype = dtype
 
         # Cached values: recomputed only when data changes
@@ -53,8 +53,10 @@ class SkewHermitian:
         self._representation = "full"
 
 
-        # take the number of occupied
-        self.n_occ = n_occ #EITHER MAKE HERE OR GET AS INPUT
+        # calculate ndim and nocc
+
+        self.ndim = get_ndim(self.ibzwfs)
+        self.n_occ = get_n_occ(self.ibzwfs)
 
         # Indices of the independent parameters:
         # - if real → strictly upper triangle
@@ -187,7 +189,7 @@ class SkewHermitian:
             New SkewHermitian object with data = self.data + other.data
         """
         new = SkewHermitian(
-            self.ndim, self.dtype, representation=self._representation
+            self.ibzwfs, self.dtype, representation=self._representation
         )
 
         if isinstance(other, np.ndarray):
@@ -212,7 +214,7 @@ class SkewHermitian:
             New SkewHermitian object with data = self.data - other.data
         """
         new = SkewHermitian(
-            self.ndim, self.dtype, representation=self._representation
+            self.ibzwfs, self.dtype, representation=self._representation
         )
 
         if isinstance(other, np.ndarray):

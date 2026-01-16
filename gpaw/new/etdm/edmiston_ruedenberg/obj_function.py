@@ -41,7 +41,7 @@ class EdmistonRuedenberg(ObjectiveFunctionETDM):
         else:
             raise NotImplementedError
 
-        super().__init__(ndim, dtype, nkps)
+        super().__init__(ibzwfs, dtype, nkps)
         self._ibzwfs = ibzwfs
         self._rpsi_unX = []  # r is for reference
         self._rP_uani = []  # r is for reference
