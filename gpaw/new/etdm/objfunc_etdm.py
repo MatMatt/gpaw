@@ -29,7 +29,7 @@ class ObjectiveFunctionETDM(ABC):
         Number of k-points or independent systems.
     """
 
-    def __init__(self, ibzwfs, dtype: type, nkps: int):
+    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full"):
         """
         Initialize the objective function with default skew-Hermitian matrices.
 
@@ -37,19 +37,26 @@ class ObjectiveFunctionETDM(ABC):
         ----------
         ndim : int
             Dimension of each skew-Hermitian matrix.
+        f_n: np.ndarray
+            array containing the occupation numbers for each spin and kpt, f_n = [spin, kpt, occ]
+            From: ibzwfs.get_all_eigs_and_occs
         dtype : type
             Data type, either float or complex.
         nkps : int
             Number of k-points.
         """
 
-        # Create a list of `nkps` SkewHermitian objects, each initialized
-        # with `ndim` and `dtype`. These hold the independent parameters
-        # that will be optimized.
-        self._a_vec_u = [
-            SkewHermitian(ibzwfs, dtype, representation="full")
-            for _ in range(nkps)
-        ]
+        # Create a list of `nkps * nspins` (?) SkewHermitian objects, each initialized
+        # with `ndim`, `dtype`, `f_n`, `representation`. 
+        # These hold the independent parameters that will be optimized.
+
+        self._a_vec_u = []
+
+        for kpt in range(f_n.shape[1]):
+            for spin in range(f_n.shape[0]):
+                skewherm = SkewHermitian(ndim, f_n[spin, kpt, :], dtype, representation)
+                self._a_vec_u.append(skewherm)
+
 
         # Initialize cached values for energy and gradient as None.
         # These will be computed lazily when requested.
@@ -57,9 +64,8 @@ class ObjectiveFunctionETDM(ABC):
         self._gradient = None
 
         # Store dimensions and metadata
-        self.ibzwfs = ibzwfs
+        self._ndim = ndim
         self._dtype = dtype
-        self._nkps = nkps
 
     @property
     def a_vec_u(self):

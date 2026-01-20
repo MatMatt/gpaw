@@ -1,6 +1,5 @@
 import numpy as np
 from gpaw.directmin.tools import (d_matrix, expm_ed)
-from gpaw.new.etdm.tools2 import (get_ndim, get_n_occ)
 
 class SkewHermitian:
     """
@@ -12,7 +11,9 @@ class SkewHermitian:
     Attributes
     ----------
     ndim : int
-        Dimension of the square matrix (number of rows/columns).
+        Dimension of the square matrix (number of rows/columns). Dimension "N"
+    n_occ: int 
+        Number of occupied orbitals, dimension "M"
     dtype : type
         Either float or complex.
         - float → real skew-symmetric matrices
@@ -21,28 +22,28 @@ class SkewHermitian:
         1D array storing the independent upper-triangular
         entries of the matrix.
     representation : str
-        Currently only "full" is supported, meaning we store
-        all upper-triangular entries.
+        can be either "full", "u-invar", "sparse" EXPLAIN DIFFERENCES 
     """
 
-    def __init__(self, ibzwfs, dtype: type,
-                 data: np.ndarray = None, representation="full"):
+    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full",
+                 data: np.ndarray = None):
         """
         Initialize a SkewHermitian object.
 
         Parameters
         ----------.
-
-        ibzwfs : WRITE
-
+        ndim: int
+            ndim = ibzwfs.nbands
+        f_n: np.ndarray 
+            vector containing occupation numbers of given spin and kpt
         dtype : type
             Either float or complex.
         data : np.ndarray
             1D vector of independent parameters (upper-triangular entries).
         representation : str
-            Only 'full' is currently implemented.
+            can be either "full", "u-invar", "sparse"
         """
-        self.ibzwfs = ibzwfs
+
         self._dtype = dtype
 
         # Cached values: recomputed only when data changes
@@ -50,34 +51,39 @@ class SkewHermitian:
         self._evecs = None      # eigenvectors of i*A
         self._evals = None      # eigenvalues of i*A
         self._rotation_mat = None  # U = exp(A)
-        self._representation = "full"
+        self._representation = representation
 
 
         # calculate ndim and nocc
 
-        self.ndim = get_ndim(self.ibzwfs)
-        self.n_occ = get_n_occ(self.ibzwfs)
+        self._ndim = ndim
+        self._n_occ = int(sum(f_n))
+
+        # Calculate dimensions of the skew-hermitian matrix differently depending on the chosen representation. (ideally the representation is determined automatically?)
 
         # Indices of the independent parameters:
         # - if real → strictly upper triangle
         # - if complex → include diagonal
+
         if representation == "full": # M*M
             if self._dtype == float:
-                self.ind_up = np.triu_indices(self.ndim, 1)
+                self.ind_up = np.triu_indices(self._ndim, 1)
             elif self._dtype == complex:
-                self.ind_up = np.triu_indices(self.ndim)
+                self.ind_up = np.triu_indices(self._ndim)
+
         if representation == "u-invar": #(M-N) * N
-            ind_up_uinv1, ind_up_uinv2  = np.indices((self.n_occ, (self.ndim-self.n_occ)))
-            self.ind_up = ( list(np.concatenate(ind_up_uinv1)), list(np.concatenate(ind_up_uinv2+self.n_occ)) )
+            ind_up_uinv1, ind_up_uinv2  = np.indices((self._n_occ, (self._ndim-self._n_occ)))
+            self.ind_up = ( list(np.concatenate(ind_up_uinv1)), list(np.concatenate(ind_up_uinv2+self._n_occ)) )
+
         if representation == "sparse": # M*N
-            self.ind_up = np.triu_indices(self.n_occ, 1, self.ndim) 
+            self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim) 
 
         # Number of independent parameters
         self._len = len(self.ind_up[0])
 
         # Assign initial data (if provided)
         self.data = data
-        assert representation == "full"
+#        assert representation == "full"
 
     # ------------------------
     # Properties
@@ -151,7 +157,7 @@ class SkewHermitian:
             Eigenvalues of i*A
         """
         if self._evecs is None:  # triggers only if not already computed
-            a_mat = vec2skewmat(self.data, self.ndim, self.ind_up, self.dtype)
+            a_mat = vec2skewmat(self.data, self._ndim, self.ind_up, self.dtype)
             self._rotation_mat, self._evecs, self._evals = expm_ed(
                 a_mat, evalevec=True
             )
@@ -170,7 +176,7 @@ class SkewHermitian:
         if self._data is None:
             return None
         elif self._rotation_mat is None:  # compute only once
-            a_mat = vec2skewmat(self.data, self.ndim, self.ind_up, self.dtype)
+            a_mat = vec2skewmat(self.data, self._ndim, self.ind_up, self.dtype)
             self._rotation_mat, self._evecs, self._evals = expm_ed(
                 a_mat, evalevec=True
             )
@@ -197,7 +203,7 @@ class SkewHermitian:
             return new
 
         # Otherwise, other must be another SkewHermitian
-        assert self.ndim == other.ndim
+        assert self._ndim == other._ndim
         assert self._representation == other.representation
         assert self.dtype == other.dtype
 
@@ -222,7 +228,7 @@ class SkewHermitian:
             return new
 
         # Otherwise, other must be another SkewHermitian
-        assert self.ndim == other.ndim
+        assert self._ndim == other._ndim
         assert self._representation == other.representation
         assert self.dtype == other.dtype
 
