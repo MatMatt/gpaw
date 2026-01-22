@@ -1,30 +1,193 @@
 import numpy as np
 import pytest
 from gpaw.new.etdm.skewherm_matrix import SkewHermitian
+from gpaw.new.etdm.tools2 import get_n_occ
 from scipy.linalg import expm
 
+# Carry out various tests with different values of input parameters
 
 @pytest.mark.parametrize(
-    "ndim,dtype",
+    # DESCRIZIONE PARAMETRI
+    "ndim, dtype, nspin, nkpt, unocc",      
     [
-        (2, float),
-        (2, complex),
-        (3, complex),
+        (4, float,   1, 1, 0),
+        (4, float,   1, 1, 1),  # one unoccupied 
+        (4, float,   1, 1, 2),  # two unoccupied
+        (4, complex, 1, 1, 1),
+        (5, complex, 1, 1, 1),
+        (4, float,   2, 1, 1),  # corresponds to spinpol=True
+        (4, float,   1, 2, 1),  # more than one kpt
+        (4, float,   2, 2, 1),  # both previous conditions
     ],
 )
-def test_skewhermitian_rotation(ndim, dtype, gpaw_new):
+
+# this is the function that the test will run?
+def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     """
-    Test that SkewHermitian rotation_mat correctly computes
-    the matrix exponential of a manually reconstructed skew-Hermitian matrix.
+    This test checks that the skewhermitian matrix is properly built
+    and its exponential correctly computed.
+    Per each spin and kpt the corresponding matrix is built and checked.
     """
+
+
     if not gpaw_new:
         pytest.skip('Does not work for old GPAW')
 
-    # Step 1: Create a random parameter vector
+    f_n = initialize_f_n(ndim, nspin, nkpt, unocc)
+    for kpt in range(f_n.shape[1]):
+        for spin in range(f_n.shape[0]):
+            skewhermitian_rotation_full(ndim, f_n[spin, kpt, :], dtype)
+            skewhermitian_rotation_uinvar(ndim, f_n[spin, kpt, :], dtype)
+            skewhermitian_rotation_sparse(ndim, f_n[spin, kpt, :], dtype)
+
+
+def initialize_f_n(ndim, nspin, nkpt, unocc):
+    """
+    Builds a test occupation number vector depending on number of spins, kpoints 
+    and unoccupied orbitals
+    """
+    f_n = np.zeros((nspin,nkpt,ndim))
+    if unocc == 0:
+        f_n[:,:,:] = 1.
+    else: 
+        f_n[:,:,:-unocc] = 1.
+    return f_n
+
+def skewhermitian_rotation_sparse(ndim, f_n, dtype):
+    """
+    Test that SkewHermitian rotation_mat correctly computes
+    the matrix exponential of a manually reconstructed skew-Hermitian matrix.
+    Representation = "sparse"
+    """  
+
+    n_occ = get_n_occ(f_n)
+
+    # Step 1: Create a random parameter vector: elements of u-invar +
+    # upper triangular elements of oo block (no diagonal)
+
+    vec_len = ((ndim - n_occ) * n_occ) + (n_occ * (n_occ - 1)) // 2
+
+    np.random.seed(42)
+    param_vec = np.random.random(vec_len).astype(dtype)
+
+    print("\n=== Parameter vector ===")
+    print(param_vec)    
+
+
+# Step 2: Manually reconstruct full skew-Hermitian matrix
+
+    ind_up = np.triu_indices(n_occ, 1, ndim)
+
+    a_mat_manual = np.zeros((ndim, ndim), dtype=dtype)
+    a_mat_manual[ind_up] = param_vec
+
+    a_mat_manual -= a_mat_manual.T.conj()
+    # match vec2skewmat
+    np.fill_diagonal(a_mat_manual, a_mat_manual.diagonal() * 0.5)
+
+    print("\n=== Manual skew-Hermitian matrix ===")
+    print(a_mat_manual)
+
+    # Step 3: Compute expected matrix exponential manually
+    U_manual = expm(a_mat_manual)
+
+    print("\n=== Manual matrix exponential ===")
+    print(U_manual)
+
+    # Step 4: Use SkewHermitian class
+    sk = SkewHermitian(ndim, f_n, dtype, representation = "sparse", data=param_vec)
+    U_class = sk.rotation_mat
+
+    # Step 5: Compare results
+    np.testing.assert_allclose(U_class, U_manual, rtol=1e-12, atol=1e-12)
+
+    # Optional: check eigenvalues/eigenvectors consistency
+    e_manual, v_manual = np.linalg.eig(1j * a_mat_manual)
+    print("\n=== Eigenvalues (manual) ===")
+    print(np.sort(e_manual))
+    print("=== Eigenvalues (class) ===")
+    print(np.sort(sk.evals))
+    np.testing.assert_allclose(
+        np.sort(e_manual),
+        np.sort(sk.evals),
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+def skewhermitian_rotation_uinvar(ndim, f_n, dtype):
+    """
+    Test that SkewHermitian rotation_mat correctly computes
+    the matrix exponential of a manually reconstructed skew-Hermitian matrix.
+    Representation = "u-invar"
+    """ 
+    n_occ = get_n_occ(f_n)
+
+    # Step 1: Create a random parameter vector: rectangular matrix 
+
+    vec_len = (ndim - n_occ) * n_occ
+
+    np.random.seed(42)
+    param_vec = np.random.random(vec_len).astype(dtype)
+
+    print("\n=== Parameter vector ===")
+    print(param_vec)    
+
+
+    # Step 2: Manually reconstruct full skew-Hermitian matrix
+
+    ind_up_uinv1, ind_up_uinv2  = np.indices((n_occ, (ndim - n_occ)))
+    ind_up = ( list(np.concatenate(ind_up_uinv1)), list(np.concatenate(ind_up_uinv2 + n_occ)) )
+
+    a_mat_manual = np.zeros((ndim, ndim), dtype=dtype)
+    a_mat_manual[ind_up] = param_vec
+
+    a_mat_manual -= a_mat_manual.T.conj()
+    # match vec2skewmat
+    np.fill_diagonal(a_mat_manual, a_mat_manual.diagonal() * 0.5)
+
+    print("\n=== Manual skew-Hermitian matrix ===")
+    print(a_mat_manual)
+
+    # Step 3: Compute expected matrix exponential manually
+    U_manual = expm(a_mat_manual)
+
+    print("\n=== Manual matrix exponential ===")
+    print(U_manual)
+
+    # Step 4: Use SkewHermitian class
+    sk = SkewHermitian(ndim, f_n, dtype, representation = "u-invar", data=param_vec)
+    U_class = sk.rotation_mat
+
+    # Step 5: Compare results
+    np.testing.assert_allclose(U_class, U_manual, rtol=1e-12, atol=1e-12)
+
+    # Optional: check eigenvalues/eigenvectors consistency
+    e_manual, v_manual = np.linalg.eig(1j * a_mat_manual)
+    print("\n=== Eigenvalues (manual) ===")
+    print(np.sort(e_manual))
+    print("=== Eigenvalues (class) ===")
+    print(np.sort(sk.evals))
+    np.testing.assert_allclose(
+        np.sort(e_manual),
+        np.sort(sk.evals),
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+def skewhermitian_rotation_full(ndim, f_n, dtype):
+    """
+    Test that SkewHermitian rotation_mat correctly computes
+    the matrix exponential of a manually reconstructed skew-Hermitian matrix.
+    Representation = "full"
+    """
+
+
+    # Step 1: Create a random parameter vector: number of upper triangle elements
     if dtype == float:
-        vec_len = (ndim * (ndim - 1)) // 2
+        vec_len = (ndim * (ndim - 1)) // 2  # excluding diagonal
     else:
-        vec_len = (ndim * (ndim + 1)) // 2
+        vec_len = (ndim * (ndim + 1)) // 2  # including diagonal
 
     np.random.seed(42)
     param_vec = np.random.random(vec_len).astype(dtype)
@@ -56,7 +219,7 @@ def test_skewhermitian_rotation(ndim, dtype, gpaw_new):
     print(U_manual)
 
     # Step 4: Use SkewHermitian class
-    sk = SkewHermitian(ndim, dtype, data=param_vec)
+    sk = SkewHermitian(ndim, f_n, dtype, representation = "full", data=param_vec)
     U_class = sk.rotation_mat
 
     print("\n=== SkewHermitian.rotation_mat ===")
@@ -77,6 +240,9 @@ def test_skewhermitian_rotation(ndim, dtype, gpaw_new):
         rtol=1e-12,
         atol=1e-12,
     )
+
+
+
 
 
 if __name__ == "__main__":

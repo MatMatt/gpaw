@@ -1,5 +1,7 @@
 import numpy as np
 from gpaw.directmin.tools import (d_matrix, expm_ed)
+from gpaw.new.etdm.tools2 import get_n_occ
+# if repr u-invar use other expm_ed 
 
 class SkewHermitian:
     """
@@ -25,8 +27,7 @@ class SkewHermitian:
         can be either "full", "u-invar", "sparse" EXPLAIN DIFFERENCES 
     """
 
-    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full",
-                 data: np.ndarray = None):
+    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full", data: np.ndarray = None):
         """
         Initialize a SkewHermitian object.
 
@@ -57,7 +58,7 @@ class SkewHermitian:
         # calculate ndim and nocc
 
         self._ndim = ndim
-        self._n_occ = int(sum(f_n))
+        self._n_occ = get_n_occ(f_n)
 
         # Calculate dimensions of the skew-hermitian matrix differently depending on the chosen representation. (ideally the representation is determined automatically?)
 
