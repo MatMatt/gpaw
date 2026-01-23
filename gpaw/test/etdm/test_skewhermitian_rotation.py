@@ -29,7 +29,6 @@ def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     Per each spin and kpt the corresponding matrix is built and checked.
     """
 
-
     if not gpaw_new:
         pytest.skip('Does not work for old GPAW')
 
