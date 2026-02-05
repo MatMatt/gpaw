@@ -5,15 +5,15 @@ from ase.io.jsonio import read_json, write_json
 from ase.parallel import paropen, parprint
 
 from gpaw.berryphase import ionic_phase, polarization_phase
-from gpaw.mpi import parallel
+from gpaw.mpi import normalize_communicator
 
 
-@parallel(name='world')
 def born_charges_wf(atoms, calc, delta=0.01, cleanup=False,
-                    ionic_only=False, out='born_charges.json', *, world):
+                    ionic_only=False, out='born_charges.json', world=None):
+    world = normalize_communicator(world)
 
     # generate displacement dictionary
-    disps_av = _all_disp(atoms, delta)
+    disps_av = get_cartesian_displacements(atoms, delta)
 
     # carry out polarization phase calculation
     # for each displacement
@@ -85,8 +85,8 @@ def is_symmetry_off(calc):
                 not params.symmetry.time_reversal)
 
 
-@parallel
-def born_charges(atoms, disps_av, phases_c, check=True, *, comm):
+def born_charges(atoms, disps_av, phases_c, check=True, comm=None):
+    comm = normalize_communicator(comm)
     natoms = len(atoms)
     cell_cv = atoms.get_cell()
     vol = abs(np.linalg.det(cell_cv))
@@ -150,7 +150,7 @@ def _all_avs(atoms):
                 yield (ia, iv, sign)
 
 
-def _all_disp(atoms, delta):
+def get_cartesian_displacements(atoms, delta):
     all_disp = {}
     for dd, avs in enumerate(_all_avs(atoms)):
         dd = int(dd)

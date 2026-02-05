@@ -6,19 +6,19 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from ase import Atoms
 from ase.units import Bohr, Ha
-
 from gpaw.core import UGArray, UGDesc
 from gpaw.core.atom_arrays import AtomDistribution
 from gpaw.densities import Densities
 from gpaw.electrostatic_potential import ElectrostaticPotential
 from gpaw.gpu import as_np
+from gpaw.mpi import MPIComm
 from gpaw.mpi import broadcast as bcast
-from gpaw.mpi import broadcast_float, MPIComm
+from gpaw.mpi import broadcast_float, receive, send
 from gpaw.new import trace, zips
 from gpaw.new.density import Density
 from gpaw.new.energies import DFTEnergies
 from gpaw.new.ibzwfs import IBZWaveFunctions
-from gpaw.new.logger import Logger
+from gpaw.new.logger import Logger, indent
 from gpaw.new.potential import Potential
 from gpaw.new.scf import SCFLoop
 from gpaw.setup import Setups
@@ -27,7 +27,7 @@ from gpaw.utilities import (check_atoms_too_close,
                             check_atoms_too_close_to_boundary)
 
 if TYPE_CHECKING:
-    from gpaw.dft import Parameters
+    from gpaw.dft import Mode, Parameters
 
 
 class ReuseWaveFunctionsError(Exception):
@@ -178,7 +178,9 @@ class DFTCalculation:
         self.potential, self.energies, _ = self.pot_calc.calculate(
             self.density, self.ibzwfs, self.potential.vHt_x)
 
-        mm_av = self.results['non_collinear_magmoms']
+        mm_av = self.results.get('non_collinear_magmoms')
+        if mm_av is None:
+            _, mm_av = self.density.calculate_magnetic_moments()
         write_atoms(atoms, mm_av, self.density.nt_sR.desc, self.log)
 
         self.results = {}
@@ -187,6 +189,10 @@ class DFTCalculation:
         return self
 
     def iconverge(self, maxiter=None, calculate_forces=None):
+
+        if calculate_forces is None:
+            calculate_forces = self._calculate_forces
+
         self.ibzwfs.make_sure_wfs_are_read_from_gpw_file()
         for ctx in self.scf_loop.iterate(self.ibzwfs,
                                          self.density,
@@ -203,18 +209,17 @@ class DFTCalculation:
     @trace
     def converge(self,
                  maxiter=None,
-                 steps=99999999999999999,
-                 calculate_forces=None):
+                 steps=99999999999999999):
         """Converge to self-consistent solution of Kohn-Sham equation."""
-        for step, _ in enumerate(self.iconverge(maxiter,
-                                                calculate_forces),
+
+        for step, _ in enumerate(self.iconverge(maxiter),
                                  start=1):
             if step == steps:
                 break
         else:  # no break
             self.log('SCF steps:', step)
 
-    def energy(self):
+    def calculate_energy(self) -> float:
         self.results['free_energy'] = broadcast_float(
             self.energies.total_free, self.comm)
         self.results['energy'] = broadcast_float(
@@ -223,6 +228,9 @@ class DFTCalculation:
         self.log('Energy contributions relative to reference atoms:',
                  f'(reference = {self.setups.Eref * Ha:.6f})\n')
         self.energies.summary(self.log)
+        return self.results['energy'] * Ha
+
+    energy = calculate_energy
 
     def dipole(self):
         if 'dipole' in self.results:
@@ -260,13 +268,13 @@ class DFTCalculation:
             return
 
         self.forces_have_been_printed = True
-        self.log('\nForces: [  # eV/Ang')
+        self.log('\nForces in eV/Ang:')
         F_av = self.results['forces'] * (Ha / Bohr)
         for a, setup in enumerate(self.setups):
             x, y, z = F_av[a]
-            c = ',' if a < len(F_av) - 1 else ']'
-            self.log(f'  [{x:10.4f}, {y:10.4f}, {z:10.4f}]{c}'
-                     f'  # {setup.symbol:2} {a}')
+            self.log(f'  {a:4} {setup.symbol:2} '
+                     f'{x:10.5f} {y:10.5f} {z:10.5f}')
+        self.log.fd.flush()
 
     def _calculate_forces(self):
         xc = self.pot_calc.xc
@@ -312,6 +320,8 @@ class DFTCalculation:
         F_av = self.ibzwfs.ibz.symmetries.symmetrize_forces(F_av)
         self.comm.broadcast(F_av, 0)
         self.results['forces'] = F_av
+
+        return F_av
 
     def stress(self) -> None:
         if 'stress' in self.results:
@@ -363,52 +373,143 @@ class DFTCalculation:
 
     def wave_function(self, band: int, kpt=0, spin=None,
                       periodic=False,
-                      broadcast=True) -> UGArray:
+                      broadcast=True) -> UGArray | None:
         psit_nR = self.wave_functions(n1=band, n2=band + 1, kpt=kpt, spin=spin,
                                       periodic=periodic, broadcast=broadcast)
         if psit_nR is not None:
             return psit_nR[0]
+        return None
 
     def wave_functions(self, n1=0, n2=None, kpt=0, spin=None,
                        periodic=False,
                        broadcast=True,
-                       _pad=True) -> UGArray:
-        collinear = self.ibzwfs.collinear
+                       _pad=True) -> UGArray | None:
+        ibzwfs = self.ibzwfs
+        collinear = ibzwfs.collinear
         if collinear:
             if spin is None:
                 spin = 0
         else:
             assert spin is None or spin == 0
-        wfs = self.ibzwfs.get_wfs(spin=spin if collinear else 0,
-                                  kpt=kpt,
-                                  n1=n1, n2=n2)
-        if wfs is not None:
-            basis = getattr(self.scf_loop.hamiltonian, 'basis', None)
-            grid = self.density.nt_sR.desc.new(comm=None)
-            if collinear:
-                wfs = wfs.to_uniform_grid_wave_functions(grid, basis)
-                psit_nR = wfs.psit_nX
+            spin = 0
+
+        kpt_comm = ibzwfs.kpt_comm
+        krank = ibzwfs.rank_ks[kpt][spin]
+        if krank == kpt_comm.rank:
+            wfs = ibzwfs._get_wfs(kpt, spin)
+            wfs = wfs.collect_bands(n1, n2)
+            if wfs is not None:
+                basis = getattr(self.scf_loop.hamiltonian, 'basis', None)
+                grid = self.density.nt_sR.desc
+                if collinear:
+                    wfs = wfs.to_uniform_grid_wave_functions(grid, basis)
+                    psit_nR = wfs.psit_nX
+                else:
+                    psit_nsG = wfs.psit_nX
+                    grid = grid.new(kpt=psit_nsG.desc.kpt_c,
+                                    dtype=psit_nsG.desc.dtype)
+                    psit_nR = psit_nsG.ifft(grid=grid)
+                if not psit_nR.desc.pbc.all() and _pad:
+                    psit_nR = psit_nR.to_pbc_grid()
+                if periodic:
+                    psit_nR.multiply_by_eikr(-psit_nR.desc.kpt_c)
+                psit_nR = psit_nR.gather()
+                if krank != 0 and psit_nR is not None:
+                    send(psit_nR, 0, kpt_comm)
+                    psit_nR = None
             else:
-                psit_nsG = wfs.psit_nX
-                grid = grid.new(kpt=psit_nsG.desc.kpt_c,
-                                dtype=psit_nsG.desc.dtype)
-                psit_nR = psit_nsG.ifft(grid=grid)
-            if not psit_nR.desc.pbc.all() and _pad:
-                psit_nR = psit_nR.to_pbc_grid()
-            if periodic:
-                psit_nR.multiply_by_eikr(-psit_nR.desc.kpt_c)
+                psit_nR = None
+        elif self.comm.rank == 0:
+            psit_nR = receive(krank, kpt_comm)
         else:
             psit_nR = None
+
         if broadcast:
             psit_nR = bcast(psit_nR, 0, comm=self.comm)
+        if psit_nR is None:
+            return None
         return psit_nR.scaled(cell=Bohr, values=Bohr**-1.5)
+
+    def change(self,
+               *,
+               xc=None,
+               eigensolver=None,
+               mixer=None,
+               occupations=None,
+               convergence=None) -> None:
+        from gpaw.dft import XC, Eigensolver, Mixer, Occupations
+
+        # build kwargs
+        allargs = {'xc': xc, 'eigensolver': eigensolver,
+                   'mixer': mixer, 'occupations': occupations,
+                   'convergence': convergence}
+        kwargs = {key: val for key, val in allargs.items() if val is not None}
+
+        atoms = self.atoms
+        params = self.params
+        log = self.log
+
+        prop_update = {'xc': XC.from_param,
+                       'eigensolver': Eigensolver.from_param,
+                       'mixer': Mixer.from_param,
+                       'occupations': Occupations.from_param}
+
+        # update params
+        for prop in kwargs:
+            val = kwargs[prop]
+            update_func = prop_update.get(prop, None)
+            # actually change property
+            if update_func is None:
+                # update dictionary
+                getattr(params, prop).update(val)
+            else:
+                setattr(params, prop, update_func(val))
+
+        # rebuild
+        builder = params.dft_component_builder(atoms, log=log,
+                                               comm=self.comm)
+
+        scf_loop = builder.create_scf_loop()
+        pot_calc = builder.create_potential_calculator()
+        xcfunc_n = pot_calc.xc
+
+        # checks compatibility
+        if 'xc' in kwargs:
+            # check that 'base' functional is the same
+            xcfunc_o = self.pot_calc.xc
+            assert xcfunc_n.get_setup_name() == xcfunc_o.get_setup_name()
+
+        self.scf_loop = scf_loop
+        self.pot_calc = pot_calc
+
+        if 'occupations' in kwargs:
+            dens = self.density
+            wfs = self.ibzwfs
+            # update occupations numbers
+            nelectrons = dens.nvalence - dens.charge + self.pot_calc.charge
+            wfs.calculate_occs(self.scf_loop.occ_calc, nelectrons,
+                               fix_fermi_level=self.scf_loop.fix_fermi_level)
+
+        prop_log = {'xc': xcfunc_n.name,
+                    'eigensolver': self.scf_loop.eigensolver,
+                    'mixer': self.scf_loop.mixer,
+                    'occupations': self.scf_loop.occ_calc,
+                    'convergence': allargs['convergence']}
+
+        # assemble log
+        for prop in kwargs:
+            log(f'Changed {prop}:')
+            log(indent(prop_log[prop]))
+
+        log('Reusing wavefunctions.')
+
+        self.results = {}
 
     def new(self,
             atoms: Atoms,
             params: Parameters,
             log=None) -> DFTCalculation:
         """Create new DFTCalculation object."""
-
         if params.mode.name != 'pw':
             raise ReuseWaveFunctionsError
 
@@ -419,7 +520,8 @@ class DFTCalculation:
         check_atoms_too_close(atoms)
         check_atoms_too_close_to_boundary(atoms)
 
-        builder = params.dft_component_builder(atoms, log=log)
+        builder = params.dft_component_builder(atoms, log=log,
+                                               comm=self.comm)
 
         kpt_kc = builder.ibz.kpt_kc
         old_kpt_kc = ibzwfs.ibz.kpt_kc
@@ -478,6 +580,42 @@ class DFTCalculation:
             atoms, ibzwfs, density, potential,
             builder.setups, scf_loop, pot_calc, log,
             params=params, energies=energies)
+
+    def change_mode(self,
+                    mode: str | dict | Mode,
+                    *,
+                    nbands: int | None = None) -> None:
+        """In-place convertion from one mode to another.
+
+        **Only LCAO to PW or FD mode implemented!**
+        """
+        from gpaw.dft import Mode
+        from gpaw.new.lcao.ibzwfs import LCAOIBZWaveFunctions
+        if not isinstance(self.ibzwfs, LCAOIBZWaveFunctions):
+            raise ValueError
+        self.params.mode = Mode.from_param(mode)
+        builder = self.params.dft_component_builder(
+            self.atoms, log=self.log, comm=self.comm)
+        self.scf_loop = builder.create_scf_loop()
+        self.pot_calc = builder.create_potential_calculator()
+        if builder.mode == 'pw':
+            self.density.nct_aX = builder.get_pseudo_core_densities()
+            self.density.tauct_aX = builder.get_pseudo_core_ked()
+            self.density = self.density.new(builder.grid,
+                                            builder.interpolation_desc)
+            self.density.normalize(self.pot_calc.charge)
+            if self.density.nt_sR.xp is np:
+                self.ibzwfs.kpt_band_comm.broadcast(self.density.nt_sR.data, 0)
+            self.potential, self.energies, _ = self.pot_calc.calculate(
+                self.density)
+
+        self.ibzwfs = self.ibzwfs.convert_to(
+            builder.mode,
+            grid=builder.grid,
+            pw=builder.wf_desc,
+            nbands=nbands)
+
+        self.results = {}
 
     def get_state(self):
         return DFTState(self.ibzwfs, self.density, self.potential)

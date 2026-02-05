@@ -198,7 +198,11 @@ class ASECalculator:
         * magmoms
         * dipole
         """
-        for _ in self.iconverge(atoms, need_wfs=prop in {'forces', 'stress'}):
+        if self._dft is None:
+            need_wfs = True
+        else:
+            need_wfs = prop not in self.dft.results
+        for _ in self.iconverge(atoms, need_wfs=need_wfs):
             pass
 
         if prop == 'forces':
@@ -263,7 +267,6 @@ class ASECalculator:
         return self.dft.results['forces']
 
     def __del__(self):
-        self.log('---')
         self.timer.write(self.log)
         try:
             mib = maxrss() / 1024**2
@@ -355,20 +358,24 @@ class ASECalculator:
         yield from self.iconverge(atoms)
 
     def new(self, **kwargs) -> ASECalculator:
-        kwargs = {**self.params.todict(), **kwargs}
+        kwargs = {
+            'communicator': self.comm,
+            **self.params.todict(),
+            **kwargs}
+
         return GPAW(**kwargs)
 
     def get_pseudo_wave_function(self, band, kpt=0, spin=None,
                                  periodic=False,
                                  broadcast=True,
                                  pad=True) -> Array3D | None:
-        psit_R = self.dft.wave_functions(n1=band, n2=band + 1,
-                                         kpt=kpt, spin=spin,
-                                         periodic=periodic,
-                                         broadcast=broadcast,
-                                         _pad=pad)[0]
-        if psit_R is not None:
-            return psit_R.data
+        psit_1R = self.dft.wave_functions(n1=band, n2=band + 1,
+                                          kpt=kpt, spin=spin,
+                                          periodic=periodic,
+                                          broadcast=broadcast,
+                                          _pad=pad)
+        if psit_1R is not None:
+            return psit_1R[0].data
         return None
 
     def get_atoms(self):
@@ -603,11 +610,15 @@ class ASECalculator:
             assert isinstance(nbands, int)
 
         dft.scf_loop.occ_calc._set_nbands(nbands)
+        from gpaw.new.pwfd.ibzwfs import PWFDIBZWaveFunctions
+        assert isinstance(dft.ibzwfs, PWFDIBZWaveFunctions)
         ibzwfs = diagonalize(dft.potential,
                              dft.ibzwfs,
                              dft.scf_loop.occ_calc,
                              nbands,
-                             dft.density.nvalence + dft.density.charge)
+                             dft.density.nvalence + dft.density.charge,
+                             scalapack,
+                             self.log)
         dft.ibzwfs = ibzwfs
         self.params.nbands = ibzwfs.nbands
         if 'nbands' not in self.params._non_defaults:
@@ -637,6 +648,8 @@ class ASECalculator:
             raise TypeError('Only mode={"dtype": dtype} is allowed.')
 
         old_params = self.params.todict()
+        old_params.pop('h', None)
+        kwargs['gpts'] = self.dft.density.nt_sR.desc.size
         kwargs = {**old_params, **kwargs,
                   'mode': {**old_params['mode'], **mode}}
 
@@ -771,10 +784,18 @@ class ASECalculator:
         import tempfile
         from gpaw.old.calculator import GPAW as OldGPAW
         from gpaw.mpi import broadcast_string
+
+        if self._dft is None:
+            return OldGPAW(**self.params.todict(),
+                           communicator=self.comm,
+                           txt=self.log.fd)
+
+        # Quick hack for now:
+        # write gpw-file and read with old GPAW!
         if self.comm.rank == 0:
             gpw = tempfile.mkstemp(suffix='.gpw')[1]
         else:
-            gpw = ''
+            gpw = None
         gpw = broadcast_string(gpw, comm=self.comm)
         self.write(gpw, mode='all')
-        return OldGPAW(gpw)
+        return OldGPAW(gpw, communicator=self.comm)

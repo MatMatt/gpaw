@@ -7,12 +7,11 @@ import numpy as np
 from ase import Atoms
 from ase.dft.bandgap import bandgap
 from ase.dft.kpoints import get_monkhorst_pack_size_and_offset
-from ase.parallel import parprint
 
 from gpaw import GPAW
 from gpaw.ibz2bz import (get_overlap, get_overlap_coefficients,
                          get_phase_shifted_overlap_coefficients)
-from gpaw.mpi import normalize_communicator, serial_comm
+from gpaw.mpi import normalize_communicator, serial_comm, rank0_call
 from gpaw.spinorbit import soc_eigenstates
 from gpaw.utilities.blas import gemmdot
 
@@ -25,7 +24,9 @@ def get_berry_phases(calc, spin=0, dir=0, check2d=False):
     if isinstance(calc, (str, Path)):
         calc = GPAW(calc, communicator=serial_comm, txt=None)
 
-    assert len(calc.symmetry.op_scc) == 1  # does not work with symmetry
+    if len(calc.symmetry.op_scc) != 1:
+        raise RuntimeError('Does not work with Symmetry')
+
     gap = bandgap(calc)[0]
 
     if gap == 0.0:
@@ -195,30 +196,15 @@ def polarization_phase(gpw_wfs: Path, comm, cleanup: bool = False):
 
     """
 
-    # calculation in serial only on master
-    if comm.rank == 0:
-        phases_c = _get_phases(gpw_wfs, cleanup=cleanup)
-    else:
-        phases_c = {
-            'phase_c': np.empty(3),
-            'electronic_phase_c': np.empty(3),
-            'atomic_phase_c': np.empty(3),
-            'dipole_phase_c': np.empty(3),
-        }
-
-    # broadcast
-    for key in phases_c:
-        comm.broadcast(phases_c[key], 0)
-
-    return phases_c
+    return rank0_call(_polarization_phase, comm)(gpw_wfs, cleanup=cleanup)
 
 
-def _get_phases(gpw_wfs: Path, cleanup: bool = False):
-    parprint(f'Reading wfs from {gpw_wfs}')
+def _polarization_phase(gpw_wfs: Path, cleanup: bool = False):
+    print(f'Reading wfs from {gpw_wfs}')
     calc = GPAW(gpw_wfs, communicator=serial_comm, txt=None)
     atoms = calc.get_atoms()
 
-    parprint('Calculating polarization')
+    print('Calculating polarization')
     electronic_phase_c = get_electronic_polarization_phase(calc)
     # valence electron number for each atom
     Nv_a = [setup.Nv for setup in calc.setups]
@@ -294,7 +280,7 @@ def get_dipole_polarization_phase(dipole_v, cell_cv):
 
 
 def parallel_transport(calc, direction=0, name=None, scale=1.0, bands=None,
-                       theta=0.0, phi=0.0, *, comm=None):
+                       theta=0.0, phi=0.0, comm=None):
     """
     Parallel transport.
     The parallel transport algorithm corresponds to the construction
@@ -309,7 +295,6 @@ def parallel_transport(calc, direction=0, name=None, scale=1.0, bands=None,
     Output:
     phi_km, S_km (see above)
     """
-
     comm = normalize_communicator(comm)
 
     if isinstance(calc, str):
