@@ -29,7 +29,7 @@ class ObjectiveFunctionETDM(ABC):
         Number of k-points or independent systems.
     """
 
-    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full"):
+    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation='full'):
         """
         Initialize the objective function with default skew-Hermitian matrices.
 
@@ -47,7 +47,7 @@ class ObjectiveFunctionETDM(ABC):
         """
 
         # Create a list of `nkps * nspins` (?) SkewHermitian objects, each initialized
-        # with `ndim`, `dtype`, `f_n`, `representation`. 
+        # with `ndim`, `dtype`, `f_n`, `representation`.
         # These hold the independent parameters that will be optimized.
 
         self._a_vec_u = []
