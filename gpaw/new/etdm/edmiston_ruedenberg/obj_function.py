@@ -12,7 +12,8 @@ import numpy as np
 
 
 class EdmistonRuedenberg(ObjectiveFunctionETDM):
-    def __init__(self, ibzwfs, loctype="pseudo-paw", indices="all", representation="full"):
+    def __init__(self, ibzwfs, loctype="pseudo-paw", indices="all", 
+                 representation="full"):
 
         dtype, nkps = (
             ibzwfs.dtype,
@@ -132,7 +133,8 @@ class EdmistonRuedenberg(ObjectiveFunctionETDM):
 
 
 class EdmistonRuedenbergUpdateRef(EdmistonRuedenberg):
-    def __init__(self, ibzwfs, loctype="pseudo-paw", indices="all", representation="full"):
+    def __init__(self, ibzwfs, loctype="pseudo-paw", indices="all", 
+                 representation="full"):
         super().__init__(ibzwfs, loctype, indices, representation)
 
     def rotate_wfs(self):
