@@ -13,7 +13,7 @@ import numpy as np
 
 class EdmistonRuedenberg(ObjectiveFunctionETDM):
     def __init__(self, ibzwfs, loctype='pseudo-paw', indices='all',
-                 representation="full"):
+                 representation='full'):
 
         dtype, nkps = (
             ibzwfs.dtype,
