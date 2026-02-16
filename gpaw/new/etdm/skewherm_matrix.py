@@ -27,7 +27,10 @@ class SkewHermitian:
         can be either "full", "u-invar", "sparse" EXPLAIN DIFFERENCES 
     """
 
-    def __init__(self, ndim: int, f_n: np.ndarray, dtype: type, representation="full", data: np.ndarray = None):
+    def __init__(self, ndim: int, f_n: np.ndarray,
+                 dtype: type,
+                 representation="full",
+                 data: np.ndarray = None):
         """
         Initialize a SkewHermitian object.
 
@@ -65,7 +68,8 @@ class SkewHermitian:
         if self._ndim == self._n_occ: self._representation = "full"
         
 
-        # Calculate dimensions of the skew-hermitian matrix differently depending on the chosen representation. (ideally the representation is determined automatically?)
+        # Calculate dimensions of the skew-hermitian matrix differently depending
+        # on the chosen representation
 
         # Indices of the independent parameters:
         # - if real → strictly upper triangle
@@ -78,8 +82,10 @@ class SkewHermitian:
                 self.ind_up = np.triu_indices(self._ndim)
 
         if representation == "u-invar": # N * (M - N)
-            ind_up_uinv1, ind_up_uinv2  = np.indices((self._n_occ, (self._ndim-self._n_occ)))
-            self.ind_up = ( list(np.concatenate(ind_up_uinv1)), list(np.concatenate(ind_up_uinv2+self._n_occ)) )
+            ind_up_uinv1, ind_up_uinv2  = np.indices((self._n_occ,
+                                                      (self._ndim - self._n_occ)))
+            self.ind_up = (list(np.concatenate(ind_up_uinv1)),
+                           list(np.concatenate(ind_up_uinv2 + self._n_occ)))
 
         if representation == "sparse": # N * M
             self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim) 
