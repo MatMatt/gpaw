@@ -61,28 +61,30 @@ class SkewHermitian:
         self._ndim = ndim
         self._n_occ = get_n_occ(f_n)
 
-        # if all the orbitals are occupied the only possible representation is full
-        if self._ndim == self._n_occ: self._representation = 'full'
+        # if all the orbitals are occupied
+        # the only possible representation is full
+        if self._ndim == self._n_occ:
+            self._representation = 'full'
 
-        # Calculate dimensions of the skew-hermitian matrix differently depending
-        # on the chosen representation
+        # Calculate dimensions of the skew-hermitian matrix differently
+        # depending on the chosen representation
         # Indices of the independent parameters:
         # - if real → strictly upper triangle
         # - if complex → include diagonal
 
-        if representation == 'full': # M * M
+        if representation == 'full':   # M * M
             if self._dtype == float:
                 self.ind_up = np.triu_indices(self._ndim, 1)
             elif self._dtype == complex:
                 self.ind_up = np.triu_indices(self._ndim)
 
-        if representation == 'u-invar': # N * (M - N)
-            ind_up_uinv1, ind_up_uinv2  = np.indices((self._n_occ,
-                                                      (self._ndim - self._n_occ)))
+        if representation == 'u-invar':   # N * (M - N)
+            ind_up_uinv1, ind_up_uinv2 = \
+                np.indices((self._n_occ, (self._ndim - self._n_occ)))
             self.ind_up = (list(np.concatenate(ind_up_uinv1)),
                            list(np.concatenate(ind_up_uinv2 + self._n_occ)))
 
-        if representation == 'sparse': # N * M
+        if representation == 'sparse':   # N * M
             self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim)
 
         # Number of independent parameters
@@ -186,12 +188,12 @@ class SkewHermitian:
                 # it only needs the upper right block of the A matrix.
                 a_upp_r = a_mat[:self._n_occ, -(self._ndim - self._n_occ):]
                 self._rotation_mat = expm_ed_unit_inv(a_upp_r)
-                self._evals, self._evecs = np.linalg.eigh(1.0j * a_mat)     # they do not get calculated by expm_ed_unit_inv
+                # they do not get calculated by expm_ed_unit_inv
+                self._evals, self._evecs = np.linalg.eigh(1.0j * a_mat)
 
             else:
                 self._rotation_mat, self._evecs, self._evals = expm_ed(
-                a_mat, evalevec=True)
-
+                    a_mat, evalevec=True)
 
         return self._rotation_mat
 
