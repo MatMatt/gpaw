@@ -17,10 +17,9 @@ def ibzwfs_from_new_gpaw(tmp_path_factory):
         mode='pw',
         xc='LDA',
         nbands=15,
-        spinpol = True,
+        spinpol=True,
         kpts=(1, 1, 1),
-        txt=str(txt_file),
-    )
+        txt=str(txt_file),)
     atoms.calc = calc
     atoms.get_potential_energy()
 

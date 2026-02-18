@@ -135,8 +135,8 @@ def skewhermitian_rotation_uinvar(ndim, f_n, dtype):
     # Step 2: Manually reconstruct full skew-Hermitian matrix
 
     ind_up_uinv1, ind_up_uinv2 = np.indices((n_occ, (ndim - n_occ)))
-    ind_up = (list(np.concatenate(ind_up_uinv1)),
-              list(np.concatenate(ind_up_uinv2 + n_occ)))
+    ind_up = ((np.concatenate(ind_up_uinv1)).tolist(),
+              (np.concatenate(ind_up_uinv2 + n_occ)).tolist())
 
     a_mat_manual = np.zeros((ndim, ndim), dtype=dtype)
     a_mat_manual[ind_up] = param_vec

@@ -81,8 +81,9 @@ class SkewHermitian:
         if representation == 'u-invar':   # N * (M - N)
             ind_up_uinv1, ind_up_uinv2 = \
                 np.indices((self._n_occ, (self._ndim - self._n_occ)))
-            self.ind_up = (list(np.concatenate(ind_up_uinv1)),
-                           list(np.concatenate(ind_up_uinv2 + self._n_occ)))
+            self.ind_up = ((np.concatenate(ind_up_uinv1)).tolist(),
+                           (np.concatenate(ind_up_uinv2 +
+                                           self._n_occ)).tolist())
 
         if representation == 'sparse':   # N * M
             self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim)
