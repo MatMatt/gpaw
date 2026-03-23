@@ -5,7 +5,7 @@ from gpaw.new.etdm.tools2 import get_n_occ
 
 class SkewHermitian:
     """
-    Class for working with skew-Hermitian matrices A (i.e., A^\\dagger = -A).
+    Class for working with skew-Hermitian matrices A (i.e., A^\dagger = -A).
 
     Only the independent upper-triangular elements are stored
     in a 1D vector (`self.data`).
@@ -13,9 +13,9 @@ class SkewHermitian:
     Attributes
     ----------
     ndim : int
-        Dimension of the square matrix (number of rows/columns). Dimension "N"
+        Dimension of the square matrix (number of rows/columns). Dimension "N".
     n_occ: int
-        Number of occupied orbitals, dimension "M"
+        Number of occupied orbitals, dimension "M".
     dtype : type
         Either float or complex.
         - float → real skew-symmetric matrices
@@ -66,26 +66,37 @@ class SkewHermitian:
         if self._ndim == self._n_occ:
             self._representation = 'full'
 
-        # Calculate dimensions of the skew-hermitian matrix differently
-        # depending on the chosen representation
-        # Indices of the independent parameters:
-        # - if real → strictly upper triangle
-        # - if complex → include diagonal
-
-        if representation == 'full':   # M * M
+        # Choose which independent elements of the skew-Hermitian A
+        # are stored in self.data.
+        #
+        # For real dtype, A is skew-symmetric and only the strictly upper
+        # triangle is independent. For complex dtype, A is skew-Hermitian and
+        # the diagonal is also independent, so the upper triangle including the
+        # diagonal is stored.
+        if representation == 'full':
+            # Independent elements of the full N x N matrix.
+            # - if real → strictly upper triangle
+            # - if complex → include diagonal
             if self._dtype == float:
                 self.ind_up = np.triu_indices(self._ndim, 1)
             elif self._dtype == complex:
                 self.ind_up = np.triu_indices(self._ndim)
 
-        if representation == 'u-invar':   # N * (M - N)
+        if representation == 'u-invar':
+            # Store only the occupied-unoccupied (ov) block.
+            # Independent elements of the N * (M - N) ov block.
             ind_up_uinv1, ind_up_uinv2 = \
                 np.indices((self._n_occ, (self._ndim - self._n_occ)))
             self.ind_up = ((np.concatenate(ind_up_uinv1)).tolist(),
                            (np.concatenate(ind_up_uinv2 +
                                            self._n_occ)).tolist())
 
-        if representation == 'sparse':   # N * M
+        if representation == 'sparse':
+            # Store the strictly upper-triangular part of the
+            # occupied-occupied (ov) block together with the full
+            # occupied-unoccupied (oo) block.
+            # Independent elements of the N * M matrix made of the
+            # ov and blocks.
             self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim)
 
         # Number of independent parameters
