@@ -5,7 +5,7 @@ from gpaw.new.etdm.tools2 import get_n_occ
 
 class SkewHermitian:
     """
-    Class for working with skew-Hermitian matrices A (i.e., A^\dagger = -A).
+    Class for working with skew-Hermitian matrices A (i.e., A^\\dagger = -A).
 
     Only the independent upper-triangular elements are stored
     in a 1D vector (`self.data`).
@@ -21,10 +21,13 @@ class SkewHermitian:
         - float → real skew-symmetric matrices
         - complex → skew-Hermitian matrices
     data : ndarray
-        1D array storing the independent upper-triangular
-        entries of the matrix.
+        1D array of independent parameters of the skew-Hermitian matrix, as
+        selected by ``representation``.
     representation : str
-        can be either "full", "u-invar", "sparse" EXPLAIN DIFFERENCES
+        Can be either "full" (default), "u-invar", or "sparse" for storing
+        the independent parameters (upper-triangular) of the full matrix A,
+        occupied-unoccupied block only, or occupied-occupied plus
+        occupied-unoccupied blocks, respectively.
     """
 
     def __init__(self, ndim: int, f_n: np.ndarray,
