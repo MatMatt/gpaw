@@ -96,8 +96,7 @@ class SkewHermitian:
             ind_up_uinv1, ind_up_uinv2 = \
                 np.indices((self._n_occ, (self._ndim - self._n_occ)))
             return ((np.concatenate(ind_up_uinv1)).tolist(),
-                           (np.concatenate(ind_up_uinv2 +
-                                           self._n_occ)).tolist())
+                    (np.concatenate(ind_up_uinv2 + self._n_occ)).tolist())
         elif self._representation == 'sparse':
             # Independent elements of the N * M matrix made
             # of the occupied-occupied and occupied-unoccupied blocks

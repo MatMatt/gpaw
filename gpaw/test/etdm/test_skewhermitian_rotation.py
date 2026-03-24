@@ -20,7 +20,6 @@ from scipy.linalg import expm
         (4, float, 2, 2, 1),  # both previous conditions
     ],
 )
-
 def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     """
     This test checks that the skewhermitian matrix is properly built
