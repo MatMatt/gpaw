@@ -60,7 +60,6 @@ class SkewHermitian:
         self._rotation_mat = None  # U = exp(A)
         self._representation = representation
 
-        # calculate ndim and nocc
         self._ndim = ndim
         self._n_occ = get_n_occ(f_n)
 
@@ -69,44 +68,43 @@ class SkewHermitian:
         if self._ndim == self._n_occ:
             self._representation = 'full'
 
-        # Choose which independent elements of the skew-Hermitian A
-        # are stored in self.data.
-        #
-        # For real dtype, A is skew-symmetric and only the strictly upper
-        # triangle is independent. For complex dtype, A is skew-Hermitian and
-        # the diagonal is also independent, so the upper triangle including the
-        # diagonal is stored.
-        if representation == 'full':
-            # Independent elements of the full N x N matrix.
-            # - if real → strictly upper triangle
-            # - if complex → include diagonal
-            if self._dtype == float:
-                self.ind_up = np.triu_indices(self._ndim, 1)
-            elif self._dtype == complex:
-                self.ind_up = np.triu_indices(self._ndim)
-
-        if representation == 'u-invar':
-            # Store only the occupied-unoccupied (ov) block.
-            # Independent elements of the N * (M - N) ov block.
-            ind_up_uinv1, ind_up_uinv2 = \
-                np.indices((self._n_occ, (self._ndim - self._n_occ)))
-            self.ind_up = ((np.concatenate(ind_up_uinv1)).tolist(),
-                           (np.concatenate(ind_up_uinv2 +
-                                           self._n_occ)).tolist())
-
-        if representation == 'sparse':
-            # Store the strictly upper-triangular part of the
-            # occupied-occupied (ov) block together with the full
-            # occupied-unoccupied (oo) block.
-            # Independent elements of the N * M matrix made of the
-            # ov and blocks.
-            self.ind_up = np.triu_indices(self._n_occ, 1, self._ndim)
+        self.ind_up = self._make_ind_up()
 
         # Number of independent parameters
         self._len = len(self.ind_up[0])
 
         # Assign initial data (if provided)
         self.data = data
+
+    def _make_ind_up(self):
+        # Choose which independent elements of the skew-Hermitian A are
+        # stored in self.data. For real dtype, A is skew-symmetric and only
+        # the strictly upper triangle is independent. For complex dtype, A
+        # is skew-Hermitian and the diagonal is also independent, so the
+        # upper triangle including the diagonal is stored.
+        if self._representation == 'full':
+            # Independent elements of the full N x N matrix
+            # - if real → strictly upper triangle
+            # - if complex → include diagonal
+            if self._dtype == float:
+                return np.triu_indices(self._ndim, 1)
+            elif self._dtype == complex:
+                return np.triu_indices(self._ndim)
+        elif self._representation == 'u-invar':
+            # Independent elements of the N * (M - N)
+            # occupied-unoccupied block
+            ind_up_uinv1, ind_up_uinv2 = \
+                np.indices((self._n_occ, (self._ndim - self._n_occ)))
+            return ((np.concatenate(ind_up_uinv1)).tolist(),
+                           (np.concatenate(ind_up_uinv2 +
+                                           self._n_occ)).tolist())
+        elif self._representation == 'sparse':
+            # Independent elements of the N * M matrix made
+            # of the occupied-occupied and occupied-unoccupied blocks
+            return np.triu_indices(self._n_occ, 1, self._ndim)
+        else:
+            raise ValueError(f'Unknown representation: '
+                             f'{self._representation}')
 
     # ------------------------
     # Properties

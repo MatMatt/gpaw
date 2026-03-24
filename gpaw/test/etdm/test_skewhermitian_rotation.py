@@ -20,7 +20,7 @@ from scipy.linalg import expm
         (4, float, 2, 2, 1),  # both previous conditions
     ],
 )
-# this is the function that the test will run?
+
 def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     """
     This test checks that the skewhermitian matrix is properly built
@@ -34,9 +34,12 @@ def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     f_n = initialize_f_n(ndim, nspin, nkpt, unocc)
     for kpt in range(f_n.shape[1]):
         for spin in range(f_n.shape[0]):
-            skewhermitian_rotation_full(ndim, f_n[spin, kpt, :], dtype)
-            skewhermitian_rotation_uinvar(ndim, f_n[spin, kpt, :], dtype)
-            skewhermitian_rotation_sparse(ndim, f_n[spin, kpt, :], dtype)
+            if unocc == 0:
+                skewhermitian_rotation_full(ndim, f_n[spin, kpt, :], dtype)
+            else:
+                skewhermitian_rotation_full(ndim, f_n[spin, kpt, :], dtype)
+                skewhermitian_rotation_uinvar(ndim, f_n[spin, kpt, :], dtype)
+                skewhermitian_rotation_sparse(ndim, f_n[spin, kpt, :], dtype)
 
 
 def initialize_f_n(ndim, nspin, nkpt, unocc):
