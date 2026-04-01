@@ -7,6 +7,7 @@ from gpaw.new.etdm.edmiston_ruedenberg.obj_function import \
 from gpaw.new.etdm.etdm import ETDM
 from gpaw.new.etdm.tools import random_a
 
+
 @pytest.fixture(scope="module")
 def ibzwfs_from_new_gpaw(tmp_path_factory):
     """Create IBZWaveFunctions using new GPAW."""
