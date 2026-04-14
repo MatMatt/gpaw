@@ -161,11 +161,11 @@ class SJMPoissonSolver(PoissonSolverWrapper):
               vHt_r,
               rhot_r) -> float:
         self.solver.solve(vHt_r.data, rhot_r.data)
+        correction = 0.0
         if self.dipolelayer:
             eps_r = vHt_r.desc.from_data(self.solver.dielectric.eps_gradeps[0])
             eps0_r = eps_r.gather()
             vHt0_r = vHt_r.gather()
-            correction = 0
             if eps0_r is not None:
                 v1, v2 = vHt0_r.data[:, :, [-10, -2]].mean(axis=(0, 1))
                 if self.backwards_compatible:
@@ -182,12 +182,11 @@ class SJMPoissonSolver(PoissonSolverWrapper):
                     s1, s2 = saw_tooth[:, :, [-10, -2]].mean(axis=(0, 1))
                     vHt0_r.data -= (v2 - v1) / (s2 - s1) * saw_tooth
 
-#                correction = (v2 - v1) / (s2 - s1) / 2
+                correction = (v2 - v1) / (s2 - s1) / 2
                 vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
             vHt_r.scatter_from(vHt0_r)
             broadcast_float(correction, vHt_r.desc.comm)
-        else:
-            correction = 0.0
+
         # TODO: We need to return self.correction which is should be the
         # half the difference of the two workfunctions, this does not work
         # yet, but is only an issue for the text output.
