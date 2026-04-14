@@ -186,6 +186,8 @@ class SJMPoissonSolver(PoissonSolverWrapper):
                 vHt0_r.data -= vHt0_r.data[:, :, -1].mean()
             vHt_r.scatter_from(vHt0_r)
             broadcast_float(correction, vHt_r.desc.comm)
+        else:
+            correction = 0.0
         # TODO: We need to return self.correction which is should be the
         # half the difference of the two workfunctions, this does not work
         # yet, but is only an issue for the text output.
