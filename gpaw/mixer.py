@@ -64,6 +64,24 @@ class BaseMixer:
         if self.weight == 1:
             self.metric = None
         else:
+            self.gd1 = gd.new_descriptor(comm=mpi.serial_comm)
+            k2_Q, _ = construct_reciprocal(self.gd1)
+            reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
+
+            def metric(a_sR, b_sR):
+                a1_sR = [self.gd.collect(a_R) for a_R in a_sR]
+                if gd.comm.rank == 0:
+                    a1_sR = np.ascontiguousarray(
+                        [fftn(a1_R, norm='ortho') for a1_R in a1_sR])
+                    reciprocal_metric(a1_sR, a1_sR)
+                    a1_sR = np.ascontiguousarray(
+                        [ifftn(a1_R, norm='ortho') for a1_R in a1_sR])
+                else:
+                    a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=complex)
+                b_sR[:] = np.array([self.gd.distribute(a1_R) for a1_R in a1_sR]).real
+            self.metric = metric
+
+            ''' Old stencil mixer
             a = 0.125 * (self.weight + 7)
             b = 0.0625 * (self.weight - 1)
             c = 0.03125 * (self.weight - 1)
@@ -84,6 +102,7 @@ class BaseMixer:
                                       (-1, 1, 1), (1, -1, -1), (-1, -1, 1),
                                       (-1, 1, -1), (-1, -1, -1)],
                                      gd, float).apply
+            # '''
 
     def reset(self):
         """Reset Density-history.
@@ -748,7 +767,7 @@ class ReciprocalMetric:
         mR_Q[:] = R_Q * (1.0 + self.q1 / self.k2_Q)
 
 
-class FFTBaseMixer(BaseMixer):  # This should be able to wrap MSR1
+class FFTBaseMixer(MSR1Mixer):  # This should be able to wrap MSR1
     name = 'fft'
 
     """Mix the density in Fourier space"""
