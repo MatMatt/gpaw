@@ -69,42 +69,17 @@ class BaseMixer:
             reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
 
             def metric(a_sR, b_sR):
-                a1_sR = [self.gd.collect(a_R) for a_R in a_sR]
+                a1_sR = np.ascontiguousarray([self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
-                    a1_sR = np.ascontiguousarray(
-                        [fftn(a1_R, norm='ortho') for a1_R in a1_sR])
+                    a1_sR = fftn(a1_R, norm='ortho', axes=(1, 2, 3))
                     reciprocal_metric(a1_sR, a1_sR)
-                    a1_sR = np.ascontiguousarray(
-                        [ifftn(a1_R, norm='ortho') for a1_R in a1_sR])
+                    a1_sR = ifftn(a1_R, norm='ortho', axes=(1, 2, 3))
                 else:
                     a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=complex)
                 b_sR[:] = np.array([self.gd.distribute(a1_R) for a1_R in a1_sR]).real
             self.metric = metric
 
-            ''' Old stencil mixer
-            a = 0.125 * (self.weight + 7)
-            b = 0.0625 * (self.weight - 1)
-            c = 0.03125 * (self.weight - 1)
-            d = 0.015625 * (self.weight - 1)
-            self.metric = FDOperator([a,
-                                      b, b, b, b, b, b,
-                                      c, c, c, c, c, c, c, c, c, c, c, c,
-                                      d, d, d, d, d, d, d, d],
-                                     [(0, 0, 0),  # a
-                                      (-1, 0, 0), (1, 0, 0),  # b
-                                      (0, -1, 0), (0, 1, 0),
-                                      (0, 0, -1), (0, 0, 1),
-                                      (1, 1, 0), (1, 0, 1), (0, 1, 1),  # c
-                                      (1, -1, 0), (1, 0, -1), (0, 1, -1),
-                                      (-1, 1, 0), (-1, 0, 1), (0, -1, 1),
-                                      (-1, -1, 0), (-1, 0, -1), (0, -1, -1),
-                                      (1, 1, 1), (1, 1, -1), (1, -1, 1),  # d
-                                      (-1, 1, 1), (1, -1, -1), (-1, -1, 1),
-                                      (-1, 1, -1), (-1, -1, -1)],
-                                     gd, float).apply
-            # '''
-
-    def reset(self):
+     def reset(self):
         """Reset Density-history.
 
         Called at initialization and after each move of the atoms.
