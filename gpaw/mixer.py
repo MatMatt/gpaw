@@ -9,7 +9,6 @@ import numpy as np
 from numpy.fft import fftn, ifftn
 
 import gpaw.mpi as mpi
-from gpaw.fd_operators import FDOperator
 from gpaw.new import trace
 from gpaw.utilities.blas import axpy
 from gpaw.utilities.tools import construct_reciprocal
@@ -69,14 +68,16 @@ class BaseMixer:
             reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
 
             def metric(a_sR, b_sR):
-                a1_sR = np.ascontiguousarray([self.gd.collect(a_R) for a_R in a_sR])
+                a1_sR = np.ascontiguousarray(
+                    [self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
-                    a1_sR = fftn(a1_R, norm='ortho', axes=(1, 2, 3))
+                    a1_sR = fftn(a1_sR, norm='ortho', axes=(1, 2, 3))
                     reciprocal_metric(a1_sR, a1_sR)
-                    a1_sR = ifftn(a1_R, norm='ortho', axes=(1, 2, 3))
+                    a1_sR = ifftn(a1_sR, norm='ortho', axes=(1, 2, 3))
                 else:
                     a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=complex)
-                b_sR[:] = np.array([self.gd.distribute(a1_R) for a1_R in a1_sR]).real
+                b_sR[:] = np.array(
+                    [self.gd.distribute(a1_R) for a1_R in a1_sR]).real
             self.metric = metric
 
     def reset(self):
