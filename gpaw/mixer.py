@@ -69,6 +69,7 @@ class BaseMixer:
             reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
 
             def metric(a_sR, b_sR):
+                # TODO: mpi4py-fft?
                 a1_sR = np.ascontiguousarray(
                     [self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
