@@ -79,7 +79,7 @@ class BaseMixer:
                 b_sR[:] = np.array([self.gd.distribute(a1_R) for a1_R in a1_sR]).real
             self.metric = metric
 
-     def reset(self):
+    def reset(self):
         """Reset Density-history.
 
         Called at initialization and after each move of the atoms.
@@ -742,7 +742,7 @@ class ReciprocalMetric:
         mR_Q[:] = R_Q * (1.0 + self.q1 / self.k2_Q)
 
 
-class FFTBaseMixer(MSR1Mixer):  # This should be able to wrap MSR1
+class FFTBaseMixer(BaseMixer):  # This should be able to wrap MSR1
     name = 'fft'
 
     """Mix the density in Fourier space"""
