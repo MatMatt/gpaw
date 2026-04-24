@@ -64,6 +64,7 @@ class BaseMixer:
             self.metric = None
         else:
             self.gd1 = gd.new_descriptor(comm=mpi.serial_comm)
+            self.gd1.pbc_c = np.array([True, True, True])
             k2_Q, _ = construct_reciprocal(self.gd1)
             reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
 
@@ -211,8 +212,7 @@ class BaseMixer:
     def apply_metric(self, R_sG, dD_asp, g_ss):
         mR_sG = R_sG.copy()
         if self.metric is not None:
-            for R_G, mR_G in zip(R_sG, mR_sG):
-                self.metric(R_G, mR_G)
+            self.metric(R_sG, mR_sG)
         mD_asp = []
         if g_ss is not None:
             mR_sG[:] = np.tensordot(g_ss, mR_sG, axes=(1, 0))
