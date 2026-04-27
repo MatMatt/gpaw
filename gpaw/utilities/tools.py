@@ -66,7 +66,7 @@ def construct_reciprocal(gd, q_c=None, no_zeros=True):
     if no_zeros:
         if k2_Q[0, 0, 0] < 1e-10:
             k2_Q[0, 0, 0] = 1.0           # Only make sense iff
-            assert gd.comm.rank == 0      # * on rank 0 (G=(0,0,0) is only there)
+            assert gd.comm.rank == 0      # * on rank 0 ((0,0,0) is only there)
             assert abs(q_c).sum() < 1e-8  # * q_c is (almost) zero
 
         assert k2_Q.min() > 0.0       # Now there should be no zero left
