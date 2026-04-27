@@ -65,7 +65,7 @@ class BaseMixer:
         else:
             self.gd1 = gd.new_descriptor(comm=mpi.serial_comm)
             self.gd1.pbc_c = np.array([True, True, True])
-            k2_Q, _ = construct_reciprocal(self.gd1)
+            k2_Q, _ = construct_reciprocal(self.gd1, no_zeros=False)
             reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
 
             def metric(a_sR, b_sR):
@@ -736,12 +736,16 @@ class ExperimentalDotProd:
 
 class ReciprocalMetric:
     def __init__(self, weight, k2_Q, gd):
-        k2_min = np.min(k2_Q)
-        self.q1 = (weight - 1) * k2_min
+        self.weight = weight
+        self.q1 = (weight - 1)
         self.k2_Q = gd.distribute(k2_Q)
 
     def __call__(self, R_Q, mR_Q):
-        mR_Q[:] = R_Q * (1.0 + self.q1 / self.k2_Q)
+        # Gaussian:
+        # w_Q = (1 + self.q1 * np.exp(-self.k2_Q * self.q1))
+        # Lorentz:
+        w_Q = 1 + self.q1 / (self.k2_Q * self.q1 * 5e-3 + 1)
+        mR_Q[:] = R_Q * w_Q
 
 
 class FFTBaseMixer(BaseMixer):  # This should be able to wrap MSR1
