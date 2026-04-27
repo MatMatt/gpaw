@@ -157,6 +157,12 @@ Git master branch
 * Added symmetry labels to symmetry-matrices in log-file
   (E, i, σ, C\ `_n`, S\ `_n`).
 
+* Removed the old stencil metric in mixing, due to it being wrong for non-
+  orthorhombic cells. The metric is now applied in reciprocal space instead.
+
+* Updated the reciprocal density metric to not deal with the G=(0,0,0)
+  component in an arbitrary manner. This should ensure more consistent SCF
+  performance.
 
 Version 25.7.0
 ==============
