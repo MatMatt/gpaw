@@ -883,54 +883,6 @@ def _fix_legacy_stuff(params: Parameters) -> None:
         params.mixer = Mixer.from_param(params.mixer.todict())
 
 
-def DFT(
-    atoms: Atoms,
-    *,
-    mode: str | dict | Mode,
-    basis: str | dict[str | int | None, str] | None = None,
-    charge: float | None = None,
-    convergence: dict | None = None,
-    eigensolver: str | dict | Eigensolver | None = None,
-    experimental: dict | None = None,
-    extensions: Sequence[ExtensionInput] | None = None,
-    gpts: Sequence[int] | None = None,
-    h: float | None = None,
-    hund: bool | None = None,
-    interpolation: int | None = None,
-    kpts: KptsType | MonkhorstPack | None = None,
-    magmoms: Sequence[float] | Sequence[Sequence[float]] | None = None,
-    maxiter: int | None = None,
-    mixer: dict | Mixer | None = None,
-    nbands: int | str | None = None,
-    occupations: dict | Occupations | None = None,
-    parallel: dict | None = None,
-    poissonsolver: dict | PoissonSolver | None = None,
-    random: bool | None = None,
-    setups: str | dict | None = None,
-    soc: bool | None = None,
-    spinpol: bool | None = None,
-    symmetry: str | dict | Symmetry | None = None,
-    xc: str | dict | XC | None = None,
-    txt: str | Path | IO[str] | None = '-',
-    communicator: MPIComm | None = None) -> DFTCalculation:
-    """Create a DFTCalculation object.
-
-    See :class:`gpaw.dft.Parameters` for the complete list of parameters.
-
-    Parameters
-    ==========
-    atoms:
-        ASE-Atoms object.
-    txt:
-        Text log-file.  Use ``None`` for no logging and ``'-'`` for using
-        standard out.
-    communicator:
-        MPI-communicator.  Default is to use ``gpaw.mpi.world``.
-
-    """
-    params = Parameters(**{k: v for k, v in locals().items()
-                           if k in PARAMETER_NAMES})
-    return params.dft_calculation(atoms, txt, communicator)
 
 
 class LegacyGPAWError(Exception):
