@@ -124,13 +124,13 @@ class BaseMixer:
             # output density):
             R_sG = nt_sG - nt_isG[-1]
             dNt = self.calculate_charge_sloshing(R_sG)
-            R_isG.append(R_sG)
 
             dD_iasp.append([])
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
 
             mR_sG, mD_asp = self.apply_metric(R_sG, dD_iasp[-1], g_ss)
+            R_isG.append(R_sG)
 
             # Update matrix:
             A_ii = np.zeros((iold, iold))
@@ -138,7 +138,7 @@ class BaseMixer:
 
             for i1, R_1sG in enumerate(R_isG):
                 a = self.dotprod(
-                    R_1sG, mR_sG, dD_iasp[i1], mD_asp, self.gd)
+                    R_1sG, R_sG, dD_iasp[i1], mD_asp, self.gd)
                 A_ii[i1, i2] = a
                 A_ii[i2, i1] = a
             A_ii[:i2, :i2] = self.A_ii[-i2:, -i2:]
@@ -242,10 +242,10 @@ class MSR1Mixer(BaseMixer):
                  beta=0.035,
                  nmaxold=8,
                  weight=70,
-                 trust_scalar=8.0,
+                 trust_scalar=1.3,
                  soft_bad_lim=1.5,
                  hard_bad_lim=2.0,
-                 gb_scale=0.9):
+                 gb_scale=1.0):
         """
         This is an implementation of the MSR1 mixer.
         References:
@@ -281,11 +281,12 @@ class MSR1Mixer(BaseMixer):
             # output density):
             R_sG = nt_sG - nt_isG[-1]
             dNt = self.calculate_charge_sloshing(R_sG)
-            R_isG.append(R_sG)
             dD_iasp.append([])
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
             mR_sG, mD_asp = self.apply_metric(R_sG, dD_iasp[-1], g_ss)
+
+            R_isG.append(R_sG)
             mR_isG.append(mR_sG)
             mD_iasp.append(mD_asp)
 
@@ -345,7 +346,7 @@ class MSR1Mixer(BaseMixer):
             punishment_factor = 0.8 if del_oldest else 1.0
             # Scaling factor for the trust radius.
             trust_scalar = self.trust_scalar
-            abs_gb_lim = 20  # Maximum value of good Broyden.
+            abs_gb_lim = 2000  # Maximum value of good Broyden.
             # Scaling factor for maximum good Broyden.
             max_gb_fact = self.gb_scale * np.clip(
                 (2e-2 / dNt_normed), 0.05, 1)
@@ -354,7 +355,7 @@ class MSR1Mixer(BaseMixer):
                 0.9 if backtracked else 0.9)
             weight = 8e-4  # Weight for regularization.
             B0_boost = 1e-1  # Favor the predicted greed towards 1
-            B0_lims = [0.4, 1.0]   # Limits for predicted greed
+            B0_lims = [0.4, 1.05]   # Limits for predicted greed
             A0_lims = [0.015, 0.45]   # Limits for unpredicted greed
             rate_ratio = [  # Rate ratio for clipping
                 0.7, 1.3 if not backtracked else punishment_factor]
@@ -506,8 +507,10 @@ class MSR1Mixer(BaseMixer):
             A2 = A3_i @ B_ii @ A2_i * dampen
             B2 = B3_i @ B_ii @ B2_i
 
+            trig_fact = A0_lims[-1] * 2 / np.pi
             A0_target = np.clip(
-                np.abs(A1 / A2),
+                # np.abs(A1 / A2),
+                np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact,
                 *A0_lims
             )
             if self.A0 is not None:
@@ -523,7 +526,7 @@ class MSR1Mixer(BaseMixer):
                 self.A0 *= np.clip(A0_ratio_GEOM, *rate_ratio)
             else:
                 self.B0 = initial_B0
-                self.A0 = np.sqrt(A0_target * self.beta)
+                self.A0 = A0_target
 
             A0 = self.A0
             B0 = self.B0
@@ -565,6 +568,7 @@ class MSR1Mixer(BaseMixer):
                 self.gd, mode='scalar')**0.5
 
             beta_i = alpha_i.copy()
+            gamma_i = beta_i.copy()
 
             # Trust radius control:
             if predicted_size > self.trust_radius * 1.02:
@@ -626,8 +630,8 @@ class MSR1Mixer(BaseMixer):
                 for a1, D_sp in enumerate(D_asp):
                     D_sp -= A0 * alpha * yD_iasp[i1][a1]
                     D_sp += B0 * beta * sD_iasp[i1][a1]
-                    self.uD_asp[a1] -= alpha * yD_iasp[i1][a1]
-                    self.pD_asp[a1] += beta * sD_iasp[i1][a1]
+                    self.uD_asp[a1] -= gamma_i[i1] * yD_iasp[i1][a1]
+                    self.pD_asp[a1] += gamma_i[i1] * sD_iasp[i1][a1]
 
             # Sync the density, because apparantly they cant agree...
             if self.world:
@@ -645,13 +649,15 @@ class MSR1Mixer(BaseMixer):
                 del mD_iasp[0]
 
         elif iold > 0:
-            # Pratt step
             self.trust_radius = None
             self.A0 = None
             A0 = self.beta
+            # Pratt step
             self.uk_sG = R_sG
+
             self.pk_sG = np.zeros_like(self.uk_sG)
             nt_sG[:] = nt_isG[-1] + A0 * self.uk_sG
+            
             self.uD_asp = []
             self.pD_asp = []
             for a1, D_sp in enumerate(D_asp):
@@ -744,7 +750,10 @@ class ReciprocalMetric:
         # Gaussian:
         # w_Q = (1 + self.q1 * np.exp(-self.k2_Q * self.q1))
         # Lorentz:
-        w_Q = 1 + self.q1 / (self.k2_Q * self.q1 * 5e-3 + 1)
+        # w_Q = 1 + self.q1 / (self.k2_Q * self.q1 * 5e-3 + 1)
+        # Invariant Lorentz (Inverse Kerker):
+        # w_Q = 1 / (1 + self.q1 * self.k2_Q / (1 + self.k2_Q))
+        w_Q = self.weight * (1 + self.k2_Q) / (1 + self.weight * self.k2_Q)
         mR_Q[:] = R_Q * w_Q
 
 
