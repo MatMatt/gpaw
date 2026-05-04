@@ -692,7 +692,7 @@ class ExperimentalDotProd:
         self.atomdist = atomdist
 
     def __call__(self, R1_isG, R2_isG, dD1_iasp, dD2_iasp, gd, mode='scalar'):
-        from gpaw.utilities import unpack_hermitian
+        from gpaw.utilities import unpack_hermitian, pack_density
         setups = self.setups
         comm = gd.comm
 
@@ -728,19 +728,22 @@ class ExperimentalDotProd:
             setup = setups[a_s]
             ni = setup.ni
             I4_pp = setup.four_phi_integrals()
-            I4_pp = unpack_hermitian(I4_pp).reshape(-1, ni**2).T.copy()
-            I4_pp = unpack_hermitian(I4_pp).reshape(ni**2, ni**2)
+            # I4_pp = unpack_hermitian(I4_pp).reshape(-1, ni**2).T.copy()
+            # I4_pp = unpack_hermitian(I4_pp).reshape(ni**2, ni**2)
 
             template = dD1_iasp[0][a]
             buffer1 = np.empty_like(template, shape=(len(dD1_iasp),
-                                                     template.shape[1]))
+                                                     I4_pp.shape[0]))
             buffer2 = np.empty_like(template, shape=(len(dD2_iasp),
-                                                     template.shape[1]))
+                                                     I4_pp.shape[1]))
+            P = int(np.sqrt(template.shape[1]))
             for spin in range(template.shape[0]):
                 for i1, dD1_asp in enumerate(dD1_iasp):
-                    buffer1[i1] = dD1_asp[a][spin].conj()
+                    buffer1[i1] = pack_density(
+                            dD1_asp[a][spin].conj().reshape(P, P))
                 for i2, dD2_asp in enumerate(dD2_iasp):
-                    buffer2[i2] = dD2_asp[a][spin]
+                    buffer2[i2] = pack_density(
+                            dD2_asp[a][spin].reshape(P, P))
 
                 if mode == 'gemm':
                     prod += (buffer1 @ I4_pp @ buffer2.T).real
