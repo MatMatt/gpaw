@@ -61,7 +61,6 @@ def construct_reciprocal(gd, q_c=None, no_zeros=True):
 
     k_vq *= k_vq
     k2_Q = k_vq.sum(axis=0).reshape(gd.n_c)
-
     # Avoid future divide-by-zero by setting k2_Q[G=(0,0,0)] = 1.0 if needed
     if no_zeros:
         if k2_Q[0, 0, 0] < 1e-10:

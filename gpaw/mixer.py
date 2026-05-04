@@ -6,7 +6,7 @@ See Kresse, Phys. Rev. B 54, 11169 (1996)
 """
 
 import numpy as np
-from numpy.fft import fftn, ifftn
+from numpy.fft import fftn, ifftn, rfftn, irfftn
 
 import gpaw.mpi as mpi
 from gpaw.new import trace
@@ -63,21 +63,33 @@ class BaseMixer:
         if self.weight == 1:
             self.metric = None
         else:
-            self.gd1 = gd.new_descriptor(comm=mpi.serial_comm)
-            self.gd1.pbc_c = np.array([True, True, True])
-            k2_Q, _ = construct_reciprocal(self.gd1, no_zeros=False)
-            reciprocal_metric = ReciprocalMetric(self.weight, k2_Q, self.gd1)
+            pbc_c = gd.pbc_c
+            pbcaxes = np.where(pbc_c)[0]
+            gd1 = gd.new_descriptor(comm=mpi.serial_comm)
+            k_Qc = np.empty((*gd1.n_c[pbc_c], len(pbcaxes)), float)
+            icell_cv = 2 * np.pi * gd.icell_cv
+            for ind, pbcaxis in enumerate(pbcaxes):
+                nums = np.fft.fftfreq(gd1.n_c[pbcaxis]) \
+                        * gd1.n_c[pbcaxis]
+                other_axes = [
+                    i for i in range(len(pbcaxes)) if i != ind]
+                k_Qc[..., pbcaxis] = np.expand_dims(nums, other_axes)
+            k_Qv = k_Qc @ icell_cv[pbc_c, :]
+            k2_Q = np.vecdot(k_Qv, k_Qv)
+
+            reciprocal_metric = ReciprocalMetric(self.weight, k2_Q,
+                                                 pbc_c)
 
             def metric(a_sR, b_sR):
                 # TODO: mpi4py-fft?
                 a1_sR = np.ascontiguousarray(
                     [self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
-                    a1_sR = fftn(a1_sR, norm='ortho', axes=(1, 2, 3))
+                    a1_sR = fftn(a1_sR, norm='ortho', axes=pbcaxes+1)
                     reciprocal_metric(a1_sR, a1_sR)
-                    a1_sR = ifftn(a1_sR, norm='ortho', axes=(1, 2, 3))
+                    a1_sR = ifftn(a1_sR, norm='ortho', axes=pbcaxes+1).real
                 else:
-                    a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=complex)
+                    a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=float)
                 b_sR[:] = np.array(
                     [self.gd.distribute(a1_R) for a1_R in a1_sR]).real
             self.metric = metric
@@ -125,22 +137,22 @@ class BaseMixer:
             R_sG = nt_sG - nt_isG[-1]
             dNt = self.calculate_charge_sloshing(R_sG)
 
+            R_isG.append(R_sG)
             dD_iasp.append([])
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
 
             mR_sG, mD_asp = self.apply_metric(R_sG, dD_iasp[-1], g_ss)
-            R_isG.append(R_sG)
 
             # Update matrix:
             A_ii = np.zeros((iold, iold))
             i2 = iold - 1
 
-            for i1, R_1sG in enumerate(R_isG):
-                a = self.dotprod(
-                    R_1sG, R_sG, dD_iasp[i1], mD_asp, self.gd)
-                A_ii[i1, i2] = a
-                A_ii[i2, i1] = a
+            a_i = self.dotprod(
+                    R_isG, [mR_sG,], dD_iasp,
+                    [mD_asp,], self.gd, mode='gemm')[:, 0]
+            A_ii[:, i2] = a_i
+            A_ii[i2, :] = a_i
             A_ii[:i2, :i2] = self.A_ii[-i2:, -i2:]
             self.A_ii = A_ii
 
@@ -242,7 +254,7 @@ class MSR1Mixer(BaseMixer):
                  beta=0.035,
                  nmaxold=8,
                  weight=70,
-                 trust_scalar=1.3,
+                 trust_scalar=1.5,
                  soft_bad_lim=1.5,
                  hard_bad_lim=2.0,
                  gb_scale=1.0):
@@ -711,6 +723,7 @@ class ExperimentalDotProd:
         prod *= gd.dv
         assert self.atomdist.comm.rank == comm.rank
         my_atoms_inds = np.where(self.atomdist.rank_a == comm.rank)[0]
+
         for a, a_s in enumerate(my_atoms_inds):
             setup = setups[a_s]
             ni = setup.ni
@@ -718,20 +731,22 @@ class ExperimentalDotProd:
             I4_pp = unpack_hermitian(I4_pp).reshape(-1, ni**2).T.copy()
             I4_pp = unpack_hermitian(I4_pp).reshape(ni**2, ni**2)
 
-            if mode == 'gemm':
+            template = dD1_iasp[0][a]
+            buffer1 = np.empty_like(template, shape=(len(dD1_iasp),
+                                                     template.shape[1]))
+            buffer2 = np.empty_like(template, shape=(len(dD2_iasp),
+                                                     template.shape[1]))
+            for spin in range(template.shape[0]):
                 for i1, dD1_asp in enumerate(dD1_iasp):
-                    dD1_sp = dD1_asp[a].conj()
-                    for i2, dD2_asp in enumerate(dD2_iasp):
-                        dD2_sp = dD2_asp[a]
-                        for dD1_p, dD2_p in zip(dD1_sp, dD2_sp):
-                            prod[i1, i2] += dD1_p @ I4_pp @ dD2_p
-            elif mode == 'vecdot' or mode == 'scalar':
-                for i, (dD1_asp, dD2_asp) in enumerate(
-                        zip(dD1_iasp, dD2_iasp)):
-                    dD1_sp = dD1_asp[a].conj()
-                    dD2_sp = dD2_asp[a]
-                    for dD1_p, dD2_p in zip(dD1_sp, dD2_sp):
-                        prod[i] += dD1_p @ I4_pp @ dD2_p
+                    buffer1[i1] = dD1_asp[a][spin].conj()
+                for i2, dD2_asp in enumerate(dD2_iasp):
+                    buffer2[i2] = dD2_asp[a][spin]
+
+                if mode == 'gemm':
+                    prod += (buffer1 @ I4_pp @ buffer2.T).real
+                elif mode == 'vecdot' or mode == 'scalar':
+                    prod += np.vecdot((buffer1 @ I4_pp).conj(), buffer2).real
+
         comm.sum(prod)
         assert (prod.imag < 1e-10).all()
         prod = prod.real
@@ -741,20 +756,16 @@ class ExperimentalDotProd:
 
 
 class ReciprocalMetric:
-    def __init__(self, weight, k2_Q, gd):
+    def __init__(self, weight, k2_Q, pbc_c):
         self.weight = weight
         self.q1 = (weight - 1)
-        self.k2_Q = gd.distribute(k2_Q)
+        non_periodic = [i for i in range(3) if not pbc_c[i]]
+        w_Q = self.weight * (1 + k2_Q) / (1 + self.weight * k2_Q)
+        self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
 
     def __call__(self, R_Q, mR_Q):
-        # Gaussian:
-        # w_Q = (1 + self.q1 * np.exp(-self.k2_Q * self.q1))
-        # Lorentz:
-        # w_Q = 1 + self.q1 / (self.k2_Q * self.q1 * 5e-3 + 1)
         # Invariant Lorentz (Inverse Kerker):
-        # w_Q = 1 / (1 + self.q1 * self.k2_Q / (1 + self.k2_Q))
-        w_Q = self.weight * (1 + self.k2_Q) / (1 + self.weight * self.k2_Q)
-        mR_Q[:] = R_Q * w_Q
+        mR_Q[:] = R_Q * self.w_Q
 
 
 class FFTBaseMixer(BaseMixer):  # This should be able to wrap MSR1
