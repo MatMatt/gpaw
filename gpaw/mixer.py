@@ -11,7 +11,6 @@ from numpy.fft import fftn, ifftn
 import gpaw.mpi as mpi
 from gpaw.new import trace
 from gpaw.utilities.blas import axpy
-from gpaw.utilities.tools import construct_reciprocal
 
 """About mixing-related classes.
 
@@ -768,53 +767,14 @@ class ReciprocalMetric:
         mR_Q[:] = R_Q * self.w_Q
 
 
-class FFTBaseMixer(BaseMixer):  # This should be able to wrap MSR1
+class FFTBaseMixer(BaseMixer):
     name = 'fft'
 
     """Mix the density in Fourier space"""
     def __init__(self, beta, nmaxold, weight):
+        raise DeprecationWarning(
+            'The fft-backend is deprecated, use pulay or msr1 instead.')
         super().__init__(beta, nmaxold, weight)
-        self.gd1 = None
-
-    def initialize_metric(self, gd):
-        self.gd = gd
-
-        self.gd1 = gd.new_descriptor(comm=mpi.serial_comm)
-        k2_Q, _ = construct_reciprocal(self.gd1)
-        self.metric = ReciprocalMetric(self.weight, k2_Q, self.gd)
-
-    def calculate_charge_sloshing(self, R_sQ):
-        assert R_sQ.ndim == 4  # and len(R_sQ) == 1
-        cs = 0.0
-        for R_Q in R_sQ:
-            R_X = self.gd.collect(R_Q)
-            if self.gd.comm.rank == 0:
-                cs += self.gd1.integrate(np.abs(ifftn(R_X, norm='ortho')).real)
-
-        return self.gd.comm.sum_scalar(cs)
-
-    def mix_density(self, nt_sR, D_asp, g_ss=None):
-        # Transform real-space density to Fourier space
-        nt1_sR = [self.gd.collect(nt_R) for nt_R in nt_sR]
-        if self.gd.comm.rank == 0:
-            nt1_sG = np.ascontiguousarray(
-                [fftn(nt_R, norm='ortho') for nt_R in nt1_sR])
-        else:
-            nt1_sG = np.empty((len(nt_sR), 0, 0, 0), dtype=complex)
-        nt_sG = np.array([self.gd.distribute(nt1_G) for nt1_G in nt1_sG])
-
-        dNt = super().mix_density(nt_sG, D_asp)
-
-        nt1_sG = [self.gd.collect(nt_G) for nt_G in nt_sG]
-        # Return density in real space
-        for nt_G, nt_R in zip(nt1_sG, nt_sR):
-            if self.gd.comm.rank == 0:
-                nt1_R = ifftn(nt_G, norm='ortho').real
-            else:
-                nt1_R = None
-            self.gd.distribute(nt1_R, nt_R)
-
-        return dNt
 
 
 class BroydenBaseMixer:
