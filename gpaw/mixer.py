@@ -6,7 +6,7 @@ See Kresse, Phys. Rev. B 54, 11169 (1996)
 """
 
 import numpy as np
-from numpy.fft import fftn, ifftn, rfftn, irfftn
+from numpy.fft import fftn, ifftn
 
 import gpaw.mpi as mpi
 from gpaw.new import trace
@@ -70,7 +70,7 @@ class BaseMixer:
             icell_cv = 2 * np.pi * gd.icell_cv
             for ind, pbcaxis in enumerate(pbcaxes):
                 nums = np.fft.fftfreq(gd1.n_c[pbcaxis]) \
-                        * gd1.n_c[pbcaxis]
+                    * gd1.n_c[pbcaxis]
                 other_axes = [
                     i for i in range(len(pbcaxes)) if i != ind]
                 k_Qc[..., pbcaxis] = np.expand_dims(nums, other_axes)
@@ -85,9 +85,9 @@ class BaseMixer:
                 a1_sR = np.ascontiguousarray(
                     [self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
-                    a1_sR = fftn(a1_sR, norm='ortho', axes=pbcaxes+1)
+                    a1_sR = fftn(a1_sR, norm='ortho', axes=pbcaxes + 1)
                     reciprocal_metric(a1_sR, a1_sR)
-                    a1_sR = ifftn(a1_sR, norm='ortho', axes=pbcaxes+1).real
+                    a1_sR = ifftn(a1_sR, norm='ortho', axes=pbcaxes + 1).real
                 else:
                     a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=float)
                 b_sR[:] = np.array(
@@ -149,8 +149,8 @@ class BaseMixer:
             i2 = iold - 1
 
             a_i = self.dotprod(
-                    R_isG, [mR_sG,], dD_iasp,
-                    [mD_asp,], self.gd, mode='gemm')[:, 0]
+                R_isG, [mR_sG,], dD_iasp,
+                [mD_asp,], self.gd, mode='gemm')[:, 0]
             A_ii[:, i2] = a_i
             A_ii[i2, :] = a_i
             A_ii[:i2, :i2] = self.A_ii[-i2:, -i2:]
@@ -669,7 +669,7 @@ class MSR1Mixer(BaseMixer):
 
             self.pk_sG = np.zeros_like(self.uk_sG)
             nt_sG[:] = nt_isG[-1] + A0 * self.uk_sG
-            
+
             self.uD_asp = []
             self.pD_asp = []
             for a1, D_sp in enumerate(D_asp):
@@ -692,7 +692,7 @@ class ExperimentalDotProd:
         self.atomdist = atomdist
 
     def __call__(self, R1_isG, R2_isG, dD1_iasp, dD2_iasp, gd, mode='scalar'):
-        from gpaw.utilities import unpack_hermitian, pack_density
+        from gpaw.utilities import pack_density
         setups = self.setups
         comm = gd.comm
 
@@ -726,10 +726,7 @@ class ExperimentalDotProd:
 
         for a, a_s in enumerate(my_atoms_inds):
             setup = setups[a_s]
-            ni = setup.ni
             I4_pp = setup.four_phi_integrals()
-            # I4_pp = unpack_hermitian(I4_pp).reshape(-1, ni**2).T.copy()
-            # I4_pp = unpack_hermitian(I4_pp).reshape(ni**2, ni**2)
 
             template = dD1_iasp[0][a]
             buffer1 = np.empty_like(template, shape=(len(dD1_iasp),
@@ -740,10 +737,10 @@ class ExperimentalDotProd:
             for spin in range(template.shape[0]):
                 for i1, dD1_asp in enumerate(dD1_iasp):
                     buffer1[i1] = pack_density(
-                            dD1_asp[a][spin].conj().reshape(P, P))
+                        dD1_asp[a][spin].conj().reshape(P, P))
                 for i2, dD2_asp in enumerate(dD2_iasp):
                     buffer2[i2] = pack_density(
-                            dD2_asp[a][spin].reshape(P, P))
+                        dD2_asp[a][spin].reshape(P, P))
 
                 if mode == 'gemm':
                     prod += (buffer1 @ I4_pp @ buffer2.T).real
