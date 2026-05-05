@@ -1228,7 +1228,8 @@ class GPWFiles(CachedFilesHandler):
     def h2o_lcao(self):
         atoms = molecule('H2O', cell=[8, 8, 8], pbc=1)
         atoms.center()
-        atoms.calc = self.GPAW(mode='lcao', txt=self.folder / 'h2o_lcao.txt')
+        atoms.calc = self.GPAW(mode='lcao', txt=self.folder / 'h2o_lcao.txt',
+                               convergence={'density': 1e-5})
         atoms.get_potential_energy()
         return atoms.calc
 
