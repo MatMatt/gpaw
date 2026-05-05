@@ -361,10 +361,10 @@ class MSR1Mixer(BaseMixer):
             abs_gb_lim = 2000  # Maximum value of good Broyden.
             # Scaling factor for maximum good Broyden.
             max_gb_fact = self.gb_scale * np.clip(
-                (2e-2 / dNt_normed), 0.05, 1)
+                (5e-2 / dNt_normed), 0.05, 1)
             # Scaling factor for the final amount of good Broyden
-            post_gb_fact = 0.9 if del_oldest else (
-                0.9 if backtracked else 0.9)
+            post_gb_fact = 0.95 if del_oldest else (
+                0.95 if backtracked else 0.95)
             weight = 8e-4  # Weight for regularization.
             B0_boost = 1e-1  # Favor the predicted greed towards 1
             B0_lims = [0.4, 1.05]   # Limits for predicted greed
@@ -763,7 +763,7 @@ class ReciprocalMetric:
         self.weight = weight
         self.q1 = (weight - 1)
         non_periodic = [i for i in range(3) if not pbc_c[i]]
-        w_Q = self.weight * (1 + k2_Q) / (1 + self.weight * k2_Q)
+        w_Q = weight * (1 + k2_Q) / (1 + weight * k2_Q)
         self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
 
     def __call__(self, R_Q, mR_Q):
