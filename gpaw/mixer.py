@@ -72,7 +72,7 @@ class BaseMixer:
                     * gd1.n_c[pbcaxis]
                 other_axes = [
                     i for i in range(len(pbcaxes)) if i != ind]
-                k_Qc[..., pbcaxis] = np.expand_dims(nums, other_axes)
+                k_Qc[..., ind] = np.expand_dims(nums, other_axes)
             k_Qv = k_Qc @ icell_cv[pbc_c, :]
             k2_Q = np.vecdot(k_Qv, k_Qv)
 
