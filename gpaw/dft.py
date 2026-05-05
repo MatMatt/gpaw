@@ -827,6 +827,50 @@ class Parameters:
         return self.mode.dft_components_builder(
             atoms, self, comm=comm, log=log)
 
+    def create_dft_calculation_components(self,
+                                          atoms: Atoms,
+                                          comm: MPIComm,
+                                          log=None) -> tuple:
+        """Create DFTCalculation object from parameters and atoms."""
+        check_atoms_too_close(atoms)
+        check_atoms_too_close_to_boundary(atoms)
+
+        if not isinstance(log, Logger):
+            log = Logger(log, comm)
+
+        builder = params.dft_component_builder(atoms, log=log, comm=comm)
+
+        basis_set = builder.create_basis_set()
+
+        # The SCF-loop has a Hamiltonian that has an fft-plan that is
+        # cached for later use, so best to create the SCF-loop first
+        # FIX this!
+        scf_loop = builder.create_scf_loop()
+
+        pot_calc = builder.create_potential_calculator()
+
+        density = builder.density_from_superposition(basis_set)
+        if len(atoms) == 0:
+            density.nt_sR.data[:] = 1.0
+        density.normalize(pot_calc.charge)
+
+        potential, energies, _ = pot_calc.calculate_without_orbitals(
+            density, kpt_band_comm=builder.communicators['D'])
+        ibzwfs = builder.create_ibz_wave_functions(
+            basis_set, potential)
+
+        if ibzwfs._wfs_u[0].has_eigs:
+            nelectrons = density.nvalence - density.charge + pot_calc.charge
+            ibzwfs.calculate_occs(scf_loop.occ_calc, nelectrons)
+
+        write_atoms(atoms, builder.initial_magmom_av, builder.grid, log)
+        ibzwfs.summary(log)
+        log(density)
+        log(potential)
+        log(builder.setups)
+        log(scf_loop)
+        log(pot_calc)
+
     def dft_calculation(self,
                         atoms,
                         txt: str | Path | IO[str] | None = '-',
