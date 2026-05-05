@@ -7,6 +7,7 @@ from scipy.linalg import expm
 # Carry out various tests with different values of input parameters
 
 
+@pytest.mark.parametrize('gpaw_new', [True])
 @pytest.mark.parametrize(
     "ndim, dtype, nspin, nkpt, unocc",
     [
@@ -18,8 +19,7 @@ from scipy.linalg import expm
         (4, float, 2, 1, 1),  # corresponds to spinpol=True
         (4, float, 1, 2, 1),  # more than one kpt
         (4, float, 2, 2, 1),  # both previous conditions
-    ],
-)
+    ],)
 def test_run(ndim, nspin, nkpt, unocc, dtype, gpaw_new):
     """
     This test checks that the skewhermitian matrix is properly built
