@@ -196,7 +196,7 @@ def skewhermitian_rotation_full(ndim, f_n, dtype):
     if dtype == complex:
         param_vec += 1j * np.random.random(vec_len)
 
-    print("\n=== Parameter vector ===")
+    print('\n=== Parameter vector ===')
     print(param_vec)
 
     # Step 2: Manually reconstruct full skew-Hermitian matrix
@@ -211,13 +211,13 @@ def skewhermitian_rotation_full(ndim, f_n, dtype):
     # match vec2skewmat
     np.fill_diagonal(a_mat_manual, a_mat_manual.diagonal() * 0.5)
 
-    print("\n=== Manual skew-Hermitian matrix ===")
+    print('\n=== Manual skew-Hermitian matrix ===')
     print(a_mat_manual)
 
     # Step 3: Compute expected matrix exponential manually
     U_manual = expm(a_mat_manual)
 
-    print("\n=== Manual matrix exponential ===")
+    print('\n=== Manual matrix exponential ===')
     print(U_manual)
 
     # Step 4: Use SkewHermitian class
@@ -225,7 +225,7 @@ def skewhermitian_rotation_full(ndim, f_n, dtype):
                        data=param_vec)
     U_class = sk.rotation_mat
 
-    print("\n=== SkewHermitian.rotation_mat ===")
+    print('\n=== SkewHermitian.rotation_mat ===')
     print(U_class)
 
     # Step 5: Compare results
@@ -233,17 +233,12 @@ def skewhermitian_rotation_full(ndim, f_n, dtype):
 
     # Optional: check eigenvalues/eigenvectors consistency
     e_manual, v_manual = np.linalg.eig(1j * a_mat_manual)
-    print("\n=== Eigenvalues (manual) ===")
+    print('\n=== Eigenvalues (manual) ===')
     print(np.sort(e_manual))
-    print("=== Eigenvalues (class) ===")
+    print('=== Eigenvalues (class) ===')
     print(np.sort(sk.evals))
     np.testing.assert_allclose(
         np.sort(e_manual),
         np.sort(sk.evals),
         rtol=1e-12,
-        atol=1e-12,
-    )
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+        atol=1e-12)
