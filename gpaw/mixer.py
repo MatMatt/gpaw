@@ -80,7 +80,7 @@ class BaseMixer:
                                                  pbc_c)
 
             def metric(a_sR, b_sR):
-                # TODO: mpi4py-fft?
+                # TODO: Parallel fft? Parallelize over non-pbc directions?
                 a1_sR = np.ascontiguousarray(
                     [self.gd.collect(a_R) for a_R in a_sR])
                 if gd.comm.rank == 0:
@@ -126,17 +126,14 @@ class BaseMixer:
                 del R_isG[0]
                 del D_iasp[0]
                 del dD_iasp[0]
-                # for D_p, D_ip, dD_ip in self.D_a:
-                #     del D_ip[0]
-                #     del dD_ip[0]
                 iold = self.nmaxold
 
             # Calculate new residual (difference between input and
             # output density):
             R_sG = nt_sG - nt_isG[-1]
             dNt = self.calculate_charge_sloshing(R_sG)
-
             R_isG.append(R_sG)
+
             dD_iasp.append([])
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
@@ -250,8 +247,8 @@ class MSR1Mixer(BaseMixer):
     name = 'msr1'
 
     def __init__(self,
-                 beta=0.035,
-                 nmaxold=8,
+                 beta=0.05,
+                 nmaxold=10,
                  weight=70,
                  trust_scalar=1.5,
                  soft_bad_lim=1.5,
@@ -360,7 +357,7 @@ class MSR1Mixer(BaseMixer):
             abs_gb_lim = 2000  # Maximum value of good Broyden.
             # Scaling factor for maximum good Broyden.
             max_gb_fact = self.gb_scale * np.clip(
-                (5e-2 / dNt_normed), 0.05, 1)
+                (3e-2 / dNt_normed), 0.05, 1)
             # Scaling factor for the final amount of good Broyden
             post_gb_fact = 0.95 if del_oldest else (
                 0.95 if backtracked else 0.95)
@@ -520,7 +517,6 @@ class MSR1Mixer(BaseMixer):
 
             trig_fact = A0_lims[-1] * 2 / np.pi
             A0_target = np.clip(
-                # np.abs(A1 / A2),
                 np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact,
                 *A0_lims
             )
@@ -755,11 +751,23 @@ class ExperimentalDotProd:
 
 
 class ReciprocalMetric:
-    def __init__(self, weight, k2_Q, pbc_c):
+    '''
+    The idea behind this metric is to have the Mixer prioritize
+    long-range contributions over short ones, while the short-range
+    contributions are handled by the residual step. This builds on
+    the idea that, the true gradient of the density is approximately
+    the residual weighed with short range interactions.
+
+    weight : float
+        The weight parameter for the reciprocal metric, i.e. how large
+
+    '''
+
+    def __init__(self, weight, k2_Q, pbc_c, A=1):
         self.weight = weight
         self.q1 = (weight - 1)
         non_periodic = [i for i in range(3) if not pbc_c[i]]
-        w_Q = weight * (1 + k2_Q) / (1 + weight * k2_Q)
+        w_Q = weight * (A + k2_Q) / (A + weight * k2_Q)
         self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
 
     def __call__(self, R_Q, mR_Q):
