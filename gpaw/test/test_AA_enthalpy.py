@@ -4,7 +4,6 @@ from ase.build import molecule
 from ase.units import Hartree, kcal, mol
 
 from gpaw import GPAW
-from gpaw.mixer import Mixer, MixerSum
 from gpaw.mpi import world
 from gpaw.occupations import FermiDirac
 from gpaw.test import gen
@@ -119,8 +118,8 @@ def calculate(element, vacuum, xc, magmom, comm):
                      parallel=dict(augment_grids=True),
                      convergence={'density': 1e-5},
                      nbands=-2,
-                     communicator=comm,)
-                     # txt=f'{element}.{xc}.txt')
+                     communicator=comm,
+                     txt=f'{element}.{xc}.txt')
     atom.calc = calc_atom
 
     mixer = {'nmaxold': 8,
@@ -140,8 +139,8 @@ def calculate(element, vacuum, xc, magmom, comm):
                 mixer=mixer,
                 parallel=dict(augment_grids=True),
                 convergence={'density': 1e-5},
-                communicator=comm,)
-                # txt=f'{element}2.{xc}.txt')
+                communicator=comm,
+                txt=f'{element}2.{xc}.txt')
     compound.set_distance(0, 1, data[element]['R_AA_B3LYP'])
     compound.center(vacuum=vacuum)
 
