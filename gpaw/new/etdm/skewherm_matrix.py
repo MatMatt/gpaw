@@ -13,7 +13,7 @@ class SkewHermitian:
     Attributes
     ----------
     ndim : int
-        Dimension N of the skew-Hermitian matrix A (number of orbitals).
+        Dimension N of the skew-Hermitian matrix A (total number of orbitals).
     nocc: int
         Number M of occupied orbitals.
     dtype : type
