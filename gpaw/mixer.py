@@ -38,8 +38,8 @@ class BaseMixer:
     def __init__(self,
                  beta=0.08,
                  nmaxold=16,
-                 weight=70,
-                 sigma=1.0):
+                 weight=100,
+                 sigma=1.5):
         """Construct density-mixer object.
 
         Parameters:
@@ -256,8 +256,8 @@ class MSR1Mixer(BaseMixer):
     def __init__(self,
                  beta=0.05,
                  nmaxold=10,
-                 weight=70,
-                 sigma=1.0,
+                 weight=100,
+                 sigma=1.5,
                  trust_scalar=1.5,
                  soft_bad_lim=1.5,
                  hard_bad_lim=2.0,
@@ -1227,6 +1227,7 @@ class MixerWrapper:
         self.beta = self.basemixers[0].beta
         self.nmaxold = self.basemixers[0].nmaxold
         self.weight = self.basemixers[0].weight
+        self.sigma = self.basemixers[0].sigma
 
     @trace
     def mix(self, nt_sR, D_asp=None):
@@ -1266,7 +1267,8 @@ class MixerWrapper:
                  'Backend: ' + self.driver.basemixerclass.name,
                  'Linear mixing parameter: %g' % self.beta,
                  f'old densities: {self.nmaxold}',
-                 'Damping of long wavelength oscillations: %g' % self.weight]
+                 'Damping of long wavelength oscillations: %g' % self.weight,
+                 'Width of damping distribution: %g' % self.sigma]
         if self.weight == 1:
             lines[-1] += '  # (no daming)'
         return '\n  '.join(lines)
