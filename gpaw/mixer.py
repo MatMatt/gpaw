@@ -1210,7 +1210,8 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
         if val is not None:
             kwargs[key] = val
 
-    for key in mixerkwargs:
+    keys = list(mixerkwargs.keys())
+    for key in keys:
         # Clean any 'None' values out as if they had never been passed:
         val = mixerkwargs.pop(key, None)
         if val is not None:
