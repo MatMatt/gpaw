@@ -2158,7 +2158,7 @@ class GPWFiles(CachedFilesHandler):
         conv = {'bands': band_cutoff + 1,
                 'density': 1.e-9}
         a = 2.867
-        mm = 2.21
+        mm = 3  # Ensure there are enough empty bands.
         atoms = bulk('Fe', 'bcc', a=a)
         # It is necessary to rattle the atoms to make sure that all tests pass
         # on all machines - see https://gitlab.com/gpaw/gpaw/-/issues/1397
@@ -2634,5 +2634,5 @@ for name, method in si_gpwfiles().items():
 if __name__ == '__main__':
     import sys
     name = sys.argv[1]
-    calc = getattr(GPWFiles(Path()), name)()
+    calc = getattr(GPWFiles(Path(), comm=world), name)()
     calc.write(name + '.gpw', mode='all')

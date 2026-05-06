@@ -32,7 +32,7 @@ def test_eigensolver(k, b, d, s):
         mode='pw',
         eigensolver='davidson',
         kpts=(4, 1, 1),
-        mixer={'weight': 1},
+        mixer={'weight': 1, 'backend': 'pulay', 'beta': 0.08},
         parallel=parallel)
     dft.converge(steps=3)
     e = dft.calculate_energy()
