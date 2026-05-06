@@ -926,7 +926,7 @@ class DummyMixer:
 class NotMixingMixer:
     name = 'no-mixing'
 
-    def __init__(self, beta, nmaxold, weight):
+    def __init__(self, beta, nmaxold, weight, sigma):
         """Construct density-mixer object.
         Parameters: they are ignored for this mixer
         """
@@ -935,6 +935,7 @@ class NotMixingMixer:
         self.beta = 0
         self.nmaxold = 0
         self.weight = 0
+        self.sigma = 0
 
     def initialize_metric(self, gd):
         self.gd = gd
@@ -1206,6 +1207,12 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
         val = mixerkwargs.pop(key, None)
         if val is not None:
             kwargs[key] = val
+
+    for key in mixerkwargs:
+        # Clean any 'None' values out as if they had never been passed:
+        val = mixerkwargs.pop(key, None)
+        if val is not None:
+            mixerkwargs[key] = val
 
     # Resolve keyword strings (like 'fft') into classes (like FFTBaseMixer):
     driver = _methods.get(kwargs['method'], kwargs['method'])
