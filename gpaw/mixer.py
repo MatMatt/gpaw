@@ -1192,6 +1192,9 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
     else:
         kwargs['method'] = FullSpinMixerDriver
 
+    if not pbc and 'weight' not in mixerkwargs:
+        kwargs['weight'] = 1
+
     # Clean up mixerkwargs (compatibility)
     if 'history' in mixerkwargs:
         assert 'nmaxold' not in mixerkwargs
