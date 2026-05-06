@@ -35,7 +35,11 @@ class BaseMixer:
     name = 'pulay'
 
     """Pulay density mixer."""
-    def __init__(self, beta, nmaxold, weight):
+    def __init__(self,
+                 beta=0.08,
+                 nmaxold=16,
+                 weight=70,
+                 sigma=1.0):
         """Construct density-mixer object.
 
         Parameters:
@@ -48,12 +52,15 @@ class BaseMixer:
         weight: float
             Weight parameter for special metric (for long wave-length
             changes).
-
+        sigma: float
+            Width paramter between zero and infinity for the special
+            metric.
         """
 
         self.beta = beta
         self.nmaxold = nmaxold
         self.weight = weight
+        self.sigma = sigma
         self.world = None
 
     def initialize_metric(self, gd):
@@ -76,8 +83,8 @@ class BaseMixer:
             k_Qv = k_Qc @ icell_cv[pbc_c, :]
             k2_Q = np.vecdot(k_Qv, k_Qv)
 
-            reciprocal_metric = ReciprocalMetric(self.weight, k2_Q,
-                                                 pbc_c)
+            reciprocal_metric = ReciprocalMetric(self.weight, self.sigma,
+                                                 k2_Q, pbc_c)
 
             def metric(a_sR, b_sR):
                 # TODO: Parallel fft? Parallelize over non-pbc directions?
@@ -250,6 +257,7 @@ class MSR1Mixer(BaseMixer):
                  beta=0.05,
                  nmaxold=10,
                  weight=70,
+                 sigma=1.0,
                  trust_scalar=1.5,
                  soft_bad_lim=1.5,
                  hard_bad_lim=2.0,
@@ -766,11 +774,11 @@ class ReciprocalMetric:
 
     '''
 
-    def __init__(self, weight, k2_Q, pbc_c, A=1):
+    def __init__(self, weight, sigma, k2_Q, pbc_c):
         self.weight = weight
         self.q1 = (weight - 1)
         non_periodic = [i for i in range(3) if not pbc_c[i]]
-        w_Q = weight * (A + k2_Q) / (A + weight * k2_Q)
+        w_Q = weight * (sigma + k2_Q) / (sigma + weight * k2_Q)
         self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
 
     def __call__(self, R_Q, mR_Q):
@@ -975,15 +983,13 @@ class NotMixingMixer:
 class SeparateSpinMixerDriver:
     name = 'separate'
 
-    def __init__(self, basemixerclass, beta, nmaxold, weight, *args, **kwargs):
+    def __init__(self, basemixerclass, **kwargs):
         self.basemixerclass = basemixerclass
 
-        self.beta = beta
-        self.nmaxold = nmaxold
-        self.weight = weight
+        self.kwargs = kwargs
 
     def get_basemixers(self, nspins):
-        return [self.basemixerclass(self.beta, self.nmaxold, self.weight)
+        return [self.basemixerclass(**self.kwargs)
                 for _ in range(nspins)]
 
     def mix(self, basemixers, nt_sG, D_asp):
@@ -1001,17 +1007,15 @@ class SpinSumMixerDriver:
     name = 'sum'
     mix_atomic_density_matrices = False
 
-    def __init__(self, basemixerclass, beta, nmaxold, weight):
+    def __init__(self, basemixerclass, **kwargs):
         self.basemixerclass = basemixerclass
 
-        self.beta = beta
-        self.nmaxold = nmaxold
-        self.weight = weight
+        self.kwargs = kwargs
 
     def get_basemixers(self, nspins):
         if nspins == 1:
             raise ValueError('Spin sum mixer expects 2 or 4 components')
-        return [self.basemixerclass(self.beta, self.nmaxold, self.weight)]
+        return [self.basemixerclass(**self.kwargs)]
 
     def mix(self, basemixers, nt_sG, D_asp):
         assert len(basemixers) == 1
@@ -1060,31 +1064,26 @@ class SpinSumMixerDriver2(SpinSumMixerDriver):
 class SpinDifferenceMixerDriver:
     name = 'difference'
 
-    def __init__(self, basemixerclass, beta, nmaxold, weight,
-                 beta_m=0.7, nmaxold_m=2, weight_m=10.0):
+    def __init__(self, basemixerclass, *, beta_m=0.7,
+                 nmaxold_m=2, weight_m=10.0, **kwargs):
         self.basemixerclass = basemixerclass
-        self.beta = beta
-        self.nmaxold = nmaxold
-        self.weight = weight
-        self.beta_m = beta_m
-        self.nmaxold_m = nmaxold_m
-        self.weight_m = weight_m
+        self.kwargs = kwargs
+        self.kwargs_m = kwargs.copy()
+        self.kwargs_m['beta'] = beta_m
+        self.kwargs_m['nmaxold'] = nmaxold_m
+        self.kwargs_m['weight'] = weight_m
 
     def get_basemixers(self, nspins):
         if nspins == 1:
             raise ValueError('Spin difference mixer expects 2 or 4 components')
-        basemixer = self.basemixerclass(self.beta, self.nmaxold, self.weight)
+        basemixer = self.basemixerclass(**self.kwargs)
         if nspins == 2:
-            basemixer_m = self.basemixerclass(self.beta_m, self.nmaxold_m,
-                                              self.weight_m)
+            basemixer_m = self.basemixerclass(**self.kwargs_m)
             return basemixer, basemixer_m
         else:
-            basemixer_x = self.basemixerclass(self.beta_m, self.nmaxold_m,
-                                              self.weight_m)
-            basemixer_y = self.basemixerclass(self.beta_m, self.nmaxold_m,
-                                              self.weight_m)
-            basemixer_z = self.basemixerclass(self.beta_m, self.nmaxold_m,
-                                              self.weight_m)
+            basemixer_x = self.basemixerclass(**self.kwargs_m)
+            basemixer_y = self.basemixerclass(**self.kwargs_m)
+            basemixer_z = self.basemixerclass(**self.kwargs_m)
             return basemixer, basemixer_x, basemixer_y, basemixer_z
 
     def mix(self, basemixers, nt_sG, D_asp):
@@ -1134,18 +1133,16 @@ class SpinDifferenceMixerDriver:
 class FullSpinMixerDriver:
     name = 'fullspin'
 
-    def __init__(self, basemixerclass, beta, nmaxold, weight, g=None):
+    def __init__(self, basemixerclass, g=None, **kwargs):
         self.basemixerclass = basemixerclass
-        self.beta = beta
-        self.nmaxold = nmaxold
-        self.weight = weight
         self.g_ss = g
+        self.kwargs = kwargs
 
     def get_basemixers(self, nspins):
         if nspins == 1:
             raise ValueError('Full-spin mixer expects 2 or 4 spin channels')
 
-        basemixer = self.basemixerclass(self.beta, self.nmaxold, self.weight)
+        basemixer = self.basemixerclass(**self.kwargs)
         return [basemixer]
 
     def mix(self, basemixers, nt_sG, D_asp):
@@ -1190,11 +1187,6 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
     # defaults, then we update it with values from the user.
     kwargs = {'backend': MSR1Mixer}
 
-    if np.any(pbc):  # Works on array or boolean
-        kwargs.update(beta=0.05, history=10, weight=70.0)
-    else:
-        kwargs.update(beta=0.2, history=10, weight=1.0)
-
     if nspins == 1:
         kwargs['method'] = SeparateSpinMixerDriver
     else:
@@ -1218,9 +1210,7 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
 
     # We forward any remaining mixer kwargs to the actual mixer object.
     # Any user defined variables that do not really exist will cause an error.
-    mixer = driver(baseclass, beta=kwargs['beta'],
-                   nmaxold=kwargs['history'], weight=kwargs['weight'],
-                   **mixerkwargs)
+    mixer = driver(baseclass, **mixerkwargs)
     return mixer
 
 
@@ -1229,15 +1219,14 @@ class MixerWrapper:
     def __init__(self, driver, nspins, gd, world=None):
         self.driver = driver
 
-        self.beta = driver.beta
-        self.nmaxold = driver.nmaxold
-        self.weight = driver.weight
-        assert self.weight is not None, driver
-
         self.basemixers = self.driver.get_basemixers(nspins)
         for basemixer in self.basemixers:
             basemixer.initialize_metric(gd)
             basemixer.world = world
+        # Basemixer 0 have the standard kwargs
+        self.beta = self.basemixers[0].beta
+        self.nmaxold = self.basemixers[0].nmaxold
+        self.weight = self.basemixers[0].weight
 
     @trace
     def mix(self, nt_sR, D_asp=None):
