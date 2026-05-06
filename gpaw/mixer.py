@@ -269,7 +269,7 @@ class MSR1Mixer(BaseMixer):
           -  http://www.wien2k.at/reg_user/textbooks/Mixing_For_Dummies.pdf
           -  and other mixer related papers by Laurence Marks (wien2k dev)
         """
-        super().__init__(beta, nmaxold, weight)
+        super().__init__(beta, nmaxold, weight, sigma)
         self.mR_isG = []
         self.mD_iasp = []
         self.gb_scale = gb_scale
