@@ -258,7 +258,7 @@ class MSR1Mixer(BaseMixer):
                  nmaxold=10,
                  weight=20,
                  sigma=1.1,
-                 trust_scalar=1.5,
+                 trust_scalar=2.0,
                  soft_bad_lim=1.5,
                  hard_bad_lim=2.0,
                  gb_scale=1.0):
