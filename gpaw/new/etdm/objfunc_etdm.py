@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from gpaw.new.etdm.tools import get_n_occ
 
 
-
 class ObjectiveFunctionETDM(ABC):
     """
     Abstract base class for the ETDM objective function.
