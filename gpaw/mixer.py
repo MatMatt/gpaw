@@ -1173,6 +1173,8 @@ for dcls in [SeparateSpinMixerDriver, SpinSumMixerDriver,
 # that the user did not explicitly provide, i.e., it fills out
 # everything that is missing and returns a mixer "driver".
 def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
+    mixerkwargs = mixerkwargs.copy()  # avoid modifying the original dict
+
     if mixerkwargs.get('name') == 'dummy':
         return DummyMixer()
 
