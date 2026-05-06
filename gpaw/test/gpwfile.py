@@ -1185,6 +1185,7 @@ class GPWFiles(CachedFilesHandler):
         co.center(vacuum=4.0)
         co.calc = self.GPAW(
             mode='lcao',
+            convergence={'density': 1e-5},
             txt=self.folder / 'co_lcao.txt')
         co.get_potential_energy()
         return co.calc
