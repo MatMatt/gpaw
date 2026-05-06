@@ -1193,9 +1193,9 @@ def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
         kwargs['method'] = FullSpinMixerDriver
 
     # Clean up mixerkwargs (compatibility)
-    if 'nmaxold' in mixerkwargs:
-        assert 'history' not in mixerkwargs
-        mixerkwargs['history'] = mixerkwargs.pop('nmaxold')
+    if 'history' in mixerkwargs:
+        assert 'nmaxold' not in mixerkwargs
+        mixerkwargs['nmaxold'] = mixerkwargs.pop('history')
 
     # Now the user override:
     for key in kwargs:
