@@ -1226,11 +1226,18 @@ class MixerWrapper:
         for basemixer in self.basemixers:
             basemixer.initialize_metric(gd)
             basemixer.world = world
-        # Basemixer 0 have the standard kwargs
-        self.beta = self.basemixers[0].beta
-        self.nmaxold = self.basemixers[0].nmaxold
-        self.weight = self.basemixers[0].weight
-        self.sigma = self.basemixers[0].sigma
+        if len(self.basemixers) > 0:
+            # Basemixer 0 have the standard kwargs
+            self.beta = self.basemixers[0].beta
+            self.nmaxold = self.basemixers[0].nmaxold
+            self.weight = self.basemixers[0].weight
+            self.sigma = self.basemixers[0].sigma
+        else:
+            # No mixing
+            self.beta = None
+            self.nmaxold = None
+            self.weight = None
+            self.sigma = None
 
     @trace
     def mix(self, nt_sR, D_asp=None):
