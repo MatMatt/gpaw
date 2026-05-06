@@ -332,7 +332,7 @@ class MSR1Mixer(BaseMixer):
                 D_iasp.insert(insert_pos, tmp)
                 tmp = dD_iasp.pop()
                 dD_iasp.insert(insert_pos, tmp)
-                dNt = self.last_dNt * 1.1  # Avoid infinite loop
+                dNt = self.last_dNt * 1.2  # Avoid infinite loop
 
                 R_sG = R_isG[-1]
                 mR_sG = mR_isG[-1]
@@ -341,7 +341,9 @@ class MSR1Mixer(BaseMixer):
 
             # 1st order norm
             ntnorm = self.calculate_charge_sloshing(nt_isG[-1])
-            dNt_normed = dNt / ntnorm
+            dNt_normed = dNt / max(ntnorm, 1)
+            if dNt_normed == 0:
+                dNt_normed = 1e-10
 
             # Here are some hardcoded parameters for the mixer.
             # I have collected them all here, for simplicity,
@@ -351,7 +353,7 @@ class MSR1Mixer(BaseMixer):
             # optimize them - if so - good luck and have fun.
             dampen = 1  # Dampen the greeds
             # How much to reduce greed when backtracing
-            punishment_factor = 0.8 if del_oldest else 1.0
+            punishment_factor = 0.9 if del_oldest else 1.0
             # Scaling factor for the trust radius.
             trust_scalar = self.trust_scalar
             abs_gb_lim = 2000  # Maximum value of good Broyden.
@@ -364,7 +366,7 @@ class MSR1Mixer(BaseMixer):
             weight = 8e-4  # Weight for regularization.
             B0_boost = 1e-1  # Favor the predicted greed towards 1
             B0_lims = [0.4, 1.05]   # Limits for predicted greed
-            A0_lims = [0.015, 0.45]   # Limits for unpredicted greed
+            A0_lims = [0.02, 0.45]   # Limits for unpredicted greed
             rate_ratio = [  # Rate ratio for clipping
                 0.7, 1.3 if not backtracked else punishment_factor]
             initial_B0 = 1.0
@@ -531,6 +533,7 @@ class MSR1Mixer(BaseMixer):
                 self.B0 = np.clip(self.B0, *B0_lims)
                 A0_ratio_GEOM = np.sqrt(A0_target * self.A0) / self.A0
                 self.A0 *= np.clip(A0_ratio_GEOM, *rate_ratio)
+                self.A0 = np.clip(self.A0, *A0_lims)
             else:
                 self.B0 = initial_B0
                 self.A0 = A0_target
@@ -617,7 +620,7 @@ class MSR1Mixer(BaseMixer):
                 new_step_size = self.trust_radius
                 scale_factor = (new_step_size / predicted_size)
                 A0 *= np.clip(scale_factor, 0, 1)
-                A0 = max(A0, min(self.A0, A0_lims[0]))
+                A0 = max(A0, A0_lims[0])
             else:
                 uk_sG = self.uk_sG
                 pk_sG = self.pk_sG
