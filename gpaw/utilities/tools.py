@@ -18,7 +18,7 @@ def split_formula(formula):
     return res
 
 
-def construct_reciprocal(gd, q_c=None, no_zeros=True):
+def construct_reciprocal(gd, q_c=None):
     """Construct the reciprocal lattice from ``GridDescriptor`` instance.
 
     The generated reciprocal lattice has lattice vectors corresponding to the
@@ -61,14 +61,14 @@ def construct_reciprocal(gd, q_c=None, no_zeros=True):
 
     k_vq *= k_vq
     k2_Q = k_vq.sum(axis=0).reshape(gd.n_c)
-    # Avoid future divide-by-zero by setting k2_Q[G=(0,0,0)] = 1.0 if needed
-    if no_zeros:
-        if k2_Q[0, 0, 0] < 1e-10:
-            k2_Q[0, 0, 0] = 1.0           # Only make sense iff
-            assert gd.comm.rank == 0      # * on rank 0 ((0,0,0) is only there)
-            assert abs(q_c).sum() < 1e-8  # * q_c is (almost) zero
 
-        assert k2_Q.min() > 0.0       # Now there should be no zero left
+    # Avoid future divide-by-zero by setting k2_Q[G=(0,0,0)] = 1.0 if needed
+    if k2_Q[0, 0, 0] < 1e-10:
+        k2_Q[0, 0, 0] = 1.0           # Only make sense iff
+        assert gd.comm.rank == 0      # * on rank 0 ((0,0,0) is only there)
+        assert abs(q_c).sum() < 1e-8  # * q_c is (almost) zero
+
+    assert k2_Q.min() > 0.0       # Now there should be no zero left
 
     # Determine N^3
     #
