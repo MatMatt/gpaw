@@ -802,11 +802,13 @@ class BroydenBaseMixer:
     def __init__(self,
                  beta=0.05,
                  nmaxold=12,
-                 weight=1.0):
+                 weight=1.0,
+                 sigma=1.0):
         self.verbose = False
         self.beta = beta
         self.nmaxold = nmaxold
         self.weight = 1.0  # XXX discards argument
+        self.sigma = 1.0
 
     def initialize_metric(self, gd):
         self.gd = gd
