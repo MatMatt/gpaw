@@ -799,7 +799,10 @@ class FFTBaseMixer(BaseMixer):
 class BroydenBaseMixer:
     name = 'broyden'
 
-    def __init__(self, beta, nmaxold, weight):
+    def __init__(self,
+                 beta=0.05,
+                 nmaxold=12,
+                 weight=1.0):
         self.verbose = False
         self.beta = beta
         self.nmaxold = nmaxold
