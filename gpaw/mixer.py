@@ -926,7 +926,11 @@ class DummyMixer:
 class NotMixingMixer:
     name = 'no-mixing'
 
-    def __init__(self, beta, nmaxold, weight, sigma):
+    def __init__(self,
+                 beta=0,
+                 nmaxold=0,
+                 weight=0,
+                 sigma=0):
         """Construct density-mixer object.
         Parameters: they are ignored for this mixer
         """
