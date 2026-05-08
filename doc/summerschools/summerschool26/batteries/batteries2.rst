@@ -1,37 +1,32 @@
-
-.. code::
-
-    # teacher
-    import ase.visualize as viz
-    viz.view = lambda atoms, repeat=None: None
-
-
-
 ===============
 Battery project
 ===============
 
-
-
 Day 3 - Equilibrium potential
 =============================
 
+Today you will study the :mol:`LiFePO4` cathode.  You will calculate the
+equilibrium potential and use Bayesian error estimation to quantify how
+sensitive the calculated equilibrium potential is towards choice of
+functional.  After today you should be able to discuss:
 
-Today you will study the LiFePO$_4$ cathode. You will calculate the equilibrium potential and use Bayesian error estimation to quantify how sensitive the calculated equilibrium potential is towards choice of functional. After today you should be able to discuss:
+- The volume change during charge/discharge.
 
--  The volume change during charge/discharge.
+- The maximum gravimetric and volumetric energy density of a :mol:`FePO4/C`
+  battery assuming the majority of weight and volume will be given by the
+  electrodes.
 
--  The maximum gravimetric and volumetric energy density of a FePO$_4$/C battery assuming the majority of weight and volume will be given by the electrodes.
+- Uncertainty in the calculations.
 
--  Uncertainty in the calculations.
-
-Some of calculations you will perform today will be tedious to be run in this notebook. You will automatically submit some calculations to the HPC cluster directly from this notebook. When you have to wait for calculations to finish you can get started on addressing the bullet points above.
-
+Some of calculations you will perform today will be tedious to be run in
+this notebook.  You will automatically submit some calculations to the HPC
+cluster directly from this notebook.  When you have to wait for
+calculations to finish you can get started on addressing the bullet points
+above.
 
 
 Initialize
 ==========
-
 
 .. code::
 
@@ -46,12 +41,14 @@ Initialize
     from ase import Atoms
 
 
-
 FePO$_4$
 ========
 
-
-First we will construct an atoms object for FePO$_4$. ASE can read files from in a large number of different [formats](https://ase-lib.org/ase/io/io.html?highlight=read%20formats#file-input-and-output). However, in this case you will build it from scratch using the below information:
+First we will construct an atoms object for FePO$_4$. ASE can read files
+from in a large number of different
+[formats](https://ase-lib.org/ase/io/io.html?highlight=read%20formats#file-input-and-output).
+However, in this case you will build it from scratch using the below
+information:
 
 
 .. code::
@@ -81,8 +78,8 @@ First we will construct an atoms object for FePO$_4$. ASE can read files from in
     # P       4.06363530       4.40642949       4.30853266
     # P       9.03398503       4.40642957       2.93877879
     # P       5.87676435       1.46881009       0.52297232
-    
-    
+
+
     # Unit cell:
     #            periodic     x          y          z
     #   1. axis:    yes    9.94012    0.00000    0.00000
@@ -99,7 +96,7 @@ You *can* use the cell below as a starting point.
     #               positions=[[x0, y0, z0],[x1, y1, z1]...],
     #               cell=[x, y, z],
     #               pbc=[True, True, True])
-    
+
     # Teacher:
     fepo4 = Atoms('Fe4O16P4',
                  positions=[[2.73015081, 1.46880951, 4.56541172],
@@ -220,7 +217,7 @@ You will use the ensemble capability of the BEEF-vdW functional. You will need t
 
 .. code::
 
-    
+
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
 
@@ -245,19 +242,19 @@ You now have what you need to make a full script. Make it in the cell below and 
     from ase.io import write
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     # Read in the structure you made and wrote to file above
     fepo4 = read('fepo4.traj')
-    
+
     params_GPAW = {...}
-    
+
     # do calculation ...
     # BEEF ...
     # write ensemble_fepo4.dat file ...
-    
+
     write('fepo4_out.traj', fepo4)
-    
-    
+
+
     # Teacher:
     from ase.parallel import paropen
     from ase.io import read, write
@@ -265,7 +262,7 @@ You now have what you need to make a full script. Make it in the cell below and 
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, FermiDirac, Mixer, PW
     fepo4 = read('fepo4.traj')
-    
+
     params_GPAW = {}
     params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
     params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
@@ -280,17 +277,17 @@ You now have what you need to make a full script. Make it in the cell below and 
                                   'density':     1.0e-3,}
     params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
     params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-    
+
     calc = GPAW(**params_GPAW)
     fepo4.calc = calc
     epot_fepo4_cell=fepo4.get_potential_energy()
     print('E_Pot=', epot_fepo4_cell)
-    
+
     write('fepo4_out.traj', fepo4)
-    
+
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
-    
+
     with paropen('ensemble_fepo4.dat', 'a') as result:
         for e in dE:
             print(e, file=result)
@@ -380,15 +377,15 @@ Add Li atoms into the structure, e.g., by following the example in [this ASE tut
 
     from numpy import identity
     from ase import Atom
-    
+
     cell = lifepo4_wo_li.get_cell()
-    
+
     # ...
-    
+
     # lifepo4 = lifepo4_wo_li.copy()
-    
+
     # Teacher:
-    
+
     lifepo4 = lifepo4_wo_li.copy()
     cell = lifepo4.get_cell()
     xyzcell = identity(3)
@@ -414,7 +411,7 @@ Ensure that the magnetic moments are as they should be, once again assuming ferr
 .. code::
 
     # ...
-    
+
     # teacher
     print(lifepo4.get_initial_magnetic_moments())
 
@@ -437,27 +434,27 @@ You should now calculate the potential energy of this sytem using the method and
     from ase.io import read, write
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     # Read in the structure you made and wrote to file above
     lifepo4 = read('lifepo4.traj')
-    
+
     params_GPAW = {...}
-    
+
     # ...
     # ...
     # ...
-    
+
     # write('lifepo4_out.traj', lifepo4)
-    
+
     # teacher
     from ase.parallel import paropen
     from ase.io import read
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     #Read in the structure you made and wrote to file above
     lifepo4 = read('lifepo4.traj')
-    
+
     params_GPAW = {}
     params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
     params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
@@ -472,15 +469,15 @@ You should now calculate the potential energy of this sytem using the method and
                                   'density':     1.0e-3,}
     params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
     params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-    
+
     calc = GPAW(**params_GPAW)
     lifepo4.calc = calc
     epot_lifepo4_cell=lifepo4.get_potential_energy()
     print('E_Pot=', epot_lifepo4_cell)
-    
+
     traj=Trajectory('lifepo4_out.traj', mode='w', atoms=lifepo4)
     traj.write()
-    
+
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
     result = paropen('ensemble_lifepo4.dat','a')
@@ -544,16 +541,16 @@ We use a Li metal reference to calculate the equilibrium potential. On exercise 
     from ase import Atoms
     from gpaw import GPAW, FermiDirac, PW
     from ase.io import read
-    
+
     li_metal = read('Li-metal-DFTD3.traj')  # Change file name accordingly
-    
+
     calc = GPAW(mode=PW(500),
                 kpts=(8, 8, 8),
                 occupations=FermiDirac(0.15),
                 nbands=-10,
                 txt=None,
                 xc='BEEF-vdW')
-    
+
     li_metal.calc = calc
     li_metal.get_potential_energy()
     li_metal.write('li_metal.traj')
@@ -606,7 +603,7 @@ No calculate the equilibrium potential under the assumption that it is given by 
 .. code::
 
     # V_eq = ...
-    
+
     # teacher
     V_eq = epot_lifepo4 - epot_fepo4 - epot_li_metal
     print(V_eq)
@@ -619,7 +616,7 @@ You will now calculate the error estimate for the Li intercallation energy in Fe
 
     fepo4_ens_cell = np.genfromtxt('ensemble_fepo4.dat', max_rows=2000)
     lifepo4_ens_cell = np.genfromtxt('ensemble_lifepo4.dat', max_rows=2000)
-    
+
     print('number of functionals in ensemble=', len(fepo4_ens_cell))
     print('number of functionals in ensemble=', len(lifepo4_ens_cell))
     print('number of functionals in ensemble=', len(li_metal_ens_cell))
@@ -633,7 +630,7 @@ Note that these are energies per cell and not per formula unit. Convert them as 
     # fepo4_ens = fepo4_ens_cell / ...
     # ...
     # ...
-    
+
     # teacher
     fepo4_ens = fepo4_ens_cell / len(fepo4) * 6
     lifepo4_ens = lifepo4_ens_cell / len(lifepo4) * 7
@@ -646,7 +643,7 @@ Make a list of equilibrium potentials.
 .. code::
 
     # V_eq_ens = lifepo4_ens - ...
-    
+
     # teacher
     V_eq_ens = lifepo4_ens - fepo4_ens - li_metal_ens
 
@@ -667,7 +664,7 @@ Use the [NumPy function standard deviation function](https://docs.scipy.org/doc/
 
     # error = ...
     # print(error)
-    
+
     # teacher
     error = np.std(V_eq_ens)
     print(error)
