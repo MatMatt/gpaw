@@ -65,40 +65,7 @@ class BaseMixer:
 
     def initialize_metric(self, gd):
         self.gd = gd
-
-        if self.weight == 1:
-            self.metric = None
-        else:
-            pbc_c = gd.pbc_c
-            pbcaxes = np.where(pbc_c)[0]
-            gd1 = gd.new_descriptor(comm=mpi.serial_comm)
-            k_Qc = np.empty((*gd1.n_c[pbc_c], len(pbcaxes)), float)
-            icell_cv = 2 * np.pi * gd.icell_cv
-            for ind, pbcaxis in enumerate(pbcaxes):
-                nums = np.fft.fftfreq(gd1.n_c[pbcaxis]) \
-                    * gd1.n_c[pbcaxis]
-                other_axes = [
-                    i for i in range(len(pbcaxes)) if i != ind]
-                k_Qc[..., ind] = np.expand_dims(nums, other_axes)
-            k_Qv = k_Qc @ icell_cv[pbc_c, :]
-            k2_Q = np.vecdot(k_Qv, k_Qv)
-
-            reciprocal_metric = ReciprocalMetric(self.weight, self.sigma,
-                                                 k2_Q, pbc_c)
-
-            def metric(a_sR, b_sR):
-                # TODO: Parallel fft? Parallelize over non-pbc directions?
-                a1_sR = np.ascontiguousarray(
-                    [self.gd.collect(a_R) for a_R in a_sR])
-                if gd.comm.rank == 0:
-                    a1_sR = fftn(a1_sR, norm='ortho', axes=pbcaxes + 1)
-                    reciprocal_metric(a1_sR, a1_sR)
-                    a1_sR = ifftn(a1_sR, norm='ortho', axes=pbcaxes + 1).real
-                else:
-                    a1_sR = np.empty((len(a1_sR), 0, 0, 0), dtype=float)
-                b_sR[:] = np.array(
-                    [self.gd.distribute(a1_R) for a1_R in a1_sR]).real
-            self.metric = metric
+        self.metric = ReciprocalMetric(gd, self.weight, self.sigma)
 
     def reset(self):
         """Reset Density-history.
@@ -145,7 +112,7 @@ class BaseMixer:
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
 
-            mR_sG, mD_asp = self.apply_metric(R_sG, dD_iasp[-1], g_ss)
+            mR_sG, mD_asp = self.metric.apply(R_sG, dD_iasp[-1], g_ss)
 
             # Update matrix:
             A_ii = np.zeros((iold, iold))
@@ -225,20 +192,6 @@ class BaseMixer:
         prod = prod.real
         return prod[0] if mode == 'scalar' else prod
 
-    def apply_metric(self, R_sG, dD_asp, g_ss):
-        mR_sG = R_sG.copy()
-        if self.metric is not None:
-            self.metric(R_sG, mR_sG)
-        mD_asp = []
-        if g_ss is not None:
-            mR_sG[:] = np.tensordot(g_ss, mR_sG, axes=(1, 0))
-        for dD_sp in dD_asp:
-            if g_ss is not None:
-                mD_asp.append(np.tensordot(g_ss, dD_sp, axes=(1, 0)))
-            else:
-                mD_asp.append(dD_sp.copy())
-        return mR_sG, mD_asp
-
     def estimate_memory(self, mem, gd):
         gridbytes = gd.bytecount()
         mem.subnode('nt_iG, R_iG', 2 * self.nmaxold * gridbytes)
@@ -300,7 +253,7 @@ class MSR1Mixer(BaseMixer):
             dD_iasp.append([])
             for D_sp, D_isp in zip(D_asp, D_iasp[-1]):
                 dD_iasp[-1].append(D_sp - D_isp)
-            mR_sG, mD_asp = self.apply_metric(R_sG, dD_iasp[-1], g_ss)
+            mR_sG, mD_asp = self.metric.apply(R_sG, dD_iasp[-1], g_ss)
 
             R_isG.append(R_sG)
             mR_isG.append(mR_sG)
@@ -769,21 +722,63 @@ class ReciprocalMetric:
     the idea that, the true gradient of the density is approximately
     the residual weighed with short range interactions.
 
+    gd : GridDescriptor
+        The grid descriptor for the density.
     weight : float
         The weight parameter for the reciprocal metric, i.e. how large
-
+    sigma: float
+        The width parameter for the reciprocal metric,
     '''
 
-    def __init__(self, weight, sigma, k2_Q, pbc_c):
+    def __init__(self, gd, weight, sigma):
+        self.gd = gd
+        pbc_c = gd.pbc_c
+        self.pbcaxes = np.where(pbc_c)[0]
+        gd1 = gd.new_descriptor(comm=mpi.serial_comm)
+        k_Qc = np.empty((*gd1.n_c[pbc_c],
+                         len(self.pbcaxes)), float)
+        icell_cv = 2 * np.pi * gd.icell_cv
+        for ind, pbcaxis in enumerate(self.pbcaxes):
+            nums = np.fft.fftfreq(gd1.n_c[pbcaxis]) \
+                * gd1.n_c[pbcaxis]
+            other_axes = [
+                i for i in range(len(self.pbcaxes)) if i != ind]
+            k_Qc[..., ind] = np.expand_dims(nums, other_axes)
+        k_Qv = k_Qc @ icell_cv[pbc_c, :]
+        k2_Q = np.vecdot(k_Qv, k_Qv)
+
         self.weight = weight
-        self.q1 = (weight - 1)
         non_periodic = [i for i in range(3) if not pbc_c[i]]
         w_Q = weight * (sigma + k2_Q) / (sigma + weight * k2_Q)
         self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
 
-    def __call__(self, R_Q, mR_Q):
-        # Invariant Lorentz (Inverse Kerker):
-        mR_Q[:] = R_Q * self.w_Q
+    def apply(self, a_sQ, dD_asp, g_ss):
+        b_sQ = a_sQ.copy()
+
+        if self.weight != 1:
+            # TODO: Parallel fft? Parallelize over non-pbc directions?
+            a1_sQ = np.ascontiguousarray(
+                [self.gd.collect(a_Q) for a_Q in a_sQ])
+            if self.gd.comm.rank == 0:
+                a1_sQ = fftn(
+                    a1_sQ, norm='ortho', axes=self.pbcaxes + 1)
+                a1_sQ[:] = a1_sQ * self.w_Q
+                a1_sQ = ifftn(
+                    a1_sQ, norm='ortho', axes=self.pbcaxes + 1).real
+            else:
+                a1_sQ = np.empty((len(a1_sQ), 0, 0, 0), dtype=float)
+            b_sQ[:] = np.array(
+                [self.gd.distribute(a1_Q) for a1_Q in a1_sQ])
+
+        mD_asp = []
+        if g_ss is not None:
+            b_sQ[:] = np.tensordot(g_ss, b_sQ, axes=(1, 0))
+        for dD_sp in dD_asp:
+            if g_ss is not None:
+                mD_asp.append(np.tensordot(g_ss, dD_sp, axes=(1, 0)))
+            else:
+                mD_asp.append(dD_sp.copy())
+        return b_sQ, mD_asp
 
 
 class FFTBaseMixer(BaseMixer):
