@@ -731,6 +731,10 @@ class ReciprocalMetric:
     '''
 
     def __init__(self, gd, weight, sigma):
+        self.weight = weight
+        if weight == 1:
+            return
+
         self.gd = gd
         pbc_c = gd.pbc_c
         self.pbcaxes = np.where(pbc_c)[0]
@@ -747,7 +751,6 @@ class ReciprocalMetric:
         k_Qv = k_Qc @ icell_cv[pbc_c, :]
         k2_Q = np.vecdot(k_Qv, k_Qv)
 
-        self.weight = weight
         non_periodic = [i for i in range(3) if not pbc_c[i]]
         w_Q = weight * (sigma + k2_Q) / (sigma + weight * k2_Q)
         self.w_Q = np.expand_dims(w_Q, axis=non_periodic)
