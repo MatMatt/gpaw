@@ -831,7 +831,7 @@ class Parameters:
 
     def create_dft_calculation_components(self,
                                           atoms: Atoms,
-                                          comm: MPIComm,
+                                          comm: MPIComm | None = None,
                                           log=None) -> tuple:
         """Create DFTCalculation object from parameters and atoms."""
         check_atoms_too_close(atoms)
@@ -840,7 +840,7 @@ class Parameters:
         if not isinstance(log, Logger):
             log = Logger(log, comm)
 
-        builder = self.dft_component_builder(atoms, log=log, comm=comm)
+        builder = self.dft_component_builder(atoms, log=log, comm=log.comm)
 
         basis_set = builder.create_basis_set()
 
@@ -872,6 +872,7 @@ class Parameters:
         log(builder.setups)
         log(scf_loop)
         log(pot_calc)
+
         return (ibzwfs, density, potential,
                 builder.setups, scf_loop, pot_calc,
                 log, self, None)
