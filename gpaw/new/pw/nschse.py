@@ -23,13 +23,13 @@ from gpaw.new.xc import create_functional
 from gpaw.setup import Setups
 from gpaw.utilities import pack_density, unpack_hermitian
 if TYPE_CHECKING:
-    from gpaw.new.calculation import DFTCalculation
+    from gpaw.dft import DFT
 
 
 class NonSelfConsistentHybridXCCalculator:
     @classmethod
     def from_dft_calculation(cls,
-                             dft: DFTCalculation,
+                             dft: DFT,
                              xc: str,
                              *,
                              log: str | Path | IO[str] | None = '-',
@@ -335,7 +335,7 @@ def nsc_corrections(density: Density,
 class NonSelfConsistentHSE06(NonSelfConsistentHybridXCCalculator):
     @classmethod
     def from_dft_calculation(cls,
-                             dft: DFTCalculation,
+                             dft: DFT,
                              xc: str = 'HSE06',
                              *,
                              log: str | Path | IO[str] | None = '-',
