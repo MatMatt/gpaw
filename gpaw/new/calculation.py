@@ -129,7 +129,8 @@ class DFT:
             else:
                 params = _parameters
                 assert not kwargs
-            _components = params.create_dft_calculation_components(self.atoms)
+            _components = params.create_dft_calculation_components(
+                self.atoms, communicator, txt)
         else:
             assert not kwargs
 
@@ -149,9 +150,12 @@ class DFT:
     def from_parameters(cls,
                         atoms: Atoms,
                         params: Parameters,
-                        log: Logger | None = None):
+                        comm,
+                        log: Logger | str | None = None):
         return cls(
             atoms,
+            mode='',
+            communicator=comm,
             _parameters=params)
 
     @classmethod
@@ -168,6 +172,7 @@ class DFT:
                         energies: DFTEnergies | None = None):
         return cls(
             atoms,
+            mode='',
             _components=(ibzwfs, density, potential,
                          setups, scf_loop, pot_calc,
                          log, params, energies),

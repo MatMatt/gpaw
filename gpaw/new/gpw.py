@@ -199,7 +199,8 @@ def read_gpw(filename: str | Path | IO[str],
              force_complex_dtype: bool = False,
              object_hooks: dict[str, Callable[[dict], Any]] | None = None
              ) -> tuple[Atoms, DFT, DFTComponentsBuilder]:
-    from gpaw.dft import Parameters, DFT, units
+    from gpaw.dft import Parameters, DFT
+    from gpaw.new.calculation import units
     """
     Read gpw file
 
