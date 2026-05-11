@@ -144,7 +144,7 @@ def write_dft_state(writer: ulm.Writer | ulm.DummyWriter,
                     potential: Potential,
                     energies: DFTEnergies,
                     flags: GPWFlags) -> None:
-    """ Common function shared between DFTCalculation and RTTDDFT. """
+    """Common function shared between DFT and RTTDDFT. """
     density.write_to_gpw(writer.child('density'), flags)
     potential.write_to_gpw(writer.child('hamiltonian'), flags)
     writer.write(e_stress=potential.e_stress * Ha)

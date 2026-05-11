@@ -36,7 +36,7 @@ from gpaw.utilities.timing import simpletimer
 if TYPE_CHECKING:
     from gpaw.dft import (XC, Eigensolver, ExtensionInput, KptsType, Mixer,
                           Mode, MonkhorstPack, Occupations, Parameters,
-                          PoissonSolver, Symmetry, PARAMETER_NAMES)
+                          PoissonSolver, Symmetry)
 
 
 class ReuseWaveFunctionsError(Exception):
@@ -119,25 +119,25 @@ class DFT:
             MPI-communicator.  Default is to use ``gpaw.mpi.world``.
 
         """
-        self.atoms = atoms.copy()
+        from gpaw.dft import PARAMETER_NAMES, Parameters
 
-        kwargs = {k: v for k, v in locals().items() if k in PARAMETER_NAMES}
+        self.atoms = atoms.copy()
 
         if _components is None:
             if _parameters is None:
+                kwargs = {k: v for k, v in locals().items()
+                          if k in PARAMETER_NAMES}
                 params = Parameters(**kwargs)
             else:
                 params = _parameters
-                assert not kwargs
             _components = params.create_dft_calculation_components(
                 self.atoms, communicator, txt)
-        else:
-            assert not kwargs
 
         (self.ibzwfs, self.density, self.potential,
          self.setups, self.scf_loop, self.pot_calc,
          self.log, self.params, energies) = _components
 
+        self.comm = self.ibzwfs.comm
         self.results: dict[str, Any] = {}
         self.relpos_ac = self.pot_calc.relpos_ac
         self.energies = energies or DFTEnergies()
@@ -156,6 +156,7 @@ class DFT:
             atoms,
             mode='',
             communicator=comm,
+            txt=log,
             _parameters=params)
 
     @classmethod
@@ -506,8 +507,8 @@ class DFT:
         return psit_nR.scaled(cell=Bohr, values=Bohr**-1.5)
 
     def gather(self, txt='-') -> DFT | None:
-        """Gather calculation data from DFTCalculation object
-           on master and return new DFTCalculation
+        """Gather calculation data from DFT object
+           on master and return new DFT object
            (only on master, None everywhere else)."""
 
         atoms = self.atoms
@@ -646,7 +647,7 @@ class DFT:
             atoms: Atoms,
             params: Parameters,
             log=None) -> DFT:
-        """Create new DFTCalculation object."""
+        """Create new DFT object."""
         if params.mode.name != 'pw':
             raise ReuseWaveFunctionsError
 
@@ -813,7 +814,7 @@ class DFT:
 
     @property
     def state(self):
-        warnings.warn('Use of deprecated DFTCalculation.state attribute. '
+        warnings.warn('Use of deprecated DFT.state attribute. '
                       'Use ibzwfs, density and potential attributes instead.')
         return self.get_state()
 

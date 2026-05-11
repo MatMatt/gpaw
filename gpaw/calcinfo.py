@@ -100,7 +100,7 @@ def get_calculation_info(atoms: Atoms,
     update_params
         Update input parameters and return new CalcInfo object
     dft_calculation
-        Return DFTCalculation object with the given input parameters
+        Return DFT object with the given input parameters
     ase_calculator
         Return ASECalculation object with the given input parameters
     """

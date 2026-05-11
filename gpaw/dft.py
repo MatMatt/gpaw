@@ -833,7 +833,7 @@ class Parameters:
                                           atoms: Atoms,
                                           comm: MPIComm | None = None,
                                           log=None) -> tuple:
-        """Create DFTCalculation object from parameters and atoms."""
+        """Create DFT object from parameters and atoms."""
         check_atoms_too_close(atoms)
         check_atoms_too_close_to_boundary(atoms)
 
@@ -875,7 +875,7 @@ class Parameters:
 
         return (ibzwfs, density, potential,
                 builder.setups, scf_loop, pot_calc,
-                log, self, None)
+                log, self, energies)
 
     def dft_calculation(self,
                         atoms,
