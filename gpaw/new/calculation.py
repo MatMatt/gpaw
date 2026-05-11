@@ -3,13 +3,12 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 from ase import Atoms
 from ase.geometry import cell_to_cellpar
 from ase.units import Bohr, Ha
-
 from gpaw import GPAW_NO_C_EXTENSION
 from gpaw.core import UGArray, UGDesc
 from gpaw.core.atom_arrays import AtomDistribution
@@ -35,7 +34,9 @@ from gpaw.utilities import (check_atoms_too_close,
 from gpaw.utilities.timing import simpletimer
 
 if TYPE_CHECKING:
-    from gpaw.dft import Mode, Parameters
+    from gpaw.dft import (XC, Eigensolver, ExtensionInput, KptsType, Mixer,
+                          Mode, MonkhorstPack, Occupations, Parameters,
+                          PoissonSolver, Symmetry, PARAMETER_NAMES)
 
 
 class ReuseWaveFunctionsError(Exception):
@@ -100,7 +101,9 @@ class DFT:
         xc: str | dict | XC | None = None,
         txt: str | Path | IO[str] | None = '-',
         communicator: MPIComm | None = None,
-        _components=None) -> DFT:
+        converge=True,
+        _components=None,
+        _parameters=None):
         """Create a DFT object.
 
         See :class:`gpaw.dft.Parameters` for the complete list of parameters.
@@ -116,10 +119,19 @@ class DFT:
             MPI-communicator.  Default is to use ``gpaw.mpi.world``.
 
         """
+        self.atoms = atoms.copy()
+
+        kwargs = {k: v for k, v in locals().items() if k in PARAMETER_NAMES}
+
         if _components is None:
-            params = Parameters(**{k: v for k, v in locals().items()
-                                   if k in PARAMETER_NAMES})
-            _components = params.create_dft_calculation_components(atoms)
+            if _parameters is None:
+                params = Parameters(**kwargs)
+            else:
+                params = _parameters
+                assert not kwargs
+            _components = params.create_dft_calculation_components(self.atoms)
+        else:
+            assert not kwargs
 
         (self.ibzwfs, self.density, self.potential,
          self.setups, self.scf_loop, self.pot_calc,
@@ -129,6 +141,18 @@ class DFT:
         self.relpos_ac = self.pot_calc.relpos_ac
         self.energies = energies or DFTEnergies()
         self.forces_have_been_printed = False
+
+        if converge:
+            self.converge()
+
+    @classmethod
+    def from_parameters(cls,
+                        atoms: Atoms,
+                        params: Parameters,
+                        log: Logger | None = None):
+        return cls(
+            atoms,
+            _parameters=params)
 
     @classmethod
     def from_components(cls,
@@ -146,7 +170,8 @@ class DFT:
             atoms,
             _components=(ibzwfs, density, potential,
                          setups, scf_loop, pot_calc,
-                         log, params, energies))
+                         log, params, energies),
+            converge=False)
 
     def __getattr__(self, name):
         matches = [ext
@@ -155,11 +180,6 @@ class DFT:
         if len(matches) != 1:
             raise AttributeError
         return matches[0]
-
-
-        return cls(atoms, ibzwfs, density, potential,
-                   builder.setups, scf_loop, pot_calc, log,
-                   params=params, energies=energies)
 
     def ase_calculator(self):
         """Create ASE-compatible GPAW calculator.
@@ -170,7 +190,7 @@ class DFT:
                              dft=self,
                              atoms=self.atoms)
 
-    def move_atoms(self, atoms) -> DFTCalculation:
+    def move_atoms(self, atoms) -> DFT:
         check_atoms_too_close(atoms)
 
         self.atoms = atoms
@@ -480,7 +500,7 @@ class DFT:
             return None
         return psit_nR.scaled(cell=Bohr, values=Bohr**-1.5)
 
-    def gather(self, txt='-') -> DFTCalculation | None:
+    def gather(self, txt='-') -> DFT | None:
         """Gather calculation data from DFTCalculation object
            on master and return new DFTCalculation
            (only on master, None everywhere else)."""
@@ -530,7 +550,7 @@ class DFT:
             builder.get_pseudo_core_densities(),
             builder.get_pseudo_core_ked())
 
-        dft = DFTCalculation(
+        dft = DFT.from_components(
             atoms, ibzwfs, density, potential,
             builder.setups,
             builder.create_scf_loop(),
@@ -620,7 +640,7 @@ class DFT:
     def new(self,
             atoms: Atoms,
             params: Parameters,
-            log=None) -> DFTCalculation:
+            log=None) -> DFT:
         """Create new DFTCalculation object."""
         if params.mode.name != 'pw':
             raise ReuseWaveFunctionsError
@@ -688,7 +708,7 @@ class DFT:
         log(scf_loop)
         log(pot_calc)
 
-        return DFTCalculation(
+        return DFT.from_components(
             atoms, ibzwfs, density, potential,
             builder.setups, scf_loop, pot_calc, log,
             params=params, energies=energies)
@@ -769,7 +789,7 @@ class DFT:
                       force_complex_dtype: bool = False,
                       object_hooks: dict[str,
                                          Callable[[dict], Any]] | None = None
-                      ) -> DFTCalculation:
+                      ) -> DFT:
 
         (atoms,
          dft,

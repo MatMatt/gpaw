@@ -13,12 +13,14 @@ from ase import Atoms
 from ase.calculators.calculator import kpts2sizeandoffsets
 
 from gpaw.mpi import MPIComm
-from gpaw.new.calculation import DFTCalculation
+from gpaw.new.calculation import write_atoms, DFT
 from gpaw.new.logger import Logger
 from gpaw.new.pwfd.davidson import Davidson as DavidsonEigensolver
 from gpaw.new.pwfd.ppcg import PPCG as PPCGEigensolver
 from gpaw.new.pwfd.rmmdiis import RMMDIIS as RMMDIISEigensolver
 from gpaw.new.symmetry import Symmetries, create_symmetries_object
+from gpaw.utilities import (check_atoms_too_close,
+                            check_atoms_too_close_to_boundary)
 
 if TYPE_CHECKING:
     from gpaw.new.ase_interface import ASECalculator
@@ -838,7 +840,7 @@ class Parameters:
         if not isinstance(log, Logger):
             log = Logger(log, comm)
 
-        builder = params.dft_component_builder(atoms, log=log, comm=comm)
+        builder = self.dft_component_builder(atoms, log=log, comm=comm)
 
         basis_set = builder.create_basis_set()
 
@@ -870,14 +872,17 @@ class Parameters:
         log(builder.setups)
         log(scf_loop)
         log(pot_calc)
+        return (ibzwfs, density, potential,
+                builder.setups, scf_loop, pot_calc,
+                log, self, None)
 
     def dft_calculation(self,
                         atoms,
                         txt: str | Path | IO[str] | None = '-',
                         communicator: MPIComm | None = None
-                        ) -> DFTCalculation:
+                        ) -> DFT:
         log = Logger(txt, communicator)
-        return DFTCalculation.from_parameters(atoms, self, log.comm, log)
+        return DFT.from_parameters(atoms, self, log.comm, log)
 
     def dft_info(self, atoms):
         ...
@@ -925,8 +930,6 @@ def _fix_legacy_stuff(params: Parameters) -> None:
             params.eigensolver.todict())
     if not isinstance(params.mixer, Mixer):
         params.mixer = Mixer.from_param(params.mixer.todict())
-
-
 
 
 class LegacyGPAWError(Exception):
