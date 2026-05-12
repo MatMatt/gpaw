@@ -752,7 +752,6 @@ class ReciprocalMetric:
 
     def apply(self, a_sQ, dD_asp, g_ss):
         b_sQ = a_sQ.copy()
-
         if self.weight != 1:
             # TODO: Parallel fft?
             a1_sQ = np.ascontiguousarray(
@@ -765,7 +764,10 @@ class ReciprocalMetric:
                 a1_sQ[:] = a1_sQ * self.w_Q
                 a1_sQ = ifftn(
                     a1_sQ, norm='ortho', axes=[1, 2, 3],
-                    s=self.gd1.n_c).real
+                    s=self.gd1.N_c).real
+                n_c = self.gd1.n_c
+                a1_sQ = np.ascontiguousarray(
+                    a1_sQ[:, :n_c[0], :n_c[1], :n_c[2]])
             else:
                 a1_sQ = np.empty((len(a1_sQ), 0, 0, 0), dtype=float)
             b_sQ[:] = np.array(
