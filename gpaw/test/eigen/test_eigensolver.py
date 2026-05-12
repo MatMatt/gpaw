@@ -32,7 +32,8 @@ def test_eigensolver(k, b, d, s):
         mode='pw',
         eigensolver='davidson',
         kpts=(4, 1, 1),
-        parallel=parallel)
+        parallel=parallel,
+        converge=False)
     dft.converge(steps=3)
     e = dft.calculate_energy()
     assert e == pytest.approx(-11.893955)
