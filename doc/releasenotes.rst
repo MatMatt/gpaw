@@ -82,7 +82,7 @@ Git master branch
 
     * backend: 'pulay' -> 'msr1'
     * spin-driver: 'difference' -> 'fullspin'
-    * beta: 0.05 -> 0.04
+    * beta: 0.05 -> 0.05
     * nmaxold: 5 -> 10
     * weight: 50 -> 20
 
