@@ -753,7 +753,7 @@ class ReciprocalMetric:
         b_sQ = a_sQ.copy()
 
         if self.weight != 1:
-            # TODO: Parallel fft? Parallelize over non-pbc directions?
+            # TODO: Parallel fft?
             a1_sQ = np.ascontiguousarray(
                 [self.gd.collect(a_Q) for a_Q in a_sQ])
             if self.gd.comm.rank == 0:
