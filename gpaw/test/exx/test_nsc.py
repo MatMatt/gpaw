@@ -15,7 +15,6 @@ def test_2h():
     h2 = molecule('H2', cell=[a, a, 18.4, 90, 90, 120], pbc=(1, 1, 0))
     h2.center()
     dft = DFT(h2, mode=PW(ecut, force_complex_dtype=True), kpts=(k, k, 1))
-    dft.converge()
     exx = NonSelfConsistentHybridXCCalculator.from_dft_calculation(
         dft, 'EXX')
     elda_skn, eexx_skn = exx.calculate(dft.ibzwfs, ibz_indices=[0])
