@@ -99,7 +99,7 @@ class DFT:
         spinpol: bool | None = None,
         symmetry: str | dict | Symmetry | None = None,
         xc: str | dict | XC | None = None,
-        txt: str | Path | IO[str] | None = '-',
+        txt: str | Path | IO[str] | Logger | None = '-',
         communicator: MPIComm | None = None,
         converge=True,
         _components=None,
@@ -151,12 +151,14 @@ class DFT:
                         atoms: Atoms,
                         params: Parameters,
                         comm,
-                        log: Logger | str | None = None):
+                        log: Logger | str | None = None,
+                        converge=True):
         return cls(
             atoms,
             mode='',
             communicator=comm,
             txt=log,
+            converge=converge,
             _parameters=params)
 
     @classmethod

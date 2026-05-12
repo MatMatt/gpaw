@@ -256,7 +256,8 @@ class ASECalculator:
     def create_new_calculation(self, atoms: Atoms) -> None:
         with self.timer('Init'):
             self._dft = DFT.from_parameters(
-                atoms, self.params, self.comm, self.log)
+                atoms, self.params, self.comm, self.log,
+                converge=False)
         self._atoms = atoms.copy()
 
     def create_new_calculation_from_old(self, atoms: Atoms) -> None:
