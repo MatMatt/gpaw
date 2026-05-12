@@ -735,8 +735,9 @@ class ReciprocalMetric:
         if weight == 1:
             return
 
+        self.gd = gd
         gd1 = gd.new_descriptor(comm=mpi.serial_comm)
-        self.gd = gd1
+        self.gd1 = gd1
         k_Qc = np.empty((*gd1.N_c, 3), float)
         icell_cv = 2 * np.pi * gd.icell_cv
         for ind, N in enumerate(gd1.N_c):
@@ -759,12 +760,12 @@ class ReciprocalMetric:
             if self.gd.comm.rank == 0:
                 a1_sQ = fftn(
                     a1_sQ, norm='ortho', axes=[1, 2, 3],
-                    s=self.gd.N_c
+                    s=self.gd1.N_c
                 )
                 a1_sQ[:] = a1_sQ * self.w_Q
                 a1_sQ = ifftn(
                     a1_sQ, norm='ortho', axes=[1, 2, 3],
-                    s=self.gd.n_c).real
+                    s=self.gd1.n_c).real
             else:
                 a1_sQ = np.empty((len(a1_sQ), 0, 0, 0), dtype=float)
             b_sQ[:] = np.array(
