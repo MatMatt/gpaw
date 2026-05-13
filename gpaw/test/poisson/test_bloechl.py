@@ -151,6 +151,9 @@ def fast_slow(fast):
                       symmetry='off')
     atoms.get_potential_energy()
     f = atoms.get_forces()
+    s = atoms.get_stress()
+    print(s)
+    return
     eps = 0.001 / 2
     atoms.positions[1, 2] += eps
     ep = atoms.get_potential_energy()
