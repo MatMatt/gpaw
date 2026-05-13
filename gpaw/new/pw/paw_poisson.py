@@ -116,7 +116,7 @@ class SlowPAWPoissonSolver(PAWPoissonSolver):
 
         return force_av
 
-    def stress_contribution(self, vHt_h, Q_aL):
+    def stress_contribution(self, vHt_h, mt_h, Q_aL):
         return self.ghat_aLh.stress_contribution(vHt_h, Q_aL)
 
 

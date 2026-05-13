@@ -256,6 +256,12 @@ class BloechlPAWPoissonSolver(PAWPoissonSolver):
         self._stress_vv = stress_vv
         return force_av, stress_vv
 
-    def stress_contribution(self, vHt_g, Q_aL):
+    def stress_contribution(self, vHt_g, nt_g, Q_aL):
         _, pair_pot_stress_vv = self._force_and_stress(Q_aL)
-        return self.ghat_aLg.stress_contribution(vHt_g, Q_aL)
+        v_vv = self.vhat_aLg.stress_contribution(nt_g, Q_aL)
+        g_vv = self.ghat_aLg.stress_contribution(vHt_g, Q_aL)
+        from ase.units import Ha, Bohr
+        print(pair_pot_stress_vv * Ha / Bohr**3 / self.pwg.volume)
+        print(v_vv * Ha / Bohr**3 / self.pwg.volume)
+        print(g_vv * Ha / Bohr**3 / self.pwg.volume)
+        return v_vv + g_vv - pair_pot_stress_vv
