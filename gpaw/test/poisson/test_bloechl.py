@@ -143,7 +143,7 @@ def test_psolve(xp):
 
 def fast_slow(fast):
     atoms = Atoms('H2', [[0, 0, 0], [0.1, 0.2, 0.8]], pbc=True)
-    atoms.center(vacuum=3.5)
+    atoms.center(vacuum=1.5)
     atoms.calc = GPAW(mode={'name': 'pw', 'ecut': 600},
                       poissonsolver={'fast': fast},
                       convergence={'forces': 1e-3},
@@ -152,7 +152,12 @@ def fast_slow(fast):
     atoms.get_potential_energy()
     f = atoms.get_forces()
     s = atoms.get_stress()
-    print(s)
+    x = 0.002
+    atoms.cell *= 1 + x
+    ep = atoms.get_potential_energy()
+    atoms.cell *= (1 - x) / (1 + x)
+    em = atoms.get_potential_energy()
+    print(sum(s[:3]), (ep - em) / (2 * x) / atoms.get_volume())
     return
     eps = 0.001 / 2
     atoms.positions[1, 2] += eps
