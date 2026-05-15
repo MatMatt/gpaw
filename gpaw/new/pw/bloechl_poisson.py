@@ -213,8 +213,8 @@ class BloechlPAWPoissonSolver(PAWPoissonSolver):
         if comm.rank == 0:
             vt0_g.data += vHt0_g.data
 
-        e_coulomb = comm.sum_scalar(e_coulomb1 / comm.size +
-                                    e_coulomb2 +
+        e_coulomb = comm.sum_scalar(0*e_coulomb1 / comm.size +
+                                    0*e_coulomb2 +
                                     e_coulomb3)
         return e_coulomb, vHt_g, V_aL
 
@@ -264,4 +264,4 @@ class BloechlPAWPoissonSolver(PAWPoissonSolver):
         print(pair_pot_stress_vv * Ha / Bohr**3 / self.pwg.volume)
         print(v_vv * Ha / Bohr**3 / self.pwg.volume)
         print(g_vv * Ha / Bohr**3 / self.pwg.volume)
-        return v_vv + g_vv - pair_pot_stress_vv
+        return 0 * v_vv + 0*g_vv - pair_pot_stress_vv
