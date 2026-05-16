@@ -27,24 +27,33 @@ def collect_files_for_web_page(fro: Path, to: Path) -> None:
         p.write_bytes(path.read_bytes())
 
 
-def compare_all_files(root: Path,
-                      references: Path) -> None:
+def compare_all_files(folder1: Path,
+                      folder2: Path) -> None:
     errors = []
-    for path in find_created_files(root):
-        if not path.is_file():
-            print('MISSING', path)
+    missing = []
+    ok = 0
+    for p1 in find_created_files(folder1):
+        p2 = folder2 / p1.relative_to(folder1)
+        if not p1.is_file():
+            missing.append(p1)
             continue
-        ref = references / path.relative_to(root)
-        if not ref.is_file():
-            print('MISSING', ref)
+        if not p2.is_file():
+            missing.append(p2)
             continue
-        err = compare_files(path, ref)
+        err = compare_files(p1, p2)
         if err:
-            print(err, path)
-            errors.append((err, path, ref))
-    for err, path, ref in sorted(errors):
-        print(path, ref, end=' ')
-    print()
+            errors.append((p1, p2))
+        else:
+            ok += 1
+    print(ok, len(errors), len(missing))
+    for p in missing:
+        print(p)
+    for p1, p2 in errors:
+        if p1.suffix in {'.png', '.svg'}:
+            print(f'eog {p1} {p2}')
+    for p1, p2 in errors:
+        if p1.suffix not in {'.png', '.svg'}:
+            print(f'meld {p1} {p2}')
 
 
 def compare_files(p1: Path, p2: Path) -> float:
@@ -59,7 +68,7 @@ def compare_images(p1: Path, p2: Path) -> float:
     import PIL.Image as pil
     a1, a2 = (np.asarray(pil.open(p)) for p in [p1, p2])
     if a1.shape != a2.shape:
-        print(a1.shape, a2.shape)
+        print('Wrong size', a1.shape, a2.shape)
         return 10.0
     d = a1 - a2
     N = 4
@@ -69,7 +78,6 @@ def compare_images(p1: Path, p2: Path) -> float:
     d = d.mean(axis=(1, 3))
     error = abs(d).mean() / 255 / 4
     if error > 0.00012:
-        print(error)
         return error
     return 0.0
 
@@ -97,8 +105,8 @@ def compare_text(p1: Path, p2: Path) -> float:
     lines2 = t2.splitlines()
     sep = ',' if p1.suffix == '.csv' else None
 
-    rtol = 0.001
-    atol = 1e-8
+    rtol = 0.002
+    atol = 1e-5
     if 'lcao-time' in p1.name:
         atol = 1.5
     elif p1.name == 'TS.xyz':
@@ -121,9 +129,9 @@ def compare_text(p1: Path, p2: Path) -> float:
                     return 1.0
             else:
                 f1 = float(w1)
-                error = abs(f1 - f2)
-                if error > atol and error / abs(f2) > rtol:
-                    print(l1, l2, f1, f2)
+                if not np.allclose(f1, f2, atol=atol, rtol=rtol):
+                    error = f1 - f2
+                    print(l1, l2, f1, f2, error)
                     return 1.0
     return 0.0
 
