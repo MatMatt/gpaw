@@ -172,14 +172,15 @@ class DFT:
                         pot_calc,
                         log: Logger,
                         params: Parameters,
-                        energies: DFTEnergies | None = None):
+                        energies: DFTEnergies | None = None,
+                        converge=True):
         return cls(
             atoms,
             mode='',
             _components=(ibzwfs, density, potential,
                          setups, scf_loop, pot_calc,
                          log, params, energies),
-            converge=False)
+            converge=converge)
 
     def __getattr__(self, name):
         matches = [ext
@@ -565,7 +566,8 @@ class DFT:
             builder.create_potential_calculator(),
             builder.log,
             params=params,
-            energies=self.energies)
+            energies=self.energies,
+            converge=False)
 
         dft.results = self.results.copy()
         return dft
@@ -719,7 +721,8 @@ class DFT:
         return DFT.from_components(
             atoms, ibzwfs, density, potential,
             builder.setups, scf_loop, pot_calc, log,
-            params=params, energies=energies)
+            params=params, energies=energies,
+            converge=False)
 
     def change_mode(self,
                     mode: str | dict | Mode,

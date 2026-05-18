@@ -259,7 +259,8 @@ def read_gpw(filename: str | Path | IO[str],
         pot_calc=builder.create_potential_calculator(),
         params=params,
         energies=energies,
-        log=log)
+        log=log,
+        converge=False)
 
     results = {key: value / units[key]
                for key, value in reader.results.asdict().items()}
