@@ -698,8 +698,6 @@ class ASECalculator:
             params=params,
             energies=self.dft.energies)
 
-        dft.converge()
-
         return ASECalculator(params,
                              log=log,
                              dft=dft,
