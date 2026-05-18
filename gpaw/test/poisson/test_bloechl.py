@@ -152,6 +152,8 @@ def fast_slow(fast):
     atoms.get_potential_energy()
     f = atoms.get_forces()
     s = atoms.get_stress()
+    print(s)
+    return
     x = 0.002
     atoms.cell *= 1 + x
     ep = atoms.get_potential_energy()
