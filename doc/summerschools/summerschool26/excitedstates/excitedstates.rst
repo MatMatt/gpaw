@@ -44,7 +44,7 @@ Part 2: Quasiparticle bandgap
 .. toctree::
    es2
 
-The Python script :download:`es2.py` teaches how to set up
+This tutorial teaches how to set up
 calculations to find the quasiparticle band gap using GW
 approximation.
 
