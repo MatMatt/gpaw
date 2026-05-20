@@ -3,12 +3,12 @@ Introduction to Nudged Elastic Band (NEB) calculations
 
 This tutorial describes how to use the NEB method to calculate the diffusion
 barrier for an Au atom on Al(001). If you are not familiar with the NEB
-method some relevant references are listed
-[here.](https://ase-lib.org/ase/neb.html)
+method, some relevant references are listed on ASE's
+documentation page on the :mod:`ase.mep.neb` module.
 
 The tutorial uses the EMT potential in stead of DFT, as this is a lot faster.
-It is based on a [tutorial found on the ASE
-webpage](https://ase-lib.org/tutorials/neb/diffusion.html#diffusion-tutorial).
+It is based on a :ref:`tutorial found on the ASE
+webpage <ase:selfdiffusion_example>`.
 
 .. literalinclude:: neb.py
   :start-after: snippet-imports-start
@@ -40,13 +40,13 @@ optimise again.
 
 Now we make a NEB calculation with 3 images between the inital and final
 states. The images are initially made as copies of the initial state and the
-command `interpolate()` makes a linear interpolation between the initial and
+call ``interpolate()`` makes a linear interpolation between the initial and
 final state. As always, we check that everything looks ok before we run the
 calculation.
 
 NOTE: The linear interpolation works well in this case but not for e.g.
-rotations. In this case an improved starting guess can be made with the [IDPP
-method.](https://ase-lib.org/tutorials/neb/idpp.html#idpp-tutorial)
+rotations. In this case an improved starting guess can be made with the
+:ref:`IDPP method <neb_idpp_tutorial>`.
 
 .. literalinclude:: neb.py
   :start-after: snippet-setupneb-start
@@ -67,38 +67,39 @@ We visualize the final path with:
 
 You can find the barrier by selecting Tools->NEB in the gui (unfortunately,
 the gui cannot show graphs when started from a notebook), or you can make a
-script using
-[NEBTools](https://ase-lib.org/ase/neb.html#ase.neb.NEBTools),
-e.g.:
+script using :class:`ase.mep.neb.NEBTools`, e.g.:
 
 .. literalinclude: neb.py
   :start-after: snippet-nebtools-start
   :end-before: snippet-nebtools-end
 
 
-## Exercise
+Exercise
+--------
 
-Now you should make your own NEB using the configuration with N<sub>2</sub>
+Now you should make your own NEB using the configuration with :mol:`N_2`
 lying down as the initial state and the configuration with two N atoms
 adsorbed on the surface as the final state. The NEB needs to run in parallel
 so you should make it as a python script, however you can use the Notebook to
 test your configurations (but not the parallelisation) if you like and export
 it as a script in the end.
 
-### Parallelisation
+Parallelisation
+===============
 
-The NEB should be parallelised over images. An example can be found in [this
-GPAW tutorial](https://gpaw.readthedocs.io/tutorialsexercises/moleculardynamics/neb/neb.html). The
-script enumerates the cpu's and uses this number (``rank``) along with the
-total number of cpu's (``size``) to distribute the tasks.
-Note that the NEB class now needs to be initialized by using ```NEB(images,parallel=True)```.
+The NEB should be parallelised over images. An example can be found in
+:ref:`this GPAW tutorial <neb>`. The
+script enumerates the CPUs and uses this number (``rank``) along with the
+total number of CPUs (``size``) to distribute the tasks.
+Note that the NEB class now needs to be initialized by using
+``NEB(images,parallel=True)``.
 
 .. literalinclude:: neb.py
    :start-after: snippet-mpiranks-start
    :end-before: snippet-mpiranks-end
 
 
-For each image we assign a set of cpu's identified by their rank. The rank
+For each image we assign a set of CPUs identified by their rank. The rank
 numbers are given to the calculator associated with this image.
 
 .. literalinclude:: neb.py
@@ -106,21 +107,23 @@ numbers are given to the calculator associated with this image.
    :end-before: snippet-gpaw-end
 
 When running the parallel NEB, you should choose the number of CPU cores
-properly.  Let Ncore = N_im * Nk where N_im is the number of images, and Nk
-is a divisor of the number of k-points; i.e. if there are 6 irreducible
-k-point, Nk should be 1, 2, 3 or 6.  Keep the total number of cores to 24 or
+properly.  Let ``Ncore = N_im * Nk`` where ``N_im``
+is the number of images, and ``Nk``
+is a divisor of the number of k-points; i.e., if there are 6 irreducible
+k-points, ``Nk`` should be 1, 2, 3 or 6.  Keep the total number of cores to 24 or
 less, or your job will wait too long in the queue.
 
-### Input parameters
+Input parameters
+================
 
 Some suitable parameters for the NEB are given below:
 
-* Use the same calculator and constraints as for the initial and final images, but remember to set the `communicator` as described above
+* Use the same calculator and constraints as for the initial and final images, but remember to set the ``communicator`` as described above
 * Use 6 images. This gives a reasonable description of the energy landscape and can be run e.g. on 12 cores.
 * Use a spring constant of 1.0 between the images. A lower value will slow the convergence
-* Relax the initial NEB until `fmax=0.1eV/Å`, then switch on the climbing image and relax until `fmax=0.05eV/Å`.
+* Relax the initial NEB until ``fmax = 0.1`` eV/Å, then switch on the climbing image and relax until ``fmax = 0.05`` eV/Å`.
 
 Once the calculation is done you should check that the final path looks
-reasonable. What is the N-N distance at the saddle point? Use NEBTools to
-calculate the barrier. Is N<sub>2</sub> likely to dissociate on the surface
+reasonable. What is the N—N distance at the saddle point? Use NEBTools to
+calculate the barrier. Is :mol:`N_2` likely to dissociate on the surface
 at room temperature?
