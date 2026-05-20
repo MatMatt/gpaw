@@ -146,9 +146,8 @@ class DensityHistory:
     def reset(self):
         self.current_indicies = []
 
-    def dotprod(self,
-                other: DensityHistory | XArray) -> ArrayND:
-        if isinstance(other, DensityHistory):
+    def dotprod(self, other: Self | XArray) -> ArrayND:
+        if isinstance(other, Self):
             H_hh = self._n_hsX.matrix_elements(other._n_hsX)
             out = H_hh.data[self.current_indicies, :][
                 :, other.current_indicies]
