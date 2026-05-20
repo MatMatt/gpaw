@@ -5,7 +5,7 @@ from gpaw.core.arrays import DomainType, XArray
 from gpaw.core.atom_arrays import AtomArraysLayout, AtomArrays
 from gpaw.core.atom_arrays import AtomDistribution
 from gpaw.setup import Setups
-from gpaw.typing import ArrayND
+from gpaw.typing import ArrayND, Self
 
 
 class BaseMixer:
@@ -147,7 +147,7 @@ class DensityHistory:
         self.current_indicies = []
 
     def dotprod(self, other: Self | XArray) -> ArrayND:
-        if isinstance(other, Self):
+        if isinstance(other, DensityHistory):
             H_hh = self._n_hsX.matrix_elements(other._n_hsX)
             out = H_hh.data[self.current_indicies, :][
                 :, other.current_indicies]
