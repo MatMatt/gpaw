@@ -129,11 +129,15 @@ class DensityHistory:
         self.current_indicies.pop(0)
 
     def next(self) -> XArray | tuple[XArray, AtomArrays]:
+        if self.nold == self.nmaxold:
+            self.delete_oldest()
+
         if self._D_hasii is not None:
             ret = (self._n_hsX[self.next_index],
                    self._D_hasii.data[self.next_index])
         else:
             ret = self._n_hsX[self.next_index]
+
         self.current_indicies.append(self.next_index)
         return ret
 

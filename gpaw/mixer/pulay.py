@@ -40,6 +40,7 @@ class PulayMixer(BaseMixer):
 
     def mix(self, density: Density) -> float:
         # Step 1: Initialize
+        nh = self.Rc_hsX.nold
         nold = self.nt_hsX.nold
         if nold == 0:
             self.nt_hsX.add_density(density)
@@ -59,22 +60,24 @@ class PulayMixer(BaseMixer):
         MRc_sX = self.metric(Rc_sX)
         MRc_1sX = MRc_sX.new(data=MRc_sX.data[None], dims=(1,) + MRc_sX.dims)
         H_h = self.Rc_hsX.dotprod(MRc_1sX)
+        if nh == self.nmaxold:
+            self.H_hh[:-1, :-1] = self.H_hh[1:, 1:]
         self.H_hh[:nold, nold - 1] = H_h
         self.H_hh[nold - 1, :nold] = H_h
 
         # TODO: Regularize
         H_hh = self.xp.linalg.inv(self.H_hh[:nold, :nold])
-        alpha_i = H_hh.sum(1)
-        alpha_i /= alpha_i.sum()
+        alpha_h = H_hh.sum(1)
+        alpha_h /= alpha_h.sum()
 
         # Step 3: Mix the densities
         nt_sX.data[:] = 0
         D_asii.data[:] = 0
-        for i, alpha in enumerate(alpha_i):
-            nt_sX.data[:] += alpha * self.nt_hsX[i][0].data
-            D_asii.data[:] += alpha * self.nt_hsX[i][1]
-            nt_sX.data[:] += self.beta * alpha * self.R_hsX[i][0].data
-            D_asii.data[:] += self.beta * alpha * self.R_hsX[i][1]
+        for h, alpha in enumerate(alpha_h):
+            nt_sX.data[:] += alpha * self.nt_hsX[h][0].data
+            D_asii.data[:] += alpha * self.nt_hsX[h][1]
+            nt_sX.data[:] += self.beta * alpha * self.R_hsX[h][0].data
+            D_asii.data[:] += self.beta * alpha * self.R_hsX[h][1]
 
         # Step 4: Update the density history
         self.nt_hsX.add_density(density)
