@@ -72,7 +72,7 @@ right.  This pops up a new window.
 To optimise the slab we need a calculator. We use the GPAW calculator in
 plane wave (PW) mode with the PBE exchange-correlation functional. The
 convergence with respect to the cutoff energy and k-point sampling should
-always be checked - see `Convergence.ipynb`for more information on how this
+always be checked - see `Convergence.ipynb` for more information on how this
 can be done. For this exercise an energy cutoff of 350eV and 4x4x1 k-point
 mesh is chosen to give reasonable results with a limited computation time.
 
@@ -228,10 +228,6 @@ the surface?
     print('N2 bond length:', slabN2.get_distance(8, 9))
 
 
-.. code::
-
-
-
 Exercise
 --------
 
@@ -258,8 +254,7 @@ Note that when viewing the structure, you can find the index of the
 individual atoms in the ``slab`` object by clicking on them.
 
 You might also find the
-[`get_center_of_mass()`](
-    https://ase-lib.org/ase/atoms.html#ase.Atoms.get_center_of_mass)
+[`get_center_of_mass()`](https://ase-lib.org/ase/atoms.html#ase.Atoms.get_center_of_mass)
 and
 [`rotate()`](https://ase-lib.org/ase/atoms.html#ase.Atoms.rotate)
 methods useful.
@@ -278,9 +273,6 @@ methods useful.
     a = slabN2_new.repeat((2, 2, 1))
     a.cell = slabN2_new.cell
     write('N2Ru_hollow.png', a, show_unit_cell=1)
-
-
-.. code::
 
 
 
@@ -309,12 +301,8 @@ job running on that number of CPU cores.
 
 .. code::
 
-
-
-.. code::
-
     # teacher:
-    
+
     # Note:  Ends up with N-N of 1.287 Å and 1.65 Å above the surface
 
 
