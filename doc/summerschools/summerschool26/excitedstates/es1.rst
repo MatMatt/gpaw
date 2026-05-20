@@ -51,24 +51,21 @@ Since we are going to relax the unit cell, we need to use the plane wave mode, s
 The materials we are looking at are semiconductors. Thus, the default value for the Fermi-Dirac smearing (i.e. occupations function) is too high (it is set up to 0.1 eV to work with metals). We recommend setting it to 0.01eV
 
 These links might be helpful for you:
-* https://gpaw.readthedocs.io/documentation/basic.html#manual-mode
-* https://gpaw.readthedocs.io/tutorialsexercises/structureoptimization/lattice_constants/lattice_constants.html
+
+* :ref:`manual_mode`
+* :ref:`lattice_constants`
 
 
 .. literalinclude:: solution1.py
    :start-at: from gpaw import GPAW
    :end-at: atoms.calc = calc
 
-We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the UnitCellFilter (see https://ase-lib.org/ase/constraints.html#ase.constraints.UnitCellFilter) and the BFGS (or QuasiNewton) optimizer.
+We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the :class:`ase:ase.filters.UnitCellFilter` and the BFGS (or QuasiNewton) optimizer.
 
 
-.. code::
-
-    from ase.filters import UnitCellFilter
-    from ase.optimize import BFGS
-    
-    filt = UnitCellFilter(atoms, mask=[1,1,1,0,0,0]) # student: filt = ???
-    op = BFGS(filt) # student: op = ???
+.. literalinclude:: solution1.py
+   :start-at: import UnitCellFilter
+   :end-at: op = BFGS
 
 
 Make sure that you have understand the difference of optimizing a bare atoms object and using a filter!
@@ -76,19 +73,11 @@ Make sure that you have understand the difference of optimizing a bare atoms obj
 ! ase gui filename.traj
 and execute it
 
-
-.. code::
-
-    # Run the optimization. This will take some time, do not get nervous.
-    # Only if it takes longer than 4-5 minutes or if it does not print anything
-    # contact us :)
-    op.run(fmax=0.05)
+.. literalinclude:: solution1.py
+   :start-at: Run the optimization
+   :end-at: op.run
 
 
-.. code::
-
-    # save the results in a file
-    calc.write(label + '_gs.gpw')
 
 
 
@@ -157,9 +146,7 @@ For the VBM and CBM, we are going to use the get_homo_lumo method of the calcula
 
 Band structure:
 ---------------
-Next, we calculate eigenvalues along a high symmetry path in the Brillouin zone. You can find the definition of the high symmetry k-points for the fcc lattice here:
-
-https://ase-lib.org/ase/dft/kpoints.html#ase.dft.kpoints.special_points
+Next, we calculate eigenvalues along a high symmetry path in the Brillouin zone. You can find the definition of the high symmetry k-points for the fcc lattice in :data:`ase:ase.dft.kpoints.special_points`.
 
 If your system is in the fcc or the diamond structures, then, your path may look something like 'GXWKL'. For BN, 'GMKG'.
 
@@ -178,8 +165,7 @@ For the band structure calculation, the density is fixed to the previously calcu
         )
 
 
-Finally, we compute the band structure using ASE's band structure method, whose documentation you can find here:
-https://ase-lib.org/ase/dft/kpoints.html#ase.dft.band_structure.BandStructure
+Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band_structure.BandStructure`.
 
 
 .. code::
@@ -212,7 +198,7 @@ In this section, we study the convergence of the results with the parameters tha
 
 
 Numerical convergence of DFT calculations should always be checked to avoid obtaining spurious results that are caused by a very coarse discretization. In this tutorial you can find an example on how to find a converged lattice constant for aluminum:
-https://gpaw.readthedocs.io/tutorialsexercises/structureoptimization/lattice_constants/lattice_constants.html
+:ref:`lattice_constants`
 
 The k-point mesh and the plane wave energy cut-off in the previous section were too low.
 
