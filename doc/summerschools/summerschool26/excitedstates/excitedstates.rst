@@ -24,8 +24,7 @@ fourth part.
 Part 1: Setup of the structure and bandstructure calculations
 =============================================================
 
-The notebook :download:`es1.ipynb` shows how to set up the
-material and how to calculate a converged band structure.
+The tutorial shows how to set up the material and how to calculate a converged band structure.
 
 * Set up the atomic structure and optimize its geometry
 
@@ -35,13 +34,17 @@ material and how to calculate a converged band structure.
 * Compare the performance of different exchange correlation
   functionals
 
+.. toctree::
+    :max-depth: 1
+
+    es1
+
 
 Part 2: Quasiparticle bandgap
 =============================
 
 .. toctree::
    es2
-
 
 The Python script :download:`es2.py` teaches how to set up
 calculations to find the quasiparticle band gap using GW
@@ -58,6 +61,9 @@ approximation.
 Part 3: Absorption spectrum
 ===========================
 
+.. toctree::
+    es3
+
 The notebook :download:`es3.ipynb` teaches how to set up
 calculations of the dielectric function to find the absorption spectrum.
 
@@ -71,6 +77,9 @@ calculations of the dielectric function to find the absorption spectrum.
 
 Part 4: Excitonic effects and Discussion
 ========================================
+
+.. toctree::
+    es4
 
 In the last notebook :download:`es4.ipynb` the results for different
 materials are plotted and discussed. Next the absorption spectra
