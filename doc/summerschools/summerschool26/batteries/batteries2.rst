@@ -6,29 +6,29 @@ You will calculate the equilibrium potential and use Bayesian error estimation
 to quantify how sensitive the calculated equilibrium potential is towards
 choice of functional. The notebook is ``batteries2.ipynb``.
 
-* Setup and calculate :mol:`FePO4` and :mol:`LiFePO4` structures
+* Setup and calculate :mol:`FePO_4` and :mol:`LiFePO_4` structures
 
   - Use these and the previous Li metal calculation to determine the
-    equilibrium potential of a :mol:`FePO4/Li` battery
+    equilibrium potential of a :mol:`FePO_4/Li` battery
 
 * Get an uncertainty estimation on the potential by using an ensemble of
   functionals called a ``BEEFEnsemble``
 
 * Using values from the previous day calculate the equilibrium potential of
-  the full Li :mol:`FePO4/C` battery
+  the full Li :mol:`FePO_4/C` battery
 
 
 Day 3 - Equilibrium potential
 =============================
 
-Today you will study the :mol:`LiFePO4` cathode.  You will calculate the
+Today you will study the :mol:`LiFePO_4` cathode.  You will calculate the
 equilibrium potential and use Bayesian error estimation to quantify how
 sensitive the calculated equilibrium potential is towards choice of
 functional.  After today you should be able to discuss:
 
 - The volume change during charge/discharge.
 
-- The maximum gravimetric and volumetric energy density of a :mol:`FePO4/C`
+- The maximum gravimetric and volumetric energy density of a :mol:`FePO_4/C`
   battery assuming the majority of weight and volume will be given by the
   electrodes.
 
@@ -56,10 +56,10 @@ Initialize
     from ase import Atoms
 
 
-FePO$_4$
-========
+:mol:`FePO_4`
+=============
 
-First we will construct an atoms object for :mol:`FePO4`. ASE can read files
+First we will construct an atoms object for :mol:`FePO_4`. ASE can read files
 from in a large number of different
 :mod:`ase:ase.io`.
 However, in this case you will build it from scratch using the below
@@ -111,7 +111,7 @@ You *can* use the cell below as a starting point.
                   pbc=[True, True, True])
 
 Visualize the structure you have made.  Explore the different functions in
-the visualizer and determine the volume of the cell (`View -> Quick Info`).
+the visualizer and determine the volume of the cell (``View -> Quick Info``).
 
 .. code::
 
@@ -121,7 +121,7 @@ For better convergence of calculations you should specify initial magnetic
 moments to iron.  The iron will in this structure be Fe\ `^{3+}` as it
 donates two *4s* electrons and one *3d* electron to PO\ `_4^{3-}`. What is
 the magnetic moment of iron?  For simplicity you should assume that
-:mol:`FePO4` is ferromagnetic.
+:mol:`FePO_4` is ferromagnetic.
 
 
 .. code::
@@ -273,10 +273,10 @@ the calculation is running.
     $ tail fepo4.py.*.out
 
 
-LiFePO$_4$
-==========
+:mol:`LiFePO_4`
+===============
 
-You will now do similar for :mol:`LiFePO4`. In this case you will load in a
+You will now do similar for :mol:`LiFePO_4`. In this case you will load in a
 template structure called ``lifepo4_wo_li.traj`` missing only the Li atoms.
 It is located in the resources folder.
 
@@ -307,7 +307,7 @@ You should now add Li into the structure using the fractional coordinates below:
 
 Add Li atoms into the structure, e.g., by following the example in
 this ASE tutorial:
-:ref:`ase:manipulating-atoms`.
+:ref:`ase:manipulatingatoms`.
 
 .. code::
 
@@ -354,14 +354,14 @@ Ensure that the magnetic moments are as they should be, once again assuming ferr
 
 At this point you should save your structure by writing it to a trajectory file.
 
-
 .. code::
 
     write('lifepo4.traj', lifepo4)
 
-
-You should now calculate the potential energy of this sytem using the method and same calculational parameters as for FePO$_4$ above. Make a full script in the cell below similar to what you did above for FePO$_4$ and make sure that it runs.
-
+You should now calculate the potential energy of this sytem using the
+method and same calculational parameters as for :mol:`FePO_4` above.  Make a
+full script in the cell below similar to what you did above for :mol:`FePO_4`
+and make sure that it runs.
 
 .. code::
 
@@ -491,9 +491,8 @@ We use a Li metal reference to calculate the equilibrium potential. On exercise 
     li_metal.get_potential_energy()
     li_metal.write('li_metal.traj')
 
-
-Now calculate the ensemble in the same way as for FePO$_4$ and LiFePO$_4$.
-
+Now calculate the ensemble in the same way as for :mol:`FePO_4` and
+:mol:`LiFePO_4`.
 
 .. code::
 
@@ -504,16 +503,19 @@ Now calculate the ensemble in the same way as for FePO$_4$ and LiFePO$_4$.
             print(e, file=result)
 
 
-
 Calculate equilibrium potential and uncertainty
 ===============================================
 
+You can now calculate the equilibrium potential for the case of a
+FePO$_4$/Li metal battery from the intercallation energy of Li in
+FePO$_4$. For simplicity, use that assumption that all vibrational
+energies and entropic terms cancel each other.  You should now have
+completed all submitted calculations before you proceed.
 
-You can now calculate the equilibrium potential for the case of a FePO$_4$/Li metal battery from the intercallation energy of Li in FePO$_4$. For simplicity, use that assumption that all vibrational energies and entropic terms cancel each other. You should now have completed all submitted calculations before you proceed.
 
-
-The calculated energies are for the full cells. Convert them to the energy per formula unit. The [len(...)](https://docs.python.org/3.6/library/functions.html#len) function can be quite helpful for this.
-
+The calculated energies are for the full cells.  Convert them to the
+energy per formula unit.  The
+:func:`len` function can be quite helpful for this.
 
 .. code::
 
@@ -524,7 +526,6 @@ The calculated energies are for the full cells. Convert them to the energy per f
     print('epot_lifepo4_cell =', epot_lifepo4_cell)
     print('epot_li_metal_cell =', epot_li_metal_cell)
 
-
 .. code::
 
     epot_fepo4 = epot_fepo4_cell / len(fepo4) * 6  # student: epot_fepo4 = ...
@@ -532,9 +533,9 @@ The calculated energies are for the full cells. Convert them to the energy per f
     epot_li_metal = epot_li_metal_cell / len(li_metal)  # student: epot_li_metal = ...
     # print(epot_fepo4, ...)
 
-
-No calculate the equilibrium potential under the assumption that it is given by $V_{eq} = \Delta U /e $, where $U$ is the electronic potential energy of the system and $e$ is the number of electrons transfered.
-
+No calculate the equilibrium potential under the assumption that it is
+given by `V_{eq} = \Delta U / e`, where `U` is the electronic potential
+energy of the system and `e` is the number of electrons transfered.
 
 .. code::
 
@@ -545,8 +546,10 @@ No calculate the equilibrium potential under the assumption that it is given by 
     print(V_eq)
 
 
-You will now calculate the error estimate for the Li intercallation energy in FePO$_4$ using the BEEF ensemble results. Start by loading in the files. Wait a few minutes and rerun the cell if the number is not 2000 for all of them.
-
+You will now calculate the error estimate for the Li intercallation
+energy in :mol:`FePO_4` using the BEEF ensemble results.  Start by loading in
+the files.  Wait a few minutes and rerun the cell if the number is not
+2000 for all of them.
 
 .. code::
 
@@ -557,9 +560,10 @@ You will now calculate the error estimate for the Li intercallation energy in Fe
     print('number of functionals in ensemble=', len(lifepo4_ens_cell))
     print('number of functionals in ensemble=', len(li_metal_ens_cell))
 
-
-Note that these are energies per cell and not per formula unit. Convert them as you did the potential energies above. Note that you are now performing the operation on a list of length 2000 and not a single float value as before.
-
+Note that these are energies per cell and not per formula unit.  Convert
+them as you did the potential energies above.  Note that you are now
+performing the operation on a list of length 2000 and not a single float
+value as before.
 
 .. code::
 
@@ -572,9 +576,7 @@ Note that these are energies per cell and not per formula unit. Convert them as 
     lifepo4_ens = lifepo4_ens_cell / len(lifepo4) * 7
     li_metal_ens = li_metal_ens_cell / len(li_metal)
 
-
 Make a list of equilibrium potentials.
-
 
 .. code::
 
@@ -583,18 +585,15 @@ Make a list of equilibrium potentials.
     # teacher
     V_eq_ens = lifepo4_ens - fepo4_ens - li_metal_ens
 
-
 Use the plot command below to visualize the distribution.
-
 
 .. code::
 
     plt.hist(V_eq_ens, 50)
     plt.grid(True)
 
-
-Use the [NumPy function standard deviation function](https://docs.scipy.org/doc/numpy/reference/generated/numpy.std.html#numpy-std) to obtain the standard deviation of the ensemble.
-
+Use the :func:`numpy:numpy.std`
+to obtain the standard deviation of the ensemble.
 
 .. code::
 
@@ -605,33 +604,28 @@ Use the [NumPy function standard deviation function](https://docs.scipy.org/doc/
     error = np.std(V_eq_ens)
     print(error)
 
-
-The equilibrium potential for a FePO$_4$/Li battery is thus as a good estimate:
+The equilibrium potential for a :mol:`FePO_4/Li`
+battery is thus as a good estimate:
 
 
 .. code::
 
     print(f'{V_eq:.2f} V +- {error:.2f} V')
 
-
-You can get the equilibrium potential for the FePO$_4$/C battery using the intercallation energy of Li in graphite, that you calculated on Day 2. What equilibrium potential do you find? How does that compare to the cell voltage you can obtain from FePO$_4$/C batteries?
-
+You can get the equilibrium potential for the :mol:`FePO_4/C` battery using
+the intercallation energy of Li in graphite, that you calculated on Day
+2. What equilibrium potential do you find?  How does that compare to the
+cell voltage you can obtain from :mol:`FePO_4/C` batteries?
 
 .. code::
 
     # You can use this cell for FePO4/C potential calculation
 
-
-Make sure you are able to discuss the bullet points at the top of this notebook. You can use the cell below for calculations.
-
-
-.. code::
-
-
+Make sure you are able to discuss the bullet points at the top of this
+notebook.  You can use the cell below for calculations.
 
 
 Bonus
 =====
 
-
-How does the predicted error estimate change if you consider the full reaction from Li in graphite + FePO4  to empty graphite + LiFePO4.
+How does the predicted error estimate change if you consider the full reaction from Li in graphite + :mol:`FePO_4` to empty graphite + :mol:`LiFePO_4`.
