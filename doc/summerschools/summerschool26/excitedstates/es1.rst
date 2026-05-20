@@ -27,7 +27,7 @@ Here is some information to help you to build the ase.Atoms object:
 * Diamond has diamond structure (!) with lattice constant a=3.56 Å
 * CdTe crystalizes in the zincblende structure with lattice constant a=6.48 Å
 * GaAs crystalizes in the zincblende structure with lattice constant a=5.65 Å
-* Monolayer BN centered in a hexagonal unit cell with a=2.5 Å (and 7 Å of vacuum at each side to prevent it from interacting with its periodic copies) and a basis of (0,0) and (0,$a / \sqrt{3}$)
+* Monolayer BN centered in a hexagonal unit cell with a=2.5 Å (and 7 Å of vacuum at each side to prevent it from interacting with its periodic copies) and a basis of (0,0) and (0, :math:`a / \sqrt{3}`)
 
 The first thing you should do is to create an :class:`ase:ase.Atoms` object (click the link to see ways to build atoms objects). In order to do so, you might find useful to use one of the crystal structures included in ase.build.bulk (hint, if you have an element of the IV group you might be interested on this link :func:`ase:ase.build.bulk`) or you might have to create a list/array for the atomic positions and another one for the unit cell and then create an atoms object (hint: see above). 
 
@@ -185,13 +185,15 @@ The band gap with different exchange correlation functionals
 
 You are now about to complete the last part of the exercise. Now that you know how to do ground state plane wave calculations and to find the band structure of a semiconductor, we ask you to discuss the effect of choosing a functional at a given level of theory.
 We propose you to study the results with the following functionals:
+
 * LDA (the one you have just used)
 * PBE
 * RPBE
 * mBEEF
 
 mBEEF is an meta GGA exchange correlation functional inspired from Bayesian statistics. An essential feature of these functionals is an ensemble of functionals around the optimum one, which allows an estimate of the computational error to be easily calculated in a non-self-consistent fashion. Further description can be found in:
-* J. J. Mortensen, K. Kaasbjerg, S. L. Frederiksen, J. K. Nørskov, J. P. Sethna, and K. W. Jacobsen (2005). Phys. Rev. Lett. 95, 216401
+
+* \J. J. Mortensen, K. Kaasbjerg, S. L. Frederiksen, J. K. Nørskov, J. P. Sethna, and K. W. Jacobsen (2005). Phys. Rev. Lett. 95, 216401
 * Wellendorff, J., Lundgaard, K. T., Jacobsen, K. W., & Bligaard, T. (2014). The Journal of Chemical Physics, 140(14), 144107.
 
 To complete this part of the exercise, we suggest that you write scripts and submit them (i.e. write one script for each functional) so that they can run in parallel. As a guide, you can use the LDA calculations you have already done.
