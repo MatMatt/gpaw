@@ -39,7 +39,13 @@ material and how to calculate a converged band structure.
 Part 2: Quasiparticle bandgap
 =============================
 
-The notebook :download:`es2.ipynb` teaches how to set up
+.. toctree:
+
+   es2
+
+:ref:`es2`
+
+The Python script :download:`es2.py` teaches how to set up
 calculations to find the quasiparticle band gap using GW
 approximation.
 
