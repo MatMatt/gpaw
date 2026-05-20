@@ -9,7 +9,6 @@ from ase.io import read, write
 import time
 # snippet-imports-header-end
 
-# %%
 # teacher
 import ase.visualize as viz
 viz.view = lambda atoms, repeat=None: None
@@ -101,8 +100,6 @@ print(f'Wall time: {(time.time() - t) / 60} min.')
 print('Adsorption energy:', slabN2.get_potential_energy() - (e_slab + e_N2))
 # snippet-adsorption-energy-end
 
-
-# %%
 # teacher:
 print('N2 bond length:', slabN2.get_distance(8, 9))
 
@@ -118,8 +115,6 @@ slab = read('Ru.traj')
 view(slab)
 # snippet-adsorption-hollow-end
 
-
-# %%
 # teacher:
 # This block is roughly what they should write themselves
 h = 2.0
@@ -132,10 +127,6 @@ a = slabN2_new.repeat((2, 2, 1))
 a.cell = slabN2_new.cell
 write('N2Ru_hollow.png', a, show_unit_cell=1)
 
-# %%
-
-
-# %%
 # teacher:
 calc = GPAW(xc='PBE',
             mode=PW(350),
@@ -147,15 +138,10 @@ t = time.time()
 dyn.run(fmax=0.05)
 print('Wall time:', time.time() - t)
 
-# %%
-
-
-# %%
 # teacher:
 
 # Note:  Ends up with N-N of 1.287 Å and 1.65 Å above the surface
 
-# %%
 # teacher:
 p1 = (slab.positions[4] +
       slab.positions[5] +
@@ -168,7 +154,6 @@ a = slab2Nads.repeat((2, 2, 1))
 a.cell = slab2Nads.cell
 write('2NadsRu.png', a, show_unit_cell=1)
 
-# %%
 # teacher:
 constraint = FixAtoms(mask=(z < z.min() + 1.0))
 slab2Nads.set_constraint(constraint)
