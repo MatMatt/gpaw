@@ -6,11 +6,12 @@ from gpaw.core.atom_arrays import AtomArraysLayout, AtomArrays
 from gpaw.core.atom_arrays import AtomDistribution
 from gpaw.setup import Setups
 from gpaw.typing import ArrayND, Self
+from gpaw.mixer.metric import BaseMetric
 
 
 class BaseMixer:
     def __init__(self):
-        pass
+        self.metric = BaseMetric()
 
     def initialize(self,
                    desc: DomainType,
@@ -26,6 +27,9 @@ class BaseMixer:
             atomdist=atomdist, dtype=float if ncomponents < 4 else complex)
         self.histories: list[DensityHistory] = []
         self._initialize_history_()
+        self.metric.initialize(ncomponents=ncomponents,
+                               grid=desc,
+                               xp=xp)
 
     def _initialize_history_(self):
         self.density_history = DensityHistory(
