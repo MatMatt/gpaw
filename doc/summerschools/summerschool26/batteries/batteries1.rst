@@ -7,9 +7,30 @@
 
 .. _batteries1:
 
-========================
-Battery project (part 1)
-========================
+===================================
+Li intercalation energy in graphite
+===================================
+
+The :ref:`batteries1` page will guide you through the first day of the
+battery exercise.
+
+* Setup a graphite structure
+
+* Calculate C-C and interlayer distances
+
+  - Use an empirical potential and DFT with a couple of exchange correlation
+    functionals and compare with experimental values
+
+* Setup and calculate the energy of Li metal
+
+  - Using DFT only from now on
+
+* Setup and calculate the combined structure of Li between graphene layers
+
+* Use all values to determine the Li intercalation energy
+
+  - Compare the results of different functionals with experimental values.
+
 
 Day 2 - Li intercalation energy
 ===============================
@@ -218,9 +239,8 @@ Check out the contents of the output file (:download:`graphite-LDA.txt`),
 all relevant information about the scf cycle are printed therein.
 
 Then we optimize the unit cell of the structure.  We will take advantage
-of the
-`StrainFilter
-<https://ase-lib.org/ase/constraints.html#the-strainfilter-class>`__
+of the :ref:`StrainFilter <ase:asdjkhdsfhj>`
+https://ase-lib.org/ase/constraints.html#the-strainfilter-class
 class.  This allows us to simultaneously optimize both C-C distance and
 interlayer distance.  We employ the
 `BFGS <https://aria42.com/blog/2014/12/understanding-lbfgs>`__ algorithm to
