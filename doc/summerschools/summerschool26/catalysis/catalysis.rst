@@ -24,6 +24,11 @@ Tools used in this exercise:
 Part 1: |N2| adsorption on a flat Ru surface
 ============================================
 
+.. toctree::
+   :maxdepth: 1
+
+   n2_on_metal
+
 :download:`n2_on_metal.ipynb`, :download:`N2Ru_hollow.png`,
 :download:`2NadsRu.png`
 
