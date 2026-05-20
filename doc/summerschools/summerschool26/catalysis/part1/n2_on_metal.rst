@@ -41,7 +41,7 @@ right.  This pops up a new window.
    :end-before: snippet-setup-slab-end
 
 To optimise the slab we need a calculator. We use the GPAW calculator in
-plane wave (PW) mode with the PBE exchange-correlation functional. The
+plane wave (PW) mode with the PBE exchange—correlation functional. The
 convergence with respect to the cutoff energy and k-point sampling should
 always be checked - see
 
