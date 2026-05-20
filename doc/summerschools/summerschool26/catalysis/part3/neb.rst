@@ -69,7 +69,7 @@ You can find the barrier by selecting Tools->NEB in the gui (unfortunately,
 the gui cannot show graphs when started from a notebook), or you can make a
 script using :class:`ase.mep.neb.NEBTools`, e.g.:
 
-.. literalinclude: neb.py
+.. literalinclude:: neb.py
   :start-after: snippet-nebtools-start
   :end-before: snippet-nebtools-end
 
