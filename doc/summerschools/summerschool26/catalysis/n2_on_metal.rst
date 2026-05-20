@@ -1,11 +1,3 @@
-
-.. :code::
-
-    # teacher
-    import ase.visualize as viz
-    viz.view = lambda atoms, repeat=None: None
-
-
 Catalysis: Dissociative adsorbtion of :mol:`N_2` on a metal surface
 ======================================================================
 
@@ -82,7 +74,7 @@ directly in the output above, or from the saved .traj file like this:
 
 Often you are only interested in the final energy which can be found like this:
 
-..literalinclude:: n2_on_metal.py
+.. literalinclude:: n2_on_metal.py
    :start-after: # snippet-final-energy-start
    :end-before: # snippet-final-energy-end
 
@@ -156,7 +148,7 @@ Exercise
    :mol:`N_2` molecule is lying down with the center of mass above a
    three-fold hollow site as shown below. Use an adsorption height of 1.7 Å.
 
-<img src="N2Ru_hollow.png">
+.. image:: N2Ru_hollow.png
 
 Remember that you can read in the `traj` files you have saved, so you don't
 need to optimise the surface again.
@@ -189,7 +181,7 @@ job running on that number of CPU cores.
 3) Make a configuration where two N atoms are adsorbed in hollow sites on the
    surface as shown below
 
-<img src='2NadsRu.png'>
+.. image:: 2NadsRu.png
 
 Note that here the two N atoms sit on next-nearest hollow sites.  An
 alternative would be to have them on nearest neighbor sites.  If you feel
