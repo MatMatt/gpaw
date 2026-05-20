@@ -1,6 +1,6 @@
 from ase.parallel import paropen
 from ase.io import read, write
-from ase.io.trajectory import Trajectory
+# from ase.io.trajectory import Trajectory
 from ase.dft.bee import BEEFEnsemble
 from gpaw import GPAW, FermiDirac, Mixer, PW
 fepo4 = read('fepo4.traj')
