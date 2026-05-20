@@ -19,7 +19,8 @@ from gpaw.core.domain import Domain
 from gpaw.gpu import cpupy as fake_cupy
 from gpaw.gpu.mpi import CuPyMPI
 from gpaw.lfc import BasisFunctions
-from gpaw.mixer import MixerWrapper, get_mixer_from_keywords
+# from gpaw.mixer import MixerWrapper, get_mixer_from_keywords
+from gpaw.mixer.basemixer import BaseMixer
 from gpaw.mpi import (MPIComm, Parallelization, broadcast,
                       normalize_communicator, serial_comm, synchronize_atoms)
 from gpaw.new import prod
@@ -342,13 +343,21 @@ class DFTComponentsBuilder:
         occ_calc = self.create_occupation_number_calculator()
         eigensolver = self.create_eigensolver(hamiltonian)
 
-        mixer = MixerWrapper(
-            get_mixer_from_keywords(self.atoms.pbc.any(),
-                                    self.ncomponents,
-                                    **self.params.mixer.params),
-            self.ncomponents,
-            self.grid._gd,
-            world=self.communicators['w'])
+        # mixer = MixerWrapper(
+        #     get_mixer_from_keywords(self.atoms.pbc.any(),
+        #                             self.ncomponents,
+        #                             **self.params.mixer.params),
+        #     self.ncomponents,
+        #     self.grid._gd,
+        #     world=self.communicators['w'])
+
+        mixer = BaseMixer(
+            desc=self.grid,
+            atomdist=self.atomdist,
+            setups=self.setups,
+            ncomponents=self.ncomponents,
+            xp=self.xp,
+        )
 
         if self.params.experimental.get('paw_corr_mixer', False):
             from gpaw.mixer import ExperimentalDotProd

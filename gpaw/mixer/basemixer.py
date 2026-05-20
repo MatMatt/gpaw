@@ -2,39 +2,53 @@ import numpy as np
 
 from gpaw.new.density import Density
 from gpaw.core.arrays import DomainType, XArray
-from gpaw.core.atoms_arrays import AtomsArrayLayout, AtomsArray
-from gpaw.typing import NDArray
+from gpaw.core.atom_arrays import AtomArraysLayout, AtomArrays
+from gpaw.core.atom_arrays import AtomDistribution
+from gpaw.setup import Setups
 
 class BaseMixer:
     name = 'no-mixing'
 
     def __init__(self,
-                 desc: DomainType):
+                 desc: DomainType,
+                 atomdist: AtomDistribution,
+                 setups: Setups,
+                 ncomponents: int,
+                 xp=np):
         self.desc = desc
-        self.xp = self.desc.xp
+        self.ncomponents = ncomponents
+        self.xp = xp
+        self.atom_array_layout = AtomArraysLayout(
+            [(setup.ni, setup.ni) for setup in setups],
+            atomdist=atomdist, dtype=float if ncomponents < 4 else complex)
+        self._initialize_history_()
+
+    def _initialize_history_(self):
         self.density_history = DensityHistory(
             nmaxold=1,
-            nspins=desc.nspins,
-            desc=desc,
+            ncomponents=self.ncomponents,
+            desc=self.desc,
+            xp=self.xp
         )
 
     def mix(self, density: Density) -> float:
-        ntc_sR = add_compensation_charge(density)
+        ntc_sX = self.add_compensation_charge(density)
         if self.density_history.nold == 0:
-            self.density_history.add(ntc_sR)
+            self.density_history.add(ntc_sX)
             return np.inf
 
-        Rc_sR = self.calculate_residual(ntc_sR)
-        self.density_history.add(ntc_sR)
-        return self.calculate_charge_sloshing(Rc_sR)
+        Rc_sX = self.calculate_residual(ntc_sX, self.density_history[-1])
+        dNt = self.calculate_charge_sloshing(Rc_sX)
+        self.density_history.add(ntc_sX)
+        return dNt
 
     def calculate_charge_sloshing(self, res_sX: XArray) -> float:
-        slosh_sX = self.desc.empty()
+        slosh_sX = self.desc.empty(self.ncomponents)
         slosh_sX.data[:] = self.xp.abs(res_sX.data)
-        return slosh_sX.integrate()
+        return slosh_sX.integrate().sum()
 
     def calculate_residual(self, ntc_sX: XArray, res_sX: XArray) -> XArray:
-        assert ntc_sX.data is not out_sX.data
+        assert ntc_sX.data is not res_sX.data
         # We do density history first, in case res_sX is the same as
         # self.density_history[-1].
         res_sX.data[:] = -self.density_history[-1].data
@@ -42,7 +56,11 @@ class BaseMixer:
         return res_sX
 
     def add_compensation_charge(self, density: Density) -> XArray:
+        # TODO: Add compensation charge to density
         return density.nt_sR
+
+    def reset(self):
+        self.density_history.reset()
 
     def __str__(self):
         return "No-mixing mixer"
@@ -50,15 +68,16 @@ class BaseMixer:
 class DensityHistory:
     def __init__(self,
                  nmaxold: int,
-                 nspins: int,
+                 ncomponents: int,
                  desc: DomainType,
-                 atoms_layout: AtomsArrayLayout | None = None):
+                 atoms_layout: AtomArraysLayout | None = None,
+                 xp=np):
         self.nmaxold = nmaxold
-        self.nspins = nspins
+        self.ncomponents = ncomponents
         self.desc = desc
         self.atoms_layout = atoms_layout
-        self._n_hsX = desc.zeroes((nmaxold, nspins))
-        self._D_hasii = atoms_layout.zeroes((nmaxold, nspins)) \
+        self._n_hsX = desc.zeros((nmaxold, ncomponents), xp=xp)
+        self._D_hasii = atoms_layout.zeros((nmaxold, ncomponents)) \
             if atoms_layout is not None else None
         self.current_indicies = []
 
@@ -66,7 +85,7 @@ class DensityHistory:
         self.add(density.n_sR, density.D_asii)
 
     def add(self, n_sX: XArray,
-            D_asii: AtomsArray | None = None) -> None:
+            D_asii: AtomArrays | None = None) -> None:
         if self.nold == self.nmaxold:
             self.delete_oldest()
 
@@ -89,6 +108,9 @@ class DensityHistory:
             if i not in self.current_indicies:
                 return i
         raise ValueError('No available index')
+
+    def reset(self):
+        self.current_indicies = []
 
     def __getitem__(self, index: int) -> tuple[XArray, AtomsArray] | XArray:
         index = self.current_indicies[index]
