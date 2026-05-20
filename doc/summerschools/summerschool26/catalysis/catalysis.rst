@@ -44,7 +44,7 @@ Based on them do the following:
 .. toctree::
    :maxdepth: 1
 
-   n2_on_metal
+   part1/n2_on_metal
 
 Part 2: Splitting |N2|: initial and final geometry
 ==================================================
