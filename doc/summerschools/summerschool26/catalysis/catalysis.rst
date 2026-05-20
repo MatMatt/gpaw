@@ -25,8 +25,6 @@ Part 1: |N2| adsorption on a flat Ru surface
 ============================================
 
 
-.. ::download:`n2_on_metal.ipynb`,
-
 Following the link below you will see instructions to do the following.
 Based on them do the following:
 
@@ -47,10 +45,6 @@ Based on them do the following:
    :maxdepth: 1
 
    n2_on_metal
-
-The final structures should look something like this:
-:download:`N2Ru_hollow.png`,
-:download:`2NadsRu.png`
 
 Part 2: Splitting |N2|: initial and final geometry
 ==================================================
