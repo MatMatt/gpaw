@@ -158,6 +158,7 @@ Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band
    :end-before: # snippet-save-band-structure-end
 
 
+.. image:: Si_bandstructure_LDA.png
 
 Convergence (optional but recommended)
 ======================================
