@@ -1,6 +1,22 @@
-===============
-Battery project
-===============
+====================================================
+Part 2: Equilibrium potential of a LiFePO4/C battery
+====================================================
+
+You will calculate the equilibrium potential and use Bayesian error estimation
+to quantify how sensitive the calculated equilibrium potential is towards
+choice of functional. The notebook is ``batteries2.ipynb``.
+
+* Setup and calculate :mol:`FePO4` and :mol:`LiFePO4` structures
+
+  - Use these and the previous Li metal calculation to determine the
+    equilibrium potential of a :mol:`FePO4/Li` battery
+
+* Get an uncertainty estimation on the potential by using an ensemble of
+  functionals called a ``BEEFEnsemble``
+
+* Using values from the previous day calculate the equilibrium potential of
+  the full Li :mol:`FePO4/C` battery
+
 
 Day 3 - Equilibrium potential
 =============================
@@ -30,7 +46,6 @@ Initialize
 
 .. code::
 
-    # magic: %matplotlib notebook
     import numpy as np
     from ase.visualize import view
     import matplotlib.pyplot as plt
@@ -44,9 +59,9 @@ Initialize
 FePO$_4$
 ========
 
-First we will construct an atoms object for FePO$_4$. ASE can read files
+First we will construct an atoms object for :mol:`FePO4`. ASE can read files
 from in a large number of different
-[formats](https://ase-lib.org/ase/io/io.html?highlight=read%20formats#file-input-and-output).
+:mod:`ase:ase.io`.
 However, in this case you will build it from scratch using the below
 information:
 
@@ -86,57 +101,27 @@ information:
     #   2. axis:    yes    0.00000    5.87524    0.00000
     #   3. axis:    yes    0.00000    0.00000    4.83157
 
-
 You *can* use the cell below as a starting point.
-
 
 .. code::
 
-    # fepo4 = Atoms('Fe4O...',
-    #               positions=[[x0, y0, z0],[x1, y1, z1]...],
-    #               cell=[x, y, z],
-    #               pbc=[True, True, True])
+    fepo4 = Atoms('Fe4O...',
+                  positions=[[x0, y0, z0],[x1, y1, z1]...],
+                  cell=[x, y, z],
+                  pbc=[True, True, True])
 
-    # Teacher:
-    fepo4 = Atoms('Fe4O16P4',
-                 positions=[[2.73015081, 1.46880951, 4.56541172],
-                    [2.23941067, 4.40642872, 2.14957739],
-                    [7.20997230, 4.40642925, 0.26615813],
-                    [7.70070740, 1.46880983, 2.68199421],
-                    [1.16033403, 1.46881052, 3.40240205],
-                    [3.80867172, 4.40642951, 0.98654342],
-                    [8.77981469, 4.40642875, 1.42923946],
-                    [6.13142032, 1.46881092, 3.84509827],
-                    [4.37288562, 1.46880982, 0.81812712],
-                    [0.59764596, 4.40643021, 3.23442747],
-                    [5.56702590, 4.40642886, 4.01346264],
-                    [9.34268360, 1.46880929, 1.59716233],
-                    [1.64001691, 0.26061277, 1.17298291],
-                    [3.32931769, 5.61463705, 3.58882629],
-                    [8.30013707, 3.19826250, 3.65857000],
-                    [6.61076951, 2.67698811, 1.24272700],
-                    [8.30013642, 5.61459688, 3.65856912],
-                    [6.61076982, 0.26063178, 1.24272567],
-                    [1.64001666, 2.67700652, 1.17298270],
-                    [3.32931675, 3.19822249, 3.58882660],
-                    [0.90585688, 1.46880966, 1.89272372],
-                    [4.06363530, 4.40642949, 4.30853266],
-                    [9.03398503, 4.40642957, 2.93877879],
-                    [5.87676435, 1.46881009, 0.52297232]
-                            ],
-                 cell=[9.94012, 5.87524, 4.83157],
-                 pbc=[1, 1, 1])
-
-
-Visualize the structure you have made. Explore the different functions in the visualizer and determine the volume of the cell (`View -> Quick Info`).
-
+Visualize the structure you have made.  Explore the different functions in
+the visualizer and determine the volume of the cell (`View -> Quick Info`).
 
 .. code::
 
     view(fepo4)
 
-
-For better convergence of calculations you should specify initial magnetic moments to iron. The iron will in this structure be Fe$^{3+}$ as it donates two *4s* electrons and one *3d* electron to PO$_4$$^{3-}$. What is the magnetic moment of iron? For simplicity you should assume that FePO$_4$ is ferromagnetic.
+For better convergence of calculations you should specify initial magnetic
+moments to iron.  The iron will in this structure be Fe\ `^{3+}` as it
+donates two *4s* electrons and one *3d* electron to PO\ `_4^{3-}`. What is
+the magnetic moment of iron?  For simplicity you should assume that
+:mol:`FePO4` is ferromagnetic.
 
 
 .. code::
@@ -146,26 +131,35 @@ For better convergence of calculations you should specify initial magnetic momen
             atom.magmom = 5.0  # student: atom.magmom = ?
 
 
-Now examine the initial magnetic moments of the system using an [appropriate method](https://ase-lib.org/ase/atoms.html?highlight=get_initial#list-of-all-methods).
-
+Now examine the initial magnetic moments of the system using
+:meth:`ase:ase.Atoms.get_initial_magnetic_moments`.
 
 .. code::
 
     magmoms = fepo4.get_initial_magnetic_moments()  # student: magmoms = fepo4.xxx()
     print(magmoms)
 
-
 Write your atoms object to file.
-
 
 .. code::
 
     write('fepo4.traj', fepo4)
 
+For this calculation you will use the BEEF-vdW functional developed by
+`Wellendorff et al.
+<https://journals.aps.org/prb/abstract/10.1103/PhysRevB.85.235149>`__.
+Although there are better alternatives for calculating the energy of bulk
+systems, the BEEF-vdW has a build-in ensemble for error estimation of
+calculated energies using a statistical approach.  An ensemble is
+essentially a collection of different functionals that are used to sample
+the space of possible solutions.  By considering this collection one can
+obtain an assessment of the uncertainty associated with the functional.
+This is particularly useful in DFT calculations where the exact functional
+form is not known, and different approximations can lead to varying
+results.
 
-For this calculation you will use the BEEF-vdW functional developed by [Wellendorff et al.](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.85.235149) Although there are better alternatives for calculating the energy of bulk systems, the BEEF-vdW has a build-in ensemble for error estimation of calculated energies using a statistical approach. An ensemble is essentially a collection of different functionals that are used to sample the space of possible solutions. By considering this collection one can obtain an assessment of the uncertainty associated with the functional. This is particularly useful in DFT calculations where the exact functional form is not known, and different approximations can lead to varying results.
-
-In the set-up of this calculator you will append relevant keyword values into a dictionary, which is fed to the calculator object.
+In the set-up of this calculator you will append relevant keyword values
+into a dictionary, which is fed to the calculator object.
 
 
 .. code::
@@ -192,16 +186,20 @@ To save computational time while keeping the calculations physically sound, the 
     params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)  # The mixer used during SCF optimization
 
 
-DFT suffers from the self-interaction error. An electron interacts with the system electron density, to which it contributes itself. The error is most pronounced for highly localized orbitals. [Hubbard U correction](https://gpaw.readthedocs.io/tutorialsexercises/energetics/hubbardu/hubbardu.html) is used to mitigate the self-interaction error of the highly localized *3d*-electrons of Fe. This is done in GPAW using the `setups` keyword.
-
+DFT suffers from the self-interaction error.  An electron interacts with
+the system electron density, to which it contributes itself.  The error is
+most pronounced for highly localized orbitals.
+:ref:`Hubbard U <hubbardu>`
+is used to mitigate the self-interaction error of the highly localized
+*3d*-electrons of Fe.  This is done in GPAW using the ``setups`` keyword.
 
 .. code::
 
     params_GPAW['setups']      = {'Fe': ':d,4.3'}             # U=4.3 applied to d orbitals
 
-
-Make a GPAW calculator and attach it to the atoms object. Here you will use [get_potential_energy](https://ase-lib.org/ase/atoms.html#ase.Atoms.get_potential_energy) to start the calculation.
-
+Make a GPAW calculator and attach it to the atoms object.  Here you will
+use :meth:`ase:ase.Atoms.get_potential_energy`
+to start the calculation.
 
 .. code::
 
@@ -211,19 +209,20 @@ Make a GPAW calculator and attach it to the atoms object. Here you will use [get
     print(epot_fepo4_cell)
     write('fepo4_out.traj', fepo4)
 
-
-You will use the ensemble capability of the BEEF-vdW functional. You will need this later so you should write it to file so you do not have to start all over again later. Start by obtaining the required data from the calculator, i.e., the individual energy of each term in the BEEF-vdW functional expansion. Get the energy difference compared to BEEF-vdW for 2000 ensemble functionals.
-
+You will use the ensemble capability of the BEEF-vdW functional.  You will
+need this later so you should write it to file so you do not have to start
+all over again later.  Start by obtaining the required data from the
+calculator, i.e., the individual energy of each term in the BEEF-vdW
+functional expansion.  Get the energy difference compared to BEEF-vdW for
+2000 ensemble functionals.
 
 .. code::
-
 
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
 
-
-Print the energy differences to file. This is not the most efficient way of printing to file but can allow easier subsequent data treatment.
-
+Print the energy differences to file.  This is not the most efficient way
+of printing to file but can allow easier subsequent data treatment.
 
 .. code::
 
@@ -231,13 +230,10 @@ Print the energy differences to file. This is not the most efficient way of prin
         for e in dE:
             print(e, file=result)
 
-
-You now have what you need to make a full script. Make it in the cell below and execute it to make sure the script runs. Once you have made sure the calculation is able to run, stop it by `interupt the kernel`.
-
+You now have what you need to make a full script:
 
 .. code::
 
-    # %%writefile 'fepo4.py'
     from ase.parallel import paropen
     from ase.io import write
     from ase.dft.bee import BEEFEnsemble
@@ -254,96 +250,35 @@ You now have what you need to make a full script. Make it in the cell below and 
 
     write('fepo4_out.traj', fepo4)
 
-
-    # Teacher:
-    from ase.parallel import paropen
-    from ase.io import read, write
-    from ase.io.trajectory import Trajectory
-    from ase.dft.bee import BEEFEnsemble
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-    fepo4 = read('fepo4.traj')
-
-    params_GPAW = {}
-    params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
-    params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
-    params_GPAW['kpts']        = {'size':  (2,4,5),            #The k-point mesh
-                                  'gamma': True}
-    params_GPAW['spinpol']     = True                          #Performing spin polarized calculations
-    params_GPAW['xc']          = 'BEEF-vdW'                    #The used exchange-correlation functional
-    params_GPAW['occupations'] = FermiDirac(width = 0.1,      #The smearing
-                                            fixmagmom = True)  #Total magnetic moment fixed to the initial value
-    params_GPAW['convergence'] = {'eigenstates': 1.0e-4,       #eV^2 / electron
-                                  'energy':      2.0e-4,       #eV / electron
-                                  'density':     1.0e-3,}
-    params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
-    params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-
-    calc = GPAW(**params_GPAW)
-    fepo4.calc = calc
-    epot_fepo4_cell=fepo4.get_potential_energy()
-    print('E_Pot=', epot_fepo4_cell)
-
-    write('fepo4_out.traj', fepo4)
-
-    ens = BEEFEnsemble(calc)
-    dE = ens.get_ensemble_energies(2000)
-
-    with paropen('ensemble_fepo4.dat', 'a') as result:
-        for e in dE:
-            print(e, file=result)
-
-
-Uncomment the `%%writefile` line and execute the cell again and submit the calculation to the HPC cluster. The calculation should take around 10 minutes.
-
+Submit the calculation to the HPC cluster.  The calculation should take
+around 10 minutes.
 
 .. code::
 
-    # magic: !mq submit fepo4.py -R 8:1h  # submits the calculation to 8 cores, 1 hour
+   $ mq submit fepo4.py -R 8:1h  # submits the calculation to 8 cores, 1 hour
 
+Run the below cell to examine the status of your calculation.
 
-Run the below cell to examine the status of your calculation. If no output is returned, the calculation has either finished or failed.
+.. code:: bash
 
+   $ mq ls
 
-.. code::
-
-    # magic: !mq ls
-
-
-Once the calculation begins, you can run the cells below to open the error log and output of the calculation in a new window. This can be done while the calculation is running.
-
+Once the calculation begins, you can run the cells below to open the error
+log and output of the calculation in a new window.  This can be done while
+the calculation is running.
 
 .. code::
 
-    # Error log
-    # magic: !cat "$(ls -t fepo4.py.*err | head -1)"
-
-
-.. code::
-
-    # Output
-    # magic: !cat "$(ls -t fepo4.py.*out | head -1)"
-
-
-Once the calculation has finished, load in the result. You can skip past this cell and return later.
-
-
-.. code::
-
-    try:
-        fepo4 = read('fepo4_out.traj')
-        print('Calculation finished')
-    except FileNotFoundError:
-        print('Calculation has not yet finished')
-
+    $ tail fepo4.py.*.err
+    $ tail fepo4.py.*.out
 
 
 LiFePO$_4$
 ==========
 
-
-
-
-You will now do similar for LiFePO$_4$. In this case you will load in a template structure called `lifepo4_wo_li.traj` missing only the Li atoms. It is located in the resources folder.
+You will now do similar for :mol:`LiFePO4`. In this case you will load in a
+template structure called ``lifepo4_wo_li.traj`` missing only the Li atoms.
+It is located in the resources folder.
 
 
 .. code::
@@ -370,8 +305,9 @@ You should now add Li into the structure using the fractional coordinates below:
     # Li  0.5  0    0.5
 
 
-Add Li atoms into the structure, e.g., by following the example in [this ASE tutorial](https://ase-lib.org/gettingstarted/manipulating_atoms/manipulating_atoms.html?highlight=set_cell#manipulating-atoms).
-
+Add Li atoms into the structure, e.g., by following the example in
+this ASE tutorial:
+:ref:`ase:manipulating-atoms`.
 
 .. code::
 
