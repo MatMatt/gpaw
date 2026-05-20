@@ -5,13 +5,13 @@ Batteries
 =========
 
 In this exercise we will study the anode and cathode material of a Li-ion
-battery. The cathode material will be |LiFePO4| a typical cathode material in
-rechargeable Li-ion batteries. The anode will be graphite.
+battery.  The cathode material will be :mol:`LiFePO_4` a typical cathode
+material in rechargeable Li-ion batteries.  The anode will be graphite.
 
 The first day we start out soft by calculating the intercalation energy of Li
 in graphite while we learn the methods and workflow using ASE and GPAW. The
 second day will be about determining the equilibrium potential of a
-|LiFePO4|/C battery, we will also use a Bayesian approach to estimate the DFT
+:mol:`LiFePO_4/C` battery, we will also use a Bayesian approach to estimate the DFT
 error we expect on this important value. On the final day we will determine
 important battery characteristics such Li transport barriers and the voltage
 profile.
@@ -50,8 +50,8 @@ basic discussion of the voltage profile of the battery. The notebook is
   - If time permits you can study the influence of changing the interlayer
     graphite distance on the energy barrier.
 
-* Create structures for a Li vacancy in :mol:`LiFePO4` and a single Li
-  in :mol:`FePO4`
+* Create structures for a Li vacancy in :mol:`LiFePO_4` and a single Li
+  in :mol:`FePO_4`
 
 * Calculate the Li vacancy/insertion energies and compare them to the
   equilibrium potential
