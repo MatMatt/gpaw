@@ -33,14 +33,14 @@ The first thing you should do is to create an :class:`ase:ase.Atoms` object (cli
 
 
 .. literalinclude:: solution1.py
-   :start-at: basic imports
-   :end-at: import bulk
+   :start-at: # snippet-basic-imports-start
+   :end-at: # snippet-basic-imports-end
 
 
 
 .. literalinclude:: solution1.py
-   :start-at: Si = bulk
-   :end-at: view(atoms)
+   :start-at: # snippet-structures-start
+   :end-at: # snippet-structures-end
 
 
 We are now going to relax the structure. To do so, we need to add a calculator, GPAW, to get DFT energies, and forces. We are going to use PBE exchange correlation functional.
@@ -57,15 +57,15 @@ These links might be helpful for you:
 
 
 .. literalinclude:: solution1.py
-   :start-at: from gpaw import GPAW
-   :end-at: atoms.calc = calc
+   :start-at: # snippet-calculator-start
+   :end-at: # snippet-calculator-end
 
 We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the :class:`ase:ase.filters.UnitCellFilter` and the BFGS (or QuasiNewton) optimizer.
 
 
 .. literalinclude:: solution1.py
-   :start-at: import UnitCellFilter
-   :end-at: op = BFGS
+   :start-at: # snippet-optimizer-start
+   :end-at: # snippet-optimizer-end
 
 
 Make sure that you have understand the difference of optimizing a bare atoms object and using a filter!
@@ -74,8 +74,8 @@ Make sure that you have understand the difference of optimizing a bare atoms obj
 and execute it
 
 .. literalinclude:: solution1.py
-   :start-at: Run the optimization
-   :end-at: op.run
+   :start-at: # snippet-run-optimization-start
+   :end-at: # snippet-run-optimization-end
 
 
 
@@ -90,14 +90,9 @@ We are now going to illustrate how to compute the band gap and obtain the band s
 The starting point for this section (and you might also want to use it in your own scripts) will be the PBE relaxed structure from the previous section:
 
 
-.. code::
-
-    from ase.io import read
-    # Add GPAW's relevant submodules again if you have restarted
-    # the kernel or if you are copy and pasting to a script
-    
-    # read only the structure
-    atoms = read(label + '_gs.gpw')
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-restart-from-relaxed-start
+   :end-at: # snippet-restart-from-relaxed-end
 
 
 We are now going to restart the calculator and recompute the ground state, saving it to a new gpw file. As we are dealing with small bulk system, plane wave mode is the most appropriate here.
@@ -105,14 +100,9 @@ It is generally a good idea to choose a finer kpoint mesh for the band structure
 We are also going to use LDA, which is faster but not very good at predicting bandgaps (yes, we know, you are going to get a silly value here).
 
 
-.. code::
-
-    # self consistency in LDA
-    calc = GPAW(mode=PW(200),
-                xc='LDA',
-                kpts=(2, 2, 2),
-                occupations=FermiDirac(0.01))
-    atoms.calc = calc
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-lda-calculator-start
+   :end-at: # snippet-lda-calculator-end
 
 
 Lets use this calculator to get the energy, the *valence band maximum*, the *conduction band minimum*, and the *band gap*, as the difference of the two of the VBM and the CBM.
@@ -120,27 +110,19 @@ Lets use this calculator to get the energy, the *valence band maximum*, the *con
 For the VBM and CBM, we are going to use the get_homo_lumo method of the calculator. This method returns the energy of the highest Kohn-Sham occupied orbital (called HOMO here) and the energy lowest Kohn-Sham unoccupied orbital (the LUMO). We are going to compute the band gap at this level of theory from the difference between both.
 
 
-.. code::
-
-    # Run this cell to see the documentation of the get_homo_lumo method
-    ... # student: calc.get_homo_lumo?
-
-
-.. code::
-
-    # Potential energy
-    E = atoms.get_potential_energy()
-    vbm, cbm = calc.get_homo_lumo()
-    
-    print('E=', E)
-    print('VBM=', vbm, 'CBM=', cbm)
-    print('band gap=', cbm - vbm)
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-homo-lumo-doc-start
+   :end-at: # snippet-homo-lumo-doc-end
 
 
-.. code::
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-band-gap-start
+   :end-at: # snippet-band-gap-end
 
-    # Save the ground state to file
-    calc.write(label + '_gs_LDA.gpw')
+
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-save-lda-start
+   :end-at: # snippet-save-lda-end
 
 
 
@@ -153,37 +135,27 @@ If your system is in the fcc or the diamond structures, then, your path may look
 For the band structure calculation, the density is fixed to the previously calculated ground state density, and as we want to calculate all k-points, symmetry is not used (symmetry='off').
 
 
-.. code::
-
-    # Restart from ground state and fix potential:
-    calc = GPAW(label + '_gs_LDA.gpw').fixed_density(
-        nbands=16,  # Write the number of bands you are going to compute here, try 2x nbands # student: nbands = ?
-        symmetry='off',
-        kpts={'path': 'GXWKL',  # student: kpts={'path': ???,  # write your path here e.g. GXWKL/GMKG
-              'npoints': 60},
-        convergence={'bands': 'occupied'}  # Your number of occupied orbitals comes here, e.g. 8/'occupied' # student: convergence=???
-        )
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-fixed-density-start
+   :end-at: # snippet-fixed-density-end
 
 
 Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band_structure.BandStructure`.
 
 
-.. code::
-
-    # Have a look at the documentation of the band structure method
-    ...  # student: calc.band_structure?
-
-
-.. code::
-
-    bs = calc.band_structure()
-    bs.plot(filename=label + '_bandstructure_LDA.png', show=True) # emax=10.0
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-band-structure-doc-start
+   :end-at: # snippet-band-structure-doc-end
 
 
-.. code::
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-plot-band-structure-start
+   :end-at: # snippet-plot-band-structure-end
 
-    # Save the band structure data, to discuss it the last day.
-    bs.write(label + '_bandstructure_LDA.json')
+
+.. literalinclude:: solution1b.py
+   :start-at: # snippet-save-band-structure-start
+   :end-at: # snippet-save-band-structure-end
 
 
 

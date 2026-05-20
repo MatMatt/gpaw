@@ -1,8 +1,11 @@
+# snippet-basic-imports-start
 # basic imports
 import numpy as np
 from ase import Atoms # Import atoms
 from ase.build import bulk
+# snippet-basic-imports-end
 
+# snippet-structures-start
 Si = bulk('Si', 'diamond', a=5.4) # student:
 Ge = bulk('Ge','diamond', a=5.7) # student:
 C = bulk('C', 'diamond', a=3.6) # student:
@@ -14,6 +17,9 @@ atoms = Si # student: atoms = ???
 label = 'Si' # student: label = '???'
 
 #view(atoms) # check your initial structure # student: view(atoms)
+# snippet-structures-end
+
+# snippet-calculator-start
 from gpaw import GPAW, PW, FermiDirac
 
 # We create the calculator object
@@ -25,12 +31,17 @@ calc = GPAW(xc = 'PBE',
 )
 
 atoms.calc = calc
+# snippet-calculator-end
+
+# snippet-optimizer-start
 from ase.filters import UnitCellFilter
 from ase.optimize import BFGS
 
 filt = UnitCellFilter(atoms) # student: filt = ???
 op = BFGS(filt) # student: op = ???
+# snippet-optimizer-end
 
+# snippet-run-optimization-start
 # Run the optimization. This will take some time, do not get nervous.
 # Only if it takes longer than 4-5 minutes or if it does not print anything
 # contact us :)
@@ -38,5 +49,4 @@ op.run(fmax=0.05)
 
 # save the results in a file
 calc.write(label + '_gs.gpw')
-
-
+# snippet-run-optimization-end
