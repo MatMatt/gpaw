@@ -329,7 +329,7 @@ class DFTComponentsBuilder:
         return poisson_solvers[0]
 
     def create_mixer(self):
-        mixer = get_mixer_from_params(self.params.mixer)
+        mixer = get_mixer_from_params(self.params.mixer.params)
         mixer.initialize(
             desc=self.grid,
             atomdist=self.atomdist,

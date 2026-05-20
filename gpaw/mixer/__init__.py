@@ -25,9 +25,6 @@ mixer_names = {
 }
 
 
-def get_mixer_from_params(params: dict | str):
-    if isinstance(params, str):
-        return mixer_names[params]()
-    else:
-        name = params.pop('backend')
-        return mixer_names[name](**params)
+def get_mixer_from_params(mixer: dict):
+    name = mixer.pop('backend', 'pulay')
+    return mixer_names[name](**mixer)
