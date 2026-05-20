@@ -35,8 +35,6 @@ The tutorial shows how to set up the material and how to calculate a converged b
   functionals
 
 .. toctree::
-    :max-depth: 1
-
     es1
 
 
