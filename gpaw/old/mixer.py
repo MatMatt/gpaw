@@ -1179,7 +1179,7 @@ for dcls in [SeparateSpinMixerDriver, SpinSumMixerDriver,
 # This function is used by Density to decide mixer parameters
 # that the user did not explicitly provide, i.e., it fills out
 # everything that is missing and returns a mixer "driver".
-def get_mixer_from_params(pbc, nspins, **mixerkwargs):
+def get_mixer_from_keywords(pbc, nspins, **mixerkwargs):
     mixerkwargs = mixerkwargs.copy()  # avoid modifying the original dict
 
     if mixerkwargs.get('name') == 'dummy':
