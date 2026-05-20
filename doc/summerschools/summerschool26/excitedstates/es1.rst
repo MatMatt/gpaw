@@ -62,13 +62,9 @@ These links might be helpful for you:
 We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the UnitCellFilter (see https://ase-lib.org/ase/constraints.html#ase.constraints.UnitCellFilter) and the BFGS (or QuasiNewton) optimizer.
 
 
-.. code::
-
-    from ase.filters import UnitCellFilter
-    from ase.optimize import BFGS
-    
-    filt = UnitCellFilter(atoms, mask=[1,1,1,0,0,0]) # student: filt = ???
-    op = BFGS(filt) # student: op = ???
+.. literalinclude:: solution1.py
+   :start-at: import UnitCellFilter
+   :end-at: op = BFGS
 
 
 Make sure that you have understand the difference of optimizing a bare atoms object and using a filter!
@@ -76,19 +72,11 @@ Make sure that you have understand the difference of optimizing a bare atoms obj
 ! ase gui filename.traj
 and execute it
 
-
-.. code::
-
-    # Run the optimization. This will take some time, do not get nervous.
-    # Only if it takes longer than 4-5 minutes or if it does not print anything
-    # contact us :)
-    op.run(fmax=0.05)
+.. literalinclude:: solution1.py
+   :start-at: Run the optimization
+   :end-at: op.run
 
 
-.. code::
-
-    # save the results in a file
-    calc.write(label + '_gs.gpw')
 
 
 

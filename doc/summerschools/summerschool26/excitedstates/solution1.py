@@ -25,4 +25,18 @@ calc = GPAW(xc = 'PBE',
 )
 
 atoms.calc = calc
+from ase.filters import UnitCellFilter
+from ase.optimize import BFGS
+
+filt = UnitCellFilter(atoms) # student: filt = ???
+op = BFGS(filt) # student: op = ???
+
+# Run the optimization. This will take some time, do not get nervous.
+# Only if it takes longer than 4-5 minutes or if it does not print anything
+# contact us :)
+op.run(fmax=0.05)
+
+# save the results in a file
+calc.write(label + '_gs.gpw')
+
 
