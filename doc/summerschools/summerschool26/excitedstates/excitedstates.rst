@@ -62,7 +62,7 @@ Part 3: Absorption spectrum
 .. toctree::
     es3
 
-The notebook :download:`es3.ipynb` teaches how to set up
+The tutorial teaches how to set up
 calculations of the dielectric function to find the absorption spectrum.
 
 * Understanding the dielectric function
@@ -79,7 +79,7 @@ Part 4: Excitonic effects and Discussion
 .. toctree::
     es4
 
-In the last notebook :download:`es4.ipynb` the results for different
+In the final tutorial the results for different
 materials are plotted and discussed. Next the absorption spectra
 is calculated including the excitonic effects (Bethe-Salpeter formalism).
 
