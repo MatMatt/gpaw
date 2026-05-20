@@ -1,8 +1,3 @@
-# %%
-# teacher
-import ase.visualize as viz
-viz.view = lambda atoms, repeat=None: None
-
 # snippet-imports-header-start
 from ase import Atoms
 from gpaw import GPAW, PW
@@ -13,6 +8,11 @@ from ase.visualize import view
 from ase.io import read, write
 import time
 # snippet-imports-header-end
+
+# %%
+# teacher
+import ase.visualize as viz
+viz.view = lambda atoms, repeat=None: None
 
 # snippet-setup-slab-start
 a_Ru = 2.704  # PBE value from OQMD.org; expt value is 2.706
@@ -106,12 +106,12 @@ print('Adsorption energy:', slabN2.get_potential_energy() - (e_slab + e_N2))
 # teacher:
 print('N2 bond length:', slabN2.get_distance(8, 9))
 
-
-
-
-
-
-# Exercize
+#
+#
+#
+#
+#
+# Exercise
 
 # snippet-adsorption-hollow-start
 slab = read('Ru.traj')
