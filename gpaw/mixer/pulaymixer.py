@@ -5,6 +5,7 @@ from gpaw.mixer.basemixer import DensityHistory, BaseMixer
 
 
 class PulayMixer(BaseMixer):
+    name = 'pulay'
     nmaxold = 16
     beta = 0.08
 
@@ -53,6 +54,7 @@ class PulayMixer(BaseMixer):
         self.add_compensation_charge(R_sX, R_asii, out=Rc_sX)
 
         # Step 2: Calculate the DIIS matrix
+        # TODO: Apply Metric
         Rc_1sX = Rc_sX.new(data=Rc_sX.data[None], dims=(1,) + Rc_sX.dims)
         H_h = self.Rc_hsX.dotprod(Rc_1sX)
         self.H_hh[:nold, nold - 1] = H_h

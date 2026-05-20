@@ -11,14 +11,14 @@ def test_pw_h(in_tmp_dir):
     comm = world.new_communicator([world.rank])
     e0 = 0.0
     a.calc = GPAW(mode=PW(250),
-                  communicator=comm,)
-                  # txt=None)
+                  communicator=comm,
+                  txt=None)
     e0 = a.get_potential_energy()
     e0 = world.sum_scalar(e0) / world.size
     a.calc = GPAW(mode=PW(250),
                   eigensolver='rmm-diis',
-                  basis='szp(dzp)',)
-                  # txt='%d.txt' % world.size)
+                  basis='szp(dzp)',
+                  txt='%d.txt' % world.size)
     e = a.get_potential_energy()
     f = a.get_forces()
     assert abs(e - e0) < 3e-4, e - e0

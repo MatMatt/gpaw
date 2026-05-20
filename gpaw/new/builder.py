@@ -20,7 +20,7 @@ from gpaw.gpu import cpupy as fake_cupy
 from gpaw.gpu.mpi import CuPyMPI
 from gpaw.lfc import BasisFunctions
 # from gpaw.mixer import MixerWrapper, get_mixer_from_keywords
-from gpaw.mixer.basemixer import BaseMixer
+# from gpaw.mixer.basemixer import BaseMixer
 from gpaw.mixer.pulaymixer import PulayMixer
 from gpaw.mpi import (MPIComm, Parallelization, broadcast,
                       normalize_communicator, serial_comm, synchronize_atoms)
