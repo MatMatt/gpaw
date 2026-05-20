@@ -3,7 +3,7 @@ from gpaw import GPAW, FermiDirac
 from gpaw import PW
 
 atoms = bulk('Si', 'diamond', a=5.4) # student:
-
+print(len(atoms))
 calc = GPAW(mode=PW(300),  # student: # energy cutoff for plane wave basis (in eV)
             kpts={'size': (3, 3, 3), 'gamma': True}, # student: kpts={'size': (?, ?, ?), 'gamma': True},
             xc='LDA',
@@ -30,6 +30,40 @@ gw.calculate()
 import pickle
 
 results = pickle.load(open('Si-g0w0_results_GW.pckl', 'rb')) # student: open('???-g0w0_results_GW.pckl', 'rb')
+direct_gap = results['qp'][0, 0, -1] - results['qp'][0, 0, -2]
+
+print('Direct bandgap of Si:', direct_gap) # student: 'Direct bandgap of ???:', direct_gap
+
+
+calc = GPAW(mode="lcao",  # student mode lcao
+            basis="dzp",  # basis set dzp
+            nbands="nao", # nbands nao
+            kpts={'size': (3, 3, 3), 'gamma': True}, # student: kpts={'size': (?, ?, ?), 'gamma': True},
+            xc='LDA',
+            occupations=FermiDirac(0.001),
+            parallel={'domain': 1},
+            txt='Si_lcao_groundstate.txt') # student: txt='???lcao_groundstate.txt'
+
+atoms.calc = calc
+atoms.get_potential_energy()
+
+calc.write('Si_lcao_groundstate.gpw', 'all')  # student: '???_lcao_groundstate.gpw', 'all' # write out wavefunctions
+
+from gpaw.new.calculation import DFTCalculation
+dft = DFTCalculation.from_gpw_file('Si_lcao_groundstate.gpw')
+dft.change_mode('pw')
+dft.write_gpw_file('Si_pw_from_lcao_groundstate.gpw', include_wfs=True) # student: calc='???_pw_from_lcao_groundstate.gpw'
+
+
+gw = G0W0(calc='Si_pw_from_lcao_groundstate.gpw', # student: calc='???_pw_lcao_groundstate.gpw',
+          nbands=26,  # student: nbands=???,  # number of bands for calculation of self-energy
+          bands=(3, 5), # student: bands=(?, ?), # VB and CB
+          ecut=20.0, # student: ecut=???, # plane-wave cutoff for self-energy (20-200)
+          integrate_gamma='WS',  # Use supercell Wigner-Seitz truncation for W.
+          filename='Si-from-lcao-g0w0') # student: filename='???-from-lcao-g0w0'
+gw.calculate()
+
+results = pickle.load(open('Si-from-lcao-g0w0_results_GW.pckl', 'rb')) # student: open('???-from-lcao-g0w0_results_GW.pckl', 'rb')
 direct_gap = results['qp'][0, 0, -1] - results['qp'][0, 0, -2]
 
 print('Direct bandgap of Si:', direct_gap) # student: 'Direct bandgap of ???:', direct_gap
