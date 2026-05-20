@@ -121,7 +121,7 @@ Some suitable parameters for the NEB are given below:
 * Use the same calculator and constraints as for the initial and final images, but remember to set the ``communicator`` as described above
 * Use 6 images. This gives a reasonable description of the energy landscape and can be run e.g. on 12 cores.
 * Use a spring constant of 1.0 between the images. A lower value will slow the convergence
-* Relax the initial NEB until ``fmax = 0.1`` eV/Å, then switch on the climbing image and relax until ``fmax = 0.05`` eV/Å`.
+* Relax the initial NEB until ``fmax = 0.1`` eV/Å, then switch on the climbing image and relax until ``fmax = 0.05`` eV/Å.
 
 Once the calculation is done you should check that the final path looks
 reasonable. What is the N—N distance at the saddle point? Use NEBTools to
