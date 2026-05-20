@@ -1,8 +1,6 @@
 import numpy as np
 
 from gpaw.new.density import Density
-from gpaw.core.arrays import DomainType, XArray
-from gpaw.core.atom_arrays import AtomArraysLayout, AtomArrays
 from gpaw.mixer.basemixer import DensityHistory, BaseMixer
 
 
