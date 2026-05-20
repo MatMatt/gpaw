@@ -1,13 +1,15 @@
 import numpy as np
 
 from gpaw.new.density import Density
-from gpaw.mixer.basemixer import DensityHistory, BaseMixer
+from gpaw.mixer.base import DensityHistory, BaseMixer
 
 
 class PulayMixer(BaseMixer):
-    name = 'pulay'
-    nmaxold = 16
-    beta = 0.08
+    def __init__(self,
+                 nmaxold: int = 16,
+                 beta: float = 0.08):
+        self.nmaxold = nmaxold
+        self.beta = beta
 
     def _initialize_history_(self):
         self.nt_hsX = DensityHistory(

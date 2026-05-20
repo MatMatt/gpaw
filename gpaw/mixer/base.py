@@ -9,14 +9,15 @@ from gpaw.typing import ArrayND, Self
 
 
 class BaseMixer:
-    name = 'no-mixing'
+    def __init__(self):
+        pass
 
-    def __init__(self,
-                 desc: DomainType,
-                 atomdist: AtomDistribution,
-                 setups: Setups,
-                 ncomponents: int,
-                 xp=np):
+    def initialize(self,
+                   desc: DomainType,
+                   atomdist: AtomDistribution,
+                   setups: Setups,
+                   ncomponents: int,
+                   xp=np):
         self.desc = desc
         self.ncomponents = ncomponents
         self.xp = xp

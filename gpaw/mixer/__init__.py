@@ -1,6 +1,7 @@
+from gpaw.mixer.base import BaseMixer
+from gpaw.mixer.pulay import PulayMixer
 # Imports for backwards compatibility:
 from gpaw.old.mixer import _definemixerfunc
-
 
 Mixer = _definemixerfunc('separate', 'pulay')
 MixerSum = _definemixerfunc('sum', 'pulay')
@@ -16,3 +17,17 @@ BroydenMixer = _definemixerfunc('separate', 'broyden')
 BroydenMixerSum = _definemixerfunc('sum', 'broyden')
 BroydenMixerSum2 = _definemixerfunc('sum2', 'broyden')
 BroydenMixerDif = _definemixerfunc('difference', 'broyden')
+
+
+mixer_names = {
+    'no-mixing': BaseMixer,
+    'pulay': PulayMixer,
+}
+
+
+def get_mixer_from_params(params: dict | str):
+    if isinstance(params, str):
+        return mixer_names[params]()
+    else:
+        name = params.pop('backend')
+        return mixer_names[name](**params)
