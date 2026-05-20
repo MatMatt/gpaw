@@ -1,4 +1,4 @@
-Catalysis: Dissociative adsorbtion of :mol:`N_2` on a metal surface
+Catalysis: Dissociative adsorption of :mol:`N_2` on a metal surface
 ======================================================================
 
 This is the rate limiting step for ammonia synthesis.
@@ -13,7 +13,7 @@ layers, a realistic calculation would require the double.
 :mol:`N_2` Adsorption on a metal surface
 -------------------------------------------
 
-This notebook shows how to calculate the adsorption energy of an
+This tutorial shows how to calculate the adsorption energy of an
 :mol:`N_2` molecule on a closepacked Ru surface. The first cell imports
 some modules from the ASE and GPAW packages
 
@@ -130,7 +130,7 @@ follow the guidelines in the **Exercise** section below.
 
 Once the calculation is finished we can calculate the adsorption energy as:
 
-E<sub>ads</sub> = E<sub>slab+N2</sub> - (E<sub>slab</sub> + E<sub>N2</sub>)
+:math:`E_{ads} = E_{slab+N_2} - (E_{slab} + E_{N_2})`
 
 
 .. literalinclude:: n2_on_metal.py
@@ -144,7 +144,7 @@ the surface?
 Exercise
 --------
 
-1) Make a new notebook and set up an adsorption configuration where the
+1) Make a script and set up an adsorption configuration where the
    :mol:`N_2` molecule is lying down with the center of mass above a
    three-fold hollow site as shown below. Use an adsorption height of 1.7 Å.
 
@@ -165,15 +165,15 @@ Note that when viewing the structure, you can find the index of the
 individual atoms in the ``slab`` object by clicking on them.
 
 You might also find the
-[`get_center_of_mass()`](https://ase-lib.org/ase/atoms.html#ase.Atoms.get_center_of_mass)
+:meth:`~ase.Atoms.get_center_of_mass`
 and
-[`rotate()`](https://ase-lib.org/ase/atoms.html#ase.Atoms.rotate)
+:meth:`~ase.Atoms.rotate`
 methods useful.
 
 Now you should optimize the structure as you did before with the
 :mol:`N_2` molecule standing.  The calculation will probably bee too long
-to run interactively in a Notebook.  Prototype it here, then interrupt the
-calculation and copy-paste the relevant cells into a script.
+to run interactively.  Prototype it in the terminal, then interrupt the
+calculation.
 
 Check the number of irreducible k-points and then submit the job as a batch
 job running on that number of CPU cores.
