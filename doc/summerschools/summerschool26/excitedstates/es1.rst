@@ -60,7 +60,7 @@ These links might be helpful for you:
    :start-at: from gpaw import GPAW
    :end-at: atoms.calc = calc
 
-We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the UnitCellFilter (see https://ase-lib.org/ase/constraints.html#ase.constraints.UnitCellFilter) and the BFGS (or QuasiNewton) optimizer.
+We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the :class:`ase:ase.filters.UnitCellFilter` and the BFGS (or QuasiNewton) optimizer.
 
 
 .. literalinclude:: solution1.py
@@ -146,9 +146,7 @@ For the VBM and CBM, we are going to use the get_homo_lumo method of the calcula
 
 Band structure:
 ---------------
-Next, we calculate eigenvalues along a high symmetry path in the Brillouin zone. You can find the definition of the high symmetry k-points for the fcc lattice here:
-
-https://ase-lib.org/ase/dft/kpoints.html#ase.dft.kpoints.special_points
+Next, we calculate eigenvalues along a high symmetry path in the Brillouin zone. You can find the definition of the high symmetry k-points for the fcc lattice in :data:`ase:ase.dft.kpoints.special_points`.
 
 If your system is in the fcc or the diamond structures, then, your path may look something like 'GXWKL'. For BN, 'GMKG'.
 
@@ -167,8 +165,7 @@ For the band structure calculation, the density is fixed to the previously calcu
         )
 
 
-Finally, we compute the band structure using ASE's band structure method, whose documentation you can find here:
-https://ase-lib.org/ase/dft/kpoints.html#ase.dft.band_structure.BandStructure
+Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band_structure.BandStructure`.
 
 
 .. code::
