@@ -6,7 +6,7 @@ barrier for an Au atom on Al(001). If you are not familiar with the NEB
 method, some relevant references are listed on ASE's
 documentation page on the :mod:`ase.mep.neb` module.
 
-The tutorial uses the EMT potential in stead of DFT, as this is a lot faster.
+The tutorial uses the EMT potential instead of DFT, as this is a lot faster.
 It is based on a :ref:`tutorial found on the ASE
 webpage <ase:selfdiffusion_example>`.
 
@@ -23,14 +23,14 @@ First we set up the initial state and check that it looks ok:
   :end-before: snippet-setup-surface-end
 
 
-Then we optimise the structure and save it
+Then we optimise the structure and save it.
 
 .. literalinclude:: neb.py
   :start-after: snippet-optimize-start
   :end-before: snippet-optimize-end
 
 
-We make the final state by moving the Au atom one lattice constant and
+We make the final state by moving the Au atom by one lattice constant and
 optimise again.
 
 .. literalinclude:: neb.py
@@ -40,8 +40,8 @@ optimise again.
 
 Now we make a NEB calculation with 3 images between the inital and final
 states. The images are initially made as copies of the initial state and the
-call ``interpolate()`` makes a linear interpolation between the initial and
-final state. As always, we check that everything looks ok before we run the
+call ``interpolate()`` performs a linear interpolation between the initial and
+final states. As always, we check that everything looks ok before we run the
 calculation.
 
 NOTE: The linear interpolation works well in this case but not for e.g.
@@ -52,7 +52,7 @@ rotations. In this case an improved starting guess can be made with the
   :start-after: snippet-setupneb-start
   :end-before: snippet-setupneb-end
 
-After verifying the structure we can run the optimization:
+After verifying the structure, we can run the optimization:
 
 .. literalinclude:: neb.py
    :start-after: snippet-bfgsneb-start
@@ -65,9 +65,8 @@ We visualize the final path with:
    :end-before: snippet-viewfinalimages-end
 
 
-You can find the barrier by selecting Tools->NEB in the gui (unfortunately,
-the gui cannot show graphs when started from a notebook), or you can make a
-script using :class:`ase.mep.neb.NEBTools`, e.g.:
+You can find the barrier by selecting Tools->NEB in the gui,
+or you can make a script using :class:`ase.mep.neb.NEBTools`, e.g.:
 
 .. literalinclude:: neb.py
   :start-after: snippet-nebtools-start
@@ -77,12 +76,9 @@ script using :class:`ase.mep.neb.NEBTools`, e.g.:
 Exercise
 --------
 
-Now you should make your own NEB using the configuration with :mol:`N_2`
-lying down as the initial state and the configuration with two N atoms
-adsorbed on the surface as the final state. The NEB needs to run in parallel
-so you should make it as a python script, however you can use the Notebook to
-test your configurations (but not the parallelisation) if you like and export
-it as a script in the end.
+Now you should set up your own NEB using the configuration with :mol:`N_2`
+lying down as the initial state and the configuration with two N-atoms
+adsorbed on the surface as the final state.
 
 Parallelisation
 ===============
@@ -92,14 +88,14 @@ The NEB should be parallelised over images. An example can be found in
 script enumerates the CPUs and uses this number (``rank``) along with the
 total number of CPUs (``size``) to distribute the tasks.
 Note that the NEB class now needs to be initialized by using
-``NEB(images,parallel=True)``.
+``NEB(images, parallel=True)``.
 
 .. literalinclude:: neb.py
    :start-after: snippet-mpiranks-start
    :end-before: snippet-mpiranks-end
 
 
-For each image we assign a set of CPUs identified by their rank. The rank
+For each image, we assign a set of CPUs identified by their rank. The rank
 numbers are given to the calculator associated with this image.
 
 .. literalinclude:: neb.py
@@ -123,7 +119,7 @@ Some suitable parameters for the NEB are given below:
 * Use a spring constant of 1.0 between the images. A lower value will slow the convergence
 * Relax the initial NEB until ``fmax = 0.1`` eV/Å, then switch on the climbing image and relax until ``fmax = 0.05`` eV/Å.
 
-Once the calculation is done you should check that the final path looks
+Once the calculation is done, you should check that the final path looks
 reasonable. What is the N—N distance at the saddle point? Use NEBTools to
 calculate the barrier. Is :mol:`N_2` likely to dissociate on the surface
 at room temperature?
