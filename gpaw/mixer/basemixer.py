@@ -7,6 +7,7 @@ from gpaw.core.atom_arrays import AtomDistribution
 from gpaw.setup import Setups
 from gpaw.typing import ArrayND
 
+
 class BaseMixer:
     name = 'no-mixing'
 
@@ -22,7 +23,7 @@ class BaseMixer:
         self.atom_layout = AtomArraysLayout(
             [(setup.ni, setup.ni) for setup in setups],
             atomdist=atomdist, dtype=float if ncomponents < 4 else complex)
-        self.histories = []
+        self.histories: list[DensityHistory] = []
         self._initialize_history_()
 
     def _initialize_history_(self):
@@ -63,9 +64,9 @@ class BaseMixer:
         return res_sX
 
     def calculate_paw_residual(self,
-                               D_asii: NDArray,
-                               prev_asii: NDArray,
-                               res_asii: NDArray) -> NDArray:
+                               D_asii: ArrayND,
+                               prev_asii: ArrayND,
+                               res_asii: ArrayND) -> ArrayND:
         assert D_asii is not res_asii
         res_asii[:] = -prev_asii
         res_asii += D_asii
@@ -87,6 +88,7 @@ class BaseMixer:
     def __str__(self):
         return "No-mixing mixer"
 
+
 class DensityHistory:
     def __init__(self,
                  nmaxold: int,
@@ -101,7 +103,7 @@ class DensityHistory:
         self._n_hsX = desc.zeros((nmaxold, ncomponents), xp=xp)
         self._D_hasii = atom_layout.zeros((nmaxold, ncomponents)) \
             if atom_layout is not None else None
-        self.current_indicies = []
+        self.current_indicies: list[int] = []
 
     def add_density(self, density: Density) -> None:
         self.add(density.nt_sR, density.D_asii)
@@ -113,6 +115,7 @@ class DensityHistory:
 
         self._n_hsX.data[self.next_index] = n_sX.data
         if self._D_hasii is not None:
+            assert D_asii is not None
             self._D_hasii.data[self.next_index] = D_asii.data
 
         self.current_indicies.append(self.next_index)
@@ -143,13 +146,16 @@ class DensityHistory:
     def reset(self):
         self.current_indicies = []
 
-    def dotprod(self, other: DensityHistory | XArray) -> ArrayND:
+    def dotprod(self,
+                other: DensityHistory | XArray) -> ArrayND:
         if isinstance(other, DensityHistory):
             H_hh = self._n_hsX.matrix_elements(other._n_hsX)
-            out = H_hh.data[self.current_indicies, :][:, other.current_indicies]
+            out = H_hh.data[self.current_indicies, :][
+                :, other.current_indicies]
         else:
             assert len(other.dims) > 1
-            out = self._n_hsX.matrix_elements(other).data[self.current_indicies, 0]
+            out = self._n_hsX.matrix_elements(other).data[
+                self.current_indicies, 0]
         return out
 
     def __getitem__(self, index: int) -> tuple[XArray, AtomArrays] | XArray:
