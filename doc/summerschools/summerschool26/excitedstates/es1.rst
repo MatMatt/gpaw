@@ -33,14 +33,14 @@ The first thing you should do is to create an :class:`ase:ase.Atoms` object (cli
 
 
 .. literalinclude:: solution1.py
-   :start-at: # snippet-basic-imports-start
-   :end-at: # snippet-basic-imports-end
+   :start-after: # snippet-basic-imports-start
+   :end-before: # snippet-basic-imports-end
 
 
 
 .. literalinclude:: solution1.py
-   :start-at: # snippet-structures-start
-   :end-at: # snippet-structures-end
+   :start-after: # snippet-structures-start
+   :end-before: # snippet-structures-end
 
 
 We are now going to relax the structure. To do so, we need to add a calculator, GPAW, to get DFT energies, and forces. We are going to use PBE exchange correlation functional.
@@ -57,15 +57,15 @@ These links might be helpful for you:
 
 
 .. literalinclude:: solution1.py
-   :start-at: # snippet-calculator-start
-   :end-at: # snippet-calculator-end
+   :start-after: # snippet-calculator-start
+   :end-before: # snippet-calculator-end
 
 We are going to relax the atomic positions and the unit cell at the same time. To do so, we are going to use the :class:`ase:ase.filters.UnitCellFilter` and the BFGS (or QuasiNewton) optimizer.
 
 
 .. literalinclude:: solution1.py
-   :start-at: # snippet-optimizer-start
-   :end-at: # snippet-optimizer-end
+   :start-after: # snippet-optimizer-start
+   :end-before: # snippet-optimizer-end
 
 
 Make sure that you have understand the difference of optimizing a bare atoms object and using a filter!
@@ -74,8 +74,8 @@ Make sure that you have understand the difference of optimizing a bare atoms obj
 and execute it
 
 .. literalinclude:: solution1.py
-   :start-at: # snippet-run-optimization-start
-   :end-at: # snippet-run-optimization-end
+   :start-after: # snippet-run-optimization-start
+   :end-before: # snippet-run-optimization-end
 
 
 
@@ -91,8 +91,8 @@ The starting point for this section (and you might also want to use it in your o
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-restart-from-relaxed-start
-   :end-at: # snippet-restart-from-relaxed-end
+   :start-after: # snippet-restart-from-relaxed-start
+   :end-before: # snippet-restart-from-relaxed-end
 
 
 We are now going to restart the calculator and recompute the ground state, saving it to a new gpw file. As we are dealing with small bulk system, plane wave mode is the most appropriate here.
@@ -101,8 +101,8 @@ We are also going to use LDA, which is faster but not very good at predicting ba
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-lda-calculator-start
-   :end-at: # snippet-lda-calculator-end
+   :start-after: # snippet-lda-calculator-start
+   :end-before: # snippet-lda-calculator-end
 
 
 Lets use this calculator to get the energy, the *valence band maximum*, the *conduction band minimum*, and the *band gap*, as the difference of the two of the VBM and the CBM.
@@ -111,18 +111,18 @@ For the VBM and CBM, we are going to use the get_homo_lumo method of the calcula
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-homo-lumo-doc-start
-   :end-at: # snippet-homo-lumo-doc-end
+   :start-after: # snippet-homo-lumo-doc-start
+   :end-before: # snippet-homo-lumo-doc-end
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-band-gap-start
-   :end-at: # snippet-band-gap-end
+   :start-after: # snippet-band-gap-start
+   :end-before: # snippet-band-gap-end
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-save-lda-start
-   :end-at: # snippet-save-lda-end
+   :start-after: # snippet-save-lda-start
+   :end-before: # snippet-save-lda-end
 
 
 
@@ -136,26 +136,26 @@ For the band structure calculation, the density is fixed to the previously calcu
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-fixed-density-start
-   :end-at: # snippet-fixed-density-end
+   :start-after: # snippet-fixed-density-start
+   :end-before: # snippet-fixed-density-end
 
 
 Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band_structure.BandStructure`.
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-band-structure-doc-start
-   :end-at: # snippet-band-structure-doc-end
+   :start-after: # snippet-band-structure-doc-start
+   :end-before: # snippet-band-structure-doc-end
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-plot-band-structure-start
-   :end-at: # snippet-plot-band-structure-end
+   :start-after: # snippet-plot-band-structure-start
+   :end-before: # snippet-plot-band-structure-end
 
 
 .. literalinclude:: solution1b.py
-   :start-at: # snippet-save-band-structure-start
-   :end-at: # snippet-save-band-structure-end
+   :start-after: # snippet-save-band-structure-start
+   :end-before: # snippet-save-band-structure-end
 
 
 
