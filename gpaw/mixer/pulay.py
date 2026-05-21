@@ -54,7 +54,7 @@ class PulayMixer(BaseMixer):
         self.calculate_paw_residual(D_asii.data, self.nt_hsX[-1][1], R_asii)
 
         Rc_sX = self.Rc_hsX.next()
-        self.add_compensation_charge(R_sX, R_asii, out=Rc_sX)
+        self.add_compensation_charge(R_sX, R_asii, density, out=Rc_sX,)
 
         # Step 2: Calculate the DIIS matrix
         MRc_sX = self.metric(Rc_sX)

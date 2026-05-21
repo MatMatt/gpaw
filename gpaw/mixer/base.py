@@ -17,6 +17,7 @@ class BaseMixer:
                    desc: DomainType,
                    atomdist: AtomDistribution,
                    setups: Setups,
+                   relpos_ac: ArrayND,
                    ncomponents: int,
                    xp=np):
         self.desc = desc
@@ -26,6 +27,10 @@ class BaseMixer:
             [(setup.ni, setup.ni) for setup in setups],
             atomdist=atomdist, dtype=float if ncomponents < 4 else complex)
         self.histories: list[DensityHistory] = []
+        self.ghat_aLr = setups.create_compensation_charges(desc,
+                                                           relpos_ac,
+                                                           atomdist,
+                                                           xp=xp)
         self._initialize_history_()
         self.metric.initialize(ncomponents=ncomponents,
                                grid=desc,
@@ -43,7 +48,7 @@ class BaseMixer:
     def mix(self, density: Density) -> float:
         nt_sX = density.nt_sR
         D_asii = density.D_asii
-        ntc_sX = self.add_compensation_charge(nt_sX, D_asii)
+        ntc_sX = self.add_compensation_charge(nt_sX, D_asii, density)
         if self.density_history.nold == 0:
             self.density_history.add(ntc_sX)
             return np.inf
@@ -77,13 +82,45 @@ class BaseMixer:
         res_asii += D_asii
         return res_asii
 
-    def add_compensation_charge(self, n_sX: XArray, D_asii: AtomArrays,
-                                out: XArray | None = None) -> XArray:
-        # TODO: Add compensation charge to density
+    def add_compensation_charge(self, n_sX: XArray,
+                                D_asii_data: AtomArrays | NDArray,
+                                density: Density,
+                                out: XArray | None = None,
+                                add_delta0: bool = False) -> XArray:
+        # Prepare output array
         if out is None:
             out = n_sX.copy()
         else:
             out.data[:] = n_sX.data
+
+        # Get compensation charge coefficients
+        ccc_asL = AtomArraysLayout(
+            [delta_iiL.shape[2] for delta_iiL in density.delta_aiiL],
+            atomdist=self.atom_layout.atomdist,
+            xp=self.xp).empty(self.ncomponents)
+
+        if not isinstance(D_asii_data, AtomArrays):
+            D_asii = AtomArrays(
+                layout = self.atom_layout,
+                dims = self.ncomponents,
+                data = D_asii_data,
+            )
+        else:
+            D_asii = D_asii_data
+
+        for a, D_sii in D_asii.items():
+            Q_sL = self.xp.einsum('sij, ijL -> sL',
+                                  D_sii.real,
+                                  density.delta_aiiL[a])
+            if add_delta0:
+                # Not important for mixing, and should never be done
+                # for residuals.
+                Q_sL[0] += density.delta0_a[a] / self.ncomponents
+            ccc_asL[a] = Q_sL
+
+        # Add compensation charge to output
+        self.ghat_aLr.add_to(out, ccc_asL)
+
         return out
 
     def reset(self):
