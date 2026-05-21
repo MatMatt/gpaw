@@ -8,7 +8,7 @@ from gpaw.mixer.base import DensityHistory, BaseMixer
 
 class MSR1Mixer(BaseMixer):
     def __init__(self,
-                 nmaxold: int = 16,
+                 nmaxold: int = 10,
                  beta: float = 0.08,
                  reg: float = 1e-4,
                  gb_scale: float = 1,
@@ -93,7 +93,9 @@ class MSR1Mixer(BaseMixer):
         # Step 3: Calculate the multisecants
         s_hsX = self.ntc_hsX.to_multisecant()
         y_hsX = self.Rc_hsX.to_multisecant()
+        y_hsX.data *= -1
         my_hsX = self.MRc_hsX.to_multisecant()
+        my_hsX.data *= -1
 
         Ay_hh = y_hsX.matrix_elements(my_hsX).data
         As_hh = s_hsX.matrix_elements(my_hsX).data
@@ -185,11 +187,10 @@ class MSR1Mixer(BaseMixer):
         self.pk_1sX.data[:] = 0
 
         for h, alpha in enumerate(alpha_h):
-            self.pk_1sX.data[:] += alpha * self.ntc_hsX[h].data
-            self.uk_1sX.data[:] -= alpha * self.Rc_hsX[h].data
+            self.pk_1sX.data[:] += alpha * s_hsX[h].data
+            self.uk_1sX.data[:] -= alpha * y_hsX[h].data
 
         predicted_radius = B * self.pk_1sX.norm2().sum()**0.5
-
         if predicted_radius > self.trust_radius * 1.02:
             s_hh = s_hsX.matrix_elements(s_hsX).data
             s_hh *= B**2
@@ -223,13 +224,15 @@ class MSR1Mixer(BaseMixer):
         D_asii.data[:] = self.nt_hsX[-1][1]
         D_asii.data[:] += self.R_hsX[-1][1] * A
 
+        beta_h *= t_norm
+
         for h, beta in enumerate(beta_h):
             nt_sX.data += B * beta * (
                 self.nt_hsX[h][0].data - self.nt_hsX[-1][0].data)
             D_asii.data += B * beta * (self.nt_hsX[h][1] - self.nt_hsX[-1][1])
-            nt_sX.data -= A * beta * (
+            nt_sX.data += A * beta * (
                 self.R_hsX[h][0].data - self.R_hsX[-1][0].data)
-            D_asii.data -= A * beta * (self.R_hsX[h][1] - self.R_hsX[-1][1])
+            D_asii.data += A * beta * (self.R_hsX[h][1] - self.R_hsX[-1][1])
 
         # Step 10: Update density history
         self.nt_hsX.add_density(density)
