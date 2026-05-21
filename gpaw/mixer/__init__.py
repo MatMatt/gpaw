@@ -1,5 +1,6 @@
 from gpaw.mixer.base import BaseMixer
 from gpaw.mixer.pulay import PulayMixer
+from gpaw.mixer.msr1 import MSR1Mixer
 from gpaw.mixer.metric import BaseMetric, FFTMetric
 # Imports for backwards compatibility:
 from gpaw.old.mixer import _definemixerfunc
@@ -23,6 +24,7 @@ BroydenMixerDif = _definemixerfunc('difference', 'broyden')
 mixer_names = {
     'no-mixing': BaseMixer,
     'pulay': PulayMixer,
+    'msr1': MSR1Mixer
 }
 
 
@@ -36,7 +38,7 @@ def get_mixer_from_params(params: dict):
     else:
         metric = FFTMetric(weight=weight, sigma=sigma)
 
-    name = params.pop('backend', 'pulay')
+    name = params.pop('backend', 'msr1')
     mixer = mixer_names[name](**params)
     mixer.metric = metric
 
