@@ -36,3 +36,9 @@ def eigvalsh(a, UPLO='L'):
 def norm(x, ord=None, axis=None, keepdims=False):
     from gpaw.gpu import cupy as cp
     return cp.ndarray(np.linalg.norm(x._data, ord, axis, keepdims))
+
+
+def svd(a, full_matrices=True, compute_uv=True):
+    from gpaw.gpu import cupy as cp
+    s, v, d = np.linalg.svd(a._data, full_matrices, compute_uv)
+    return cp.ndarray(s), cp.ndarray(v), cp.ndarray(d)
