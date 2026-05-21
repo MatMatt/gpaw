@@ -209,7 +209,7 @@ class DensityHistory:
     def to_multisecant(self, out: XArray | None = None) -> XArray:
         if out is None:
             out = self.desc.empty((self.nold - 1, self.ncomponents),
-                xp=self.xp)
+                                  xp=self.xp)
         else:
             assert out.dims == (self.nold - 1, self.ncomponents)
         out.data[:] = self._n_hsX[self.current_indicies[:-1]].data
