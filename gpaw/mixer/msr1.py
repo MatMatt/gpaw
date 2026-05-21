@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.optimize import root_scalar
+
 from gpaw.new.density import Density
 from gpaw.mixer.base import DensityHistory, BaseMixer
 
@@ -10,17 +12,20 @@ class MSR1Mixer(BaseMixer):
                  beta: float = 0.08,
                  reg: float = 1e-4,
                  gb_scale: float = 1,
-                 max_A: float = 0.45):
+                 max_A: float = 0.45,
+                 trust_scale: float = 1.0):
         self.nmaxold = nmaxold
         self.beta = beta
         self.reg = reg
         self.gb_scale = gb_scale
+        self.trust_scale = trust_scale
         self.A_lims = [0.02, max_A]
         self.B_lims = [0.6, 1.1]
         self.rate_ratio = [0.7, 1.3]
         self.A = 0
-        sefl.B = 1
+        self.B = 1
         self.B_boost = 0.1
+        self.trust_radius = None
 
     def _initialize_history_(self):
         self.nt_hsX = DensityHistory(
@@ -57,6 +62,8 @@ class MSR1Mixer(BaseMixer):
         )
         self.histories = [self.nt_hsX, self.ntc_hsX, self.R_hsX,
                           self.Rc_hsX, self.MRc_hsX]
+        self.uk_1sX = self.desc.empty((1, self.ncomponents))
+        self.pk_1sX = self.desc.empty((1, self.ncomponents))
 
     def mix(self, density: Density) -> float:
         # Step 1: Initialize
@@ -111,11 +118,11 @@ class MSR1Mixer(BaseMixer):
         t_hsX.data += good_broydenness * s_hsX.data
 
         # Step 6: Calculate the mixing weights
-        A_hh = t_hsX.matrix_elements(my_hsX)
-        B_hh = t_hsX.matrix_elements(s_hsX)
+        A_hh = t_hsX.matrix_elements(my_hsX).data
+        B_hh = t_hsX.matrix_elements(s_hsX).data
 
-        A_diag = self.xp.diag(A_hh)
-        B_diag = self.xp.diag(B_hh)
+        A_diag = self.xp.mean(self.xp.diag(A_hh))
+        B_diag = self.xp.mean(self.xp.diag(B_hh))
 
         S, V, D = self.xp.linalg.svd(A_hh)
         V /= V**2 + A_diag**2 * self.reg**2
@@ -126,24 +133,24 @@ class MSR1Mixer(BaseMixer):
         B_hh = D.T @ self.xp.diag(V) @ S.T
 
         MRc_1sX = MRc_sX.new(data=MRc_sX.data[None], dims=(1,) + MRc_sX.dims)
-        alpha_h = t_isG.matrix_elements(MRc_1sX)[:, 0]
-        alpha_h = A_hh @ alpha_h
+        BR_h = t_hsX.matrix_elements(MRc_1sX).data[:, 0]
+        alpha_h = A_hh @ BR_h
 
         # TODO: Ensure ranks agree
 
         # Step 7: Predict mixing coefficients
         tmp_1sX = self.uk_1sX.copy()
-        tmp_1sX.data -= self.Rc_sX.data
+        tmp_1sX.data -= Rc_sX.data
         tmp_1sX.data *= -1
         A1 = self.uk_1sX.norm2().sum()
         B1 = tmp_1sX.norm2().sum()
 
-        A2_i = t_hsX.matrix_elements(self.uk_1sX)
-        A2_j = self.uk_1sX.matrix_elements(y_hsX)
+        A2_i = t_hsX.matrix_elements(self.uk_1sX).data[:, 0]
+        A2_j = self.uk_1sX.matrix_elements(y_hsX).data[0, :]
         A2 = A2_i @ B_hh @ A2_j
 
-        B2_i = t_hsX.matrix_elements(self.pk_1sX)
-        B2_j = tmp_1sX.matrix_elements(y_hsX)
+        B2_i = t_hsX.matrix_elements(self.pk_1sX).data[:, 0]
+        B2_j = tmp_1sX.matrix_elements(y_hsX).data[0, :]
         B2 = B2_i @ B_hh @ B2_j
 
         trig_fact = self.A_lims[-1] * 2 / np.pi
@@ -151,8 +158,8 @@ class MSR1Mixer(BaseMixer):
             np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact,
             *self.A_lims
         )
-        B_target = np.abs(B1 / B2) + self.B_boost
-        if self.nold > 2:
+        if nold > 2:
+            B_target = np.abs(B1 / B2) + self.B_boost
             A_ratio = np.sqrt(A_target * self.A) / self.A
             self.A *= np.clip(A_ratio, *self.rate_ratio)
             self.A = np.clip(self.A, *self.A_lims)
@@ -168,13 +175,69 @@ class MSR1Mixer(BaseMixer):
         # Step 8: Trust region control
         tmp_1sX.data[:] = A * self.uk_1sX.data
         tmp_1sX.data[:] += B * self.pk_1sX.data
-        
+        trust_radius = self.trust_scale * tmp_1sX.norm2().sum()**0.5
+        if self.trust_radius is None:
+            self.trust_radius = trust_radius
+        else:
+            self.trust_radius = (self.trust_radius + trust_radius) * 0.5
 
-        # Step 9: Mix the densities
+        self.uk_1sX.data[:] = Rc_sX.data
+        self.pk_1sX.data[:] = 0
+
+        for h, alpha in enumerate(alpha_h):
+            self.pk_1sX.data[:] += alpha * self.ntc_hsX[h].data
+            self.uk_1sX.data[:] -= alpha * self.Rc_hsX[h].data
+
+        predicted_radius = B * self.pk_1sX.norm2().sum()**0.5
+
+        if predicted_radius > self.trust_radius * 1.02:
+            s_hh = s_hsX.matrix_elements(s_hsX).data
+            s_hh *= B**2
+            A_hh = self.xp.linalg.inv(A_hh)
+            def err_fct(lamb):
+                beta_h = self.xp.linalg.solve(
+                    A_hh + lamb * self.xp.eye(nold - 1), BR_h
+                )
+                return (beta_h @ s_hh @ beta_h) - self.trust_radius**2
+
+            try:
+                lamb = root_scalar(err_fct, bracket=[0, 500 * A_diag])
+                root = lamb.root
+            except ValueError:
+                root = 500 * A_diag
+            beta_h = self.xp.linalg.solve(
+                A_hh + root * self.xp.eye(nold - 1), BR_h
+            )
+
+            # TODO: Sync beta
+
+            scale_factor = self.trust_radius / predicted_radius
+            A *= np.clip(scale_factor, 0, 1)
+            A = max(A, self.A_lims[-1])
+        else:
+            beta_h = alpha_h
+
+        # Step 9: Finally mix the densities
+        nt_sX.data[:] = self.nt_hsX[-1][0].data
+        nt_sX.data[:] += self.R_hsX[-1][0].data * A
+        D_asii.data[:] = self.nt_hsX[-1][1]
+        D_asii.data[:] += self.R_hsX[-1][1] * A
+
+        for h, beta in enumerate(beta_h):
+            nt_sX.data += B * beta * (
+                self.nt_hsX[h][0].data - self.nt_hsX[-1][0].data)
+            D_asii.data += B * beta * (self.nt_hsX[h][1] - self.nt_hsX[-1][1])
+            nt_sX.data -= A * beta * (
+                self.R_hsX[h][0].data - self.R_hsX[-1][0].data)
+            D_asii.data -= A * beta * (self.R_hsX[h][1] - self.R_hsX[-1][1])
 
         # Step 10: Update density history
+        self.nt_hsX.add_density(density)
+        self.add_compensation_charge(nt_sX, D_asii, density,
+                                     out=self.ntc_hsX.next())
 
         # Step 11: Return the mixing error
+        return self.calculate_charge_sloshing(self.Rc_hsX[-1])
 
     def decide_good_broydenness(self,
                                 Ay_hh: ArrayND,
@@ -202,7 +265,7 @@ class MSR1Mixer(BaseMixer):
             A_hh *= norm_vec[None, :]
             A_hh *= norm_vec[:, None]
             try:
-                eigs = self.xp.linalg.eigvals(A_ii)
+                eigs = self.xp.linalg.eigvals(A_hh)
                 min_real = self.xp.min(eigs.real)
                 max_imag = self.xp.max(self.xp.abs(eigs.imag))
             except np.linalg.LinAlgError:
@@ -214,6 +277,7 @@ class MSR1Mixer(BaseMixer):
                 good_broydenness -= 2**(-iter) * max_gb
         good_broydenness -= 2**(-iter) * max_gb
         good_broydenness *= self.gb_scale
+        return good_broydenness
 
     def pratt_step(self, density: Density) -> float:
         nt_sX = density.nt_sR
@@ -225,4 +289,6 @@ class MSR1Mixer(BaseMixer):
         self.nt_hsX.add_density(density)
         self.add_compensation_charge(nt_sX, D_asii, density,
                                      out=self.ntc_hsX.next())
+        self.uk_1sX.data[:] = self.Rc_hsX[-1].data
+        self.pk_1sX.data[:] = 0
         return self.calculate_charge_sloshing(self.Rc_hsX[-1])
