@@ -10,9 +10,9 @@ from gpaw.typing import ArrayND
 class MSR1Mixer(BaseMixer):
     def __init__(self,
                  nmaxold: int = 10,
-                 beta: float = 0.08,
-                 reg: float = 1e-4,
-                 gb_scale: float = 1,
+                 beta: float = 0.04,
+                 reg: float = 1e-5,
+                 gb_scale: float = 1.0,
                  max_A: float = 0.45,
                  trust_scale: float = 1.0):
         self.nmaxold = nmaxold
@@ -74,7 +74,8 @@ class MSR1Mixer(BaseMixer):
         if nold == 0:
             self.nt_hsX.add_density(density)
             self.add_compensation_charge(nt_sX, D_asii, density,
-                                         out=self.ntc_hsX.next())
+                                         out=self.ntc_hsX.next(),
+                                         add_delta0=True)
             return np.inf
 
         R_sX, R_asii = self.R_hsX.next()
@@ -178,6 +179,8 @@ class MSR1Mixer(BaseMixer):
 
         A = self.A
         B = self.B
+        # print('A', A)
+        # print('B', B)
 
         # Step 8: Trust region control
         tmp_1sX.data[:] = A * self.uk_1sX.data
@@ -197,6 +200,8 @@ class MSR1Mixer(BaseMixer):
 
         predicted_radius = B * self.pk_1sX.norm2().sum()**0.5
         if predicted_radius > self.trust_radius * 1.02:
+            # print('predicted_radius', predicted_radius,
+            #       'trust_radius', self.trust_radius)
             s_hh = s_hsX.matrix_elements(s_hsX).data
             s_hh *= B**2
             A_hh = self.xp.linalg.inv(A_hh)
@@ -208,10 +213,10 @@ class MSR1Mixer(BaseMixer):
                 return (beta_h @ s_hh @ beta_h) - self.trust_radius**2
 
             try:
-                lamb = root_scalar(err_fct, bracket=[0, 500 * A_diag])
+                lamb = root_scalar(err_fct, bracket=[0, 1000 * A_diag])
                 root = lamb.root
             except ValueError:
-                root = 500 * A_diag
+                root = 1000 * A_diag
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h
             )
@@ -243,7 +248,8 @@ class MSR1Mixer(BaseMixer):
         # Step 10: Update density history
         self.nt_hsX.add_density(density)
         self.add_compensation_charge(nt_sX, D_asii, density,
-                                     out=self.ntc_hsX.next())
+                                     out=self.ntc_hsX.next(),
+                                     add_delta0=True)
 
         # Step 11: Return the mixing error
         return self.calculate_charge_sloshing(self.Rc_hsX[-1])
@@ -293,9 +299,11 @@ class MSR1Mixer(BaseMixer):
         D_asii.data[:] = self.nt_hsX[-1][1]
         nt_sX.data += self.beta * self.R_hsX[-1][0].data
         D_asii.data += self.beta * self.R_hsX[-1][1]
+
         self.nt_hsX.add_density(density)
         self.add_compensation_charge(nt_sX, D_asii, density,
-                                     out=self.ntc_hsX.next())
+                                     out=self.ntc_hsX.next(),
+                                     add_delta0=True)
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
         self.pk_1sX.data[:] = 0
         return self.calculate_charge_sloshing(self.Rc_hsX[-1])

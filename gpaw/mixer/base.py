@@ -49,7 +49,8 @@ class BaseMixer:
     def mix(self, density: Density) -> float:
         nt_sX = density.nt_sR
         D_asii = density.D_asii
-        ntc_sX = self.add_compensation_charge(nt_sX, D_asii, density)
+        ntc_sX = self.add_compensation_charge(nt_sX, D_asii, density,
+                                              add_delta0=True)
         if self.density_history.nold == 0:
             self.density_history.add(ntc_sX)
             return np.inf

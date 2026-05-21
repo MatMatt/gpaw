@@ -162,21 +162,10 @@ class FFTPlans:
         self.ifft()
 
         if out_R is not None:
-            out_shape = out_R.desc.global_shape()
-            if self.tmp_R.shape != out_shape:
-                tmp_R = self.tmp_R[
-                    :out_shape[0], :out_shape[1], :out_shape[2]]
-            else:
-                tmp_R = self.tmp_R
-            out_R.scatter_from(tmp_R)
+            out_R.scatter_from(self.tmp_R)
 
     def fft_sphere(self, in_R, pw):
-        in_shape = in_R.shape
-        if self.tmp_R.shape != in_shape:
-            self.tmp_R[:] = 0
-            self.tmp_R[:in_shape[0], :in_shape[1], :in_shape[2]] = in_R.data
-        else:
-            self.tmp_R[:] = in_R.data
+        self.tmp_R[:] = in_R.data
         self.fft()
         coefs = pw.cut(self.tmp_Q) * (1 / self.tmp_R.size)
         return coefs
