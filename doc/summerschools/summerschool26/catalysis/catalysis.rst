@@ -121,5 +121,10 @@ surface in the hcp site.  We check for convergence with respect to:
 * number of k-points in the BZ
 * plane-wave cutoff energy
 
+.. toctree::
+   :maxdepth: 1
+
+   part5/convergence
+
 
 .. |N2| replace:: N\ :sub:`2`
