@@ -37,7 +37,7 @@ def get_mixer_from_params(params: dict):
         metric = BaseMetric()
     else:
         metric = FFTMetric(weight=weight, sigma=sigma)
-
+    params.pop('method', None)
     name = params.pop('backend', 'msr1')
     mixer = mixer_names[name](**params)
     mixer.metric = metric
