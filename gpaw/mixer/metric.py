@@ -51,6 +51,7 @@ class FFTMetric(BaseMetric):
         w_G = self.weight * (self.sigma + ekin_G) \
             / (self.sigma + self.weight * ekin_G)
 
+        # TODO: Fix non-pbc directions
         n_sG = n_sX.fft(pw=self.pw)
         n_sG.data *= w_G
         n_sG.ifft(grid=self.grid, out=N_sX)
