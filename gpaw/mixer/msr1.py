@@ -63,8 +63,8 @@ class MSR1Mixer(BaseMixer):
         )
         self.histories = [self.nt_hsX, self.ntc_hsX, self.R_hsX,
                           self.Rc_hsX, self.MRc_hsX]
-        self.uk_1sX = self.desc.empty((1, self.ncomponents))
-        self.pk_1sX = self.desc.empty((1, self.ncomponents))
+        self.uk_1sX = self.desc.empty((1, self.ncomponents), xp=self.xp)
+        self.pk_1sX = self.desc.empty((1, self.ncomponents), xp=self.xp)
 
     def mix(self, density: Density) -> float:
         # Step 1: Initialize

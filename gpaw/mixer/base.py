@@ -25,7 +25,8 @@ class BaseMixer:
         self.xp = xp
         self.atom_layout = AtomArraysLayout(
             [(setup.ni, setup.ni) for setup in setups],
-            atomdist=atomdist, dtype=float if ncomponents < 4 else complex)
+            atomdist=atomdist, dtype=float if ncomponents < 4 else complex,
+            xp=xp)
         self.histories: list[DensityHistory] = []
         self.ghat_aLr = setups.create_compensation_charges(desc,
                                                            relpos_ac,
@@ -60,9 +61,10 @@ class BaseMixer:
         return dNt
 
     def calculate_charge_sloshing(self, res_sX: XArray) -> float:
-        slosh_sX = self.desc.empty(self.ncomponents)
+        slosh_sX = self.desc.empty(self.ncomponents, xp=self.xp)
         slosh_sX.data[:] = self.xp.abs(res_sX.data)
-        return slosh_sX.integrate().sum()
+        dNt = slosh_sX.integrate().sum()
+        return dNt if self.xp == np else dNt.get()
 
     def calculate_residual(self, ntc_sX: XArray, prev_sX: XArray,
                            res_sX: XArray) -> XArray:
@@ -142,6 +144,7 @@ class DensityHistory:
         self.ncomponents = ncomponents
         self.desc = desc
         self.atom_layout = atom_layout
+        self.xp = xp
         self._n_hsX = desc.zeros((nmaxold, ncomponents), xp=xp)
         self._D_hasii = atom_layout.zeros((nmaxold, ncomponents)) \
             if atom_layout is not None else None
@@ -205,7 +208,8 @@ class DensityHistory:
 
     def to_multisecant(self, out: XArray | None = None) -> XArray:
         if out is None:
-            out = self.desc.empty((self.nold - 1, self.ncomponents))
+            out = self.desc.empty((self.nold - 1, self.ncomponents),
+                xp=self.xp)
         else:
             assert out.dims == (self.nold - 1, self.ncomponents)
         out.data[:] = self._n_hsX[self.current_indicies[:-1]].data
