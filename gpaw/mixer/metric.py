@@ -52,9 +52,13 @@ class FFTMetric(BaseMetric):
             / (self.sigma + self.weight * ekin_G)
 
         assert isinstance(n_sX, UGArray)
-        n_sG = n_sX.fft(pw=self.pw)
+        n_sX_pbc = n_sX.to_pbc_grid()
+        if n_sX_pbc is n_sX:
+            n_sX_pbc = n_sX_pbc.copy()
+        n_sG = n_sX_pbc.fft(pw=self.pw)
         n_sG.data *= w_G
-        n_sG.ifft(grid=self.grid, out=out)
+        n_sG.ifft(grid=n_sX_pbc, out=n_sX_pbc)
+        out.from_pbc_grid(n_sX_pbc)
 
         out.matrix.data[:] = self.g_ss @ out.matrix.data
 
