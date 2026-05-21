@@ -147,14 +147,18 @@ class MSR1Mixer(BaseMixer):
         tmp_1sX.data *= -1
         A1 = self.uk_1sX.norm2().sum()
         B1 = tmp_1sX.norm2().sum()
+        A1 = A1 if self.xp is np else A1.get()
+        B1 = B1 if self.xp is np else B1.get()
 
         A2_i = t_hsX.matrix_elements(self.uk_1sX).data[:, 0]
         A2_j = self.uk_1sX.matrix_elements(y_hsX).data[0, :]
         A2 = A2_i @ B_hh @ A2_j
+        A2 = A2 if self.xp is np else A2.get()
 
         B2_i = t_hsX.matrix_elements(self.pk_1sX).data[:, 0]
         B2_j = tmp_1sX.matrix_elements(y_hsX).data[0, :]
         B2 = B2_i @ B_hh @ B2_j
+        B2 = B2 if self.xp is np else B2.get()
 
         trig_fact = self.A_lims[-1] * 2 / np.pi
         A_target = np.clip(
