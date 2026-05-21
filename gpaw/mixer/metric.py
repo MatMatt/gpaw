@@ -47,7 +47,7 @@ class FFTMetric(BaseMetric):
         # We will now assume that the density is represented
         # in real space. This may change in the future.
 
-        ekin_G = self.pw.ekin_G
+        ekin_G = self.xp.asarray(self.pw.ekin_G)
         w_G = self.weight * (self.sigma + ekin_G) \
             / (self.sigma + self.weight * ekin_G)
 
