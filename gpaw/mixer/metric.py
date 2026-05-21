@@ -55,6 +55,7 @@ class FFTMetric(BaseMetric):
         n_sG = n_sX.fft(pw=self.pw)
         n_sG.data *= w_G
         n_sG.ifft(grid=self.grid, out=out)
+
         out.matrix.data[:] = self.g_ss @ out.matrix.data
 
         return out

@@ -37,7 +37,7 @@ def test_gpu(dtype, gpu, mode, random):
                   'force_complex_dtype': dtype == complex},
             random=random,
             **{'symmetry': 'off',
-               'mixer': {'backend': 'fft'}} if GPAW_NO_C_EXTENSION else {},
+               'mixer': {'backend': 'msr1', 'weight': 100}},
             convergence={'density': 1e-8},
             parallel={'gpu': gpu},
             setups='paw',
