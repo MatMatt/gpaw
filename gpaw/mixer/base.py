@@ -83,7 +83,7 @@ class BaseMixer:
         return res_asii
 
     def add_compensation_charge(self, n_sX: XArray,
-                                D_asii_data: AtomArrays | NDArray,
+                                D_asii_data: AtomArrays | ArrayND,
                                 density: Density,
                                 out: XArray | None = None,
                                 add_delta0: bool = False) -> XArray:
@@ -101,9 +101,9 @@ class BaseMixer:
 
         if not isinstance(D_asii_data, AtomArrays):
             D_asii = AtomArrays(
-                layout = self.atom_layout,
-                dims = self.ncomponents,
-                data = D_asii_data,
+                layout=self.atom_layout,
+                dims=self.ncomponents,
+                data=D_asii_data,
             )
         else:
             D_asii = D_asii_data

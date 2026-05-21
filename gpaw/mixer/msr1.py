@@ -4,6 +4,7 @@ from scipy.optimize import root_scalar
 
 from gpaw.new.density import Density
 from gpaw.mixer.base import DensityHistory, BaseMixer
+from gpaw.typing import ArrayND
 
 
 class MSR1Mixer(BaseMixer):
@@ -19,13 +20,13 @@ class MSR1Mixer(BaseMixer):
         self.reg = reg
         self.gb_scale = gb_scale
         self.trust_scale = trust_scale
-        self.A_lims = [0.02, max_A]
-        self.B_lims = [0.6, 1.1]
-        self.rate_ratio = [0.7, 1.3]
-        self.A = 0
-        self.B = 1
+        self.A_lims: list[float] = [0.02, max_A]
+        self.B_lims: list[float] = [0.6, 1.1]
+        self.rate_ratio: list[float] = [0.7, 1.3]
+        self.A: float = 0.0
+        self.B: float = 1.0
         self.B_boost = 0.1
-        self.trust_radius = None
+        self.trust_radius: None | float = None
 
     def _initialize_history_(self):
         self.nt_hsX = DensityHistory(
@@ -158,16 +159,16 @@ class MSR1Mixer(BaseMixer):
         trig_fact = self.A_lims[-1] * 2 / np.pi
         A_target = np.clip(
             np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact,
-            *self.A_lims
+            self.A_lims[0], self.A_lims[1]
         )
         if nold > 2:
             B_target = np.abs(B1 / B2) + self.B_boost
             A_ratio = np.sqrt(A_target * self.A) / self.A
-            self.A *= np.clip(A_ratio, *self.rate_ratio)
-            self.A = np.clip(self.A, *self.A_lims)
+            self.A *= np.clip(A_ratio, self.rate_ratio[0], self.rate_ratio[1])
+            self.A = np.clip(self.A, self.A_lims[0], self.A_lims[1])
             B_ratio = (self.B + B_target) / self.B
-            self.B *= np.clip(B_ratio, *self.rate_ratio)
-            self.B = np.clip(self.B, *self.B_lims)
+            self.B *= np.clip(B_ratio, self.rate_ratio[0], self.rate_ratio[1])
+            self.B = np.clip(self.B, self.B_lims[0], self.B_lims[1])
         else:
             self.A = A_target
 
@@ -195,6 +196,7 @@ class MSR1Mixer(BaseMixer):
             s_hh = s_hsX.matrix_elements(s_hsX).data
             s_hh *= B**2
             A_hh = self.xp.linalg.inv(A_hh)
+
             def err_fct(lamb):
                 beta_h = self.xp.linalg.solve(
                     A_hh + lamb * self.xp.eye(nold - 1), BR_h
@@ -242,8 +244,7 @@ class MSR1Mixer(BaseMixer):
         # Step 11: Return the mixing error
         return self.calculate_charge_sloshing(self.Rc_hsX[-1])
 
-    def decide_good_broydenness(self,
-                                Ay_hh: ArrayND,
+    def decide_good_broydenness(self, Ay_hh: ArrayND,
                                 As_hh: ArrayND) -> float:
         Ay_norm = self.xp.linalg.norm(Ay_hh, ord='fro')
         As_norm = self.xp.linalg.norm(As_hh, ord='fro')

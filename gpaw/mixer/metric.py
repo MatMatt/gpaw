@@ -3,7 +3,7 @@ import numpy as np
 from gpaw.core.arrays import XArray
 from gpaw.typing import ArrayND
 from gpaw.core.plane_waves import PWDesc
-from gpaw.core.uniform_grid import UGDesc
+from gpaw.core.uniform_grid import UGDesc, UGArray
 
 
 class BaseMetric:
@@ -52,6 +52,7 @@ class FFTMetric(BaseMetric):
             / (self.sigma + self.weight * ekin_G)
 
         # TODO: Fix non-pbc directions
+        assert isinstance(n_sX, UGArray)
         n_sG = n_sX.fft(pw=self.pw)
         n_sG.data *= w_G
         n_sG.ifft(grid=self.grid, out=out)
