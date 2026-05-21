@@ -65,7 +65,6 @@ class PulayMixer(BaseMixer):
         self.H_hh[:nold, nold - 1] = H_h
         self.H_hh[nold - 1, :nold] = H_h
 
-        # TODO: Regularize
         H_hh = self.xp.linalg.inv(self.H_hh[:nold, :nold])
         alpha_h = H_hh.sum(1)
         alpha_h /= alpha_h.sum()
