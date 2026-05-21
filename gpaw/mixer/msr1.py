@@ -113,7 +113,7 @@ class MSR1Mixer(BaseMixer):
             # Somethings gone terribly wrong
             good_broydenness = 0
             t_norm = y_norm
-        t_norm = 1 / self.xp.sqrt(t_norm)
+        t_norm = 1 / t_norm**0.5
         y_hsX.matrix.data *= t_norm[:, None]
         s_hsX.matrix.data *= t_norm[:, None]
         my_hsX.matrix.data *= t_norm[:, None]
@@ -262,9 +262,8 @@ class MSR1Mixer(BaseMixer):
 
         good_broydenness = 0.5 * max_gb
         for iter in range(2, 12):
-            norm_vec = 1 / self.xp.sqrt(
-                y_norm + s_norm * good_broydenness
-            )
+            norm_vec = 1 / (y_norm + s_norm *
+                            good_broydenness)**0.5
             A_hh = Ay_hh + As_hh * good_broydenness
             A_hh *= norm_vec[None, :]
             A_hh *= norm_vec[:, None]
@@ -272,7 +271,7 @@ class MSR1Mixer(BaseMixer):
                 eigs = self.xp.linalg.eigvals(A_hh)
                 min_real = self.xp.min(eigs.real)
                 max_imag = self.xp.max(self.xp.abs(eigs.imag))
-            except np.linalg.LinAlgError:
+            except Exception:
                 good_broydenness -= 2**(-iter) * max_gb
                 continue
             if min_real > max_imag:

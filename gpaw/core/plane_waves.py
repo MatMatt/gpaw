@@ -441,7 +441,6 @@ class PWArray(XArray[PWDesc]):
         assert self.desc.dtype == out.desc.dtype, \
             (self.desc.dtype, out.desc.dtype)
 
-        # assert not out.desc.zerobc_c.any()
         assert comm.size == out.desc.comm.size, (comm, out.desc.comm)
 
         plan = plan or out.desc.fft_plans(xp=xp)
