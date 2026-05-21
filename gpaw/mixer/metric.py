@@ -24,11 +24,11 @@ class BaseMetric:
                          comm=grid.comm)
 
     def __call__(self, n_sX: XArray,
-                 N_sX: XArray | None = None) -> XArray:
-        if N_sX is None:
-            N_sX = n_sX.new()
-        N_sX.matrix.data[:] = self.g_ss @ n_sX.matrix.data
-        return N_sX
+                 out: XArray | None = None) -> XArray:
+        if out is None:
+            out = n_sX.new()
+        out.matrix.data[:] = self.g_ss @ n_sX.matrix.data
+        return out
 
 
 class FFTMetric(BaseMetric):
@@ -41,9 +41,9 @@ class FFTMetric(BaseMetric):
         super().__init__(g_ss)
 
     def __call__(self, n_sX: XArray,
-                 N_sX: XArray | None = None) -> XArray:
-        if N_sX is None:
-            N_sX = n_sX.new()
+                 out: XArray | None = None) -> XArray:
+        if out is None:
+            out = n_sX.new()
         # We will now assume that the density is represented
         # in real space. This may change in the future.
 
@@ -54,7 +54,7 @@ class FFTMetric(BaseMetric):
         # TODO: Fix non-pbc directions
         n_sG = n_sX.fft(pw=self.pw)
         n_sG.data *= w_G
-        n_sG.ifft(grid=self.grid, out=N_sX)
-        N_sX.matrix.data[:] = self.g_ss @ N_sX.matrix.data
+        n_sG.ifft(grid=self.grid, out=out)
+        out.matrix.data[:] = self.g_ss @ out.matrix.data
 
-        return N_sX
+        return out

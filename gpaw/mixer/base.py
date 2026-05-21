@@ -203,6 +203,15 @@ class DensityHistory:
                 self.current_indicies, 0]
         return out
 
+    def to_multisecant(self, out: XArray | None = None) -> XArray:
+        if out is None:
+            out = self.desc.empty((self.nold - 1, self.ncomponents))
+        else:
+            assert out.dims == (self.nold - 1, self.ncomponents)
+        out.data[:] = self._n_hsX[self.current_indicies[:-1]].data
+        out.data -= self._n_hsX[self.current_indicies[-1]].data
+        return out
+
     def __getitem__(self, index: int) -> tuple[XArray, AtomArrays] | XArray:
         index = self.current_indicies[index]
 
