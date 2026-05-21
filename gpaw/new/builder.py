@@ -332,6 +332,7 @@ class DFTComponentsBuilder:
             desc=self.grid,
             atomdist=self.atomdist,
             setups=self.setups,
+            relpos_ac=self.relpos_ac,
             ncomponents=self.ncomponents,
             xp=self.xp
         )
