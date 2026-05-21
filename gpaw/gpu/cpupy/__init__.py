@@ -128,6 +128,10 @@ def exp(a):
     return ndarray(np.exp(a._data))
 
 
+def mean(a, axis=None):
+    return ndarray(np.mean(a._data, axis=axis))
+
+
 def conjugate(a):
     return ndarray(np.conjugate(a._data))
 
