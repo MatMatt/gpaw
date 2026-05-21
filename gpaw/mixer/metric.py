@@ -51,7 +51,6 @@ class FFTMetric(BaseMetric):
         w_G = self.weight * (self.sigma + ekin_G) \
             / (self.sigma + self.weight * ekin_G)
 
-        # TODO: Fix non-pbc directions
         assert isinstance(n_sX, UGArray)
         n_sG = n_sX.fft(pw=self.pw)
         n_sG.data *= w_G
