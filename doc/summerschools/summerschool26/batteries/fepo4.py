@@ -57,7 +57,7 @@ calc = GPAW(**params)
 fepo4.calc = calc
 epot_fepo4_cell = fepo4.get_potential_energy()
 print(epot_fepo4_cell)
-write('fepo4_out.traj', fepo4)
+write('fepo4.traj', fepo4)
 # snippet-beef
 ens = BEEFEnsemble(calc)
 dE = ens.get_ensemble_energies(2000)
