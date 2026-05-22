@@ -41,21 +41,6 @@ calculations to finish you can get started on addressing the bullet points
 above.
 
 
-Initialize
-==========
-
-.. code::
-
-    import numpy as np
-    from ase.visualize import view
-    import matplotlib.pyplot as plt
-    from ase.io import read, write, Trajectory
-    from ase.parallel import paropen
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-    from ase.dft.bee import BEEFEnsemble
-    from ase import Atoms
-
-
 :mol:`FePO_4`
 =============
 
@@ -64,7 +49,6 @@ from in a large number of different
 :mod:`ase:ase.io`.
 However, in this case you will build it from scratch using the below
 information:
-
 
 .. code::
 
@@ -93,8 +77,6 @@ information:
     # P       4.06363530       4.40642949       4.30853266
     # P       9.03398503       4.40642957       2.93877879
     # P       5.87676435       1.46881009       0.52297232
-
-
     # Unit cell:
     #            periodic     x          y          z
     #   1. axis:    yes    9.94012    0.00000    0.00000
@@ -106,7 +88,7 @@ You *can* use the cell below as a starting point.
 .. code::
 
     fepo4 = Atoms('Fe4O...',
-                  positions=[[x0, y0, z0],[x1, y1, z1]...],
+                  positions=[[x0, y0, z0], [x1, y1, z1], ...],
                   cell=[x, y, z],
                   pbc=[True, True, True])
 
@@ -123,20 +105,18 @@ donates two *4s* electrons and one *3d* electron to PO\ `_4^{3-}`. What is
 the magnetic moment of iron?  For simplicity you should assume that
 :mol:`FePO_4` is ferromagnetic.
 
-
 .. code::
 
     for atom in fepo4:
         if atom.symbol == 'Fe':
-            atom.magmom = 5.0  # student: atom.magmom = ?
-
+            atom.magmom = ?
 
 Now examine the initial magnetic moments of the system using
 :meth:`ase:ase.Atoms.get_initial_magnetic_moments`.
 
 .. code::
 
-    magmoms = fepo4.get_initial_magnetic_moments()  # student: magmoms = fepo4.xxx()
+    magmoms = fepo4.xxx()
     print(magmoms)
 
 Write your atoms object to file.
@@ -160,31 +140,11 @@ results.
 
 In the set-up of this calculator you will append relevant keyword values
 into a dictionary, which is fed to the calculator object.
-
-
-.. code::
-
-    params_GPAW = {}
-
-
 To save computational time while keeping the calculations physically sound, the following should be used:
 
-
-.. code::
-
-    params_GPAW['mode']        = PW(500)                      # The used plane wave energy cutoff
-    params_GPAW['nbands']      = -40                          # The number on empty bands had the system been spin-paired
-    params_GPAW['kpts']        = {'size': (2, 4, 5),          # The k-point mesh
-                                  'gamma': True}
-    params_GPAW['spinpol']     = True                         # Performing spin polarized calculations
-    params_GPAW['xc']          = 'BEEF-vdW'                   # The used exchange-correlation functional
-    params_GPAW['occupations'] = FermiDirac(width=0.1,        # The smearing
-                                            fixmagmom=True)   # Total magnetic moment fixed to the initial value
-    params_GPAW['convergence'] = {'eigenstates': 1.0e-4,      # eV^2 / electron
-                                  'energy':      2.0e-4,      # eV / electron
-                                  'density':     1.0e-3}
-    params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)  # The mixer used during SCF optimization
-
+.. literalinclude:: bat2.py
+   :start-after: snippet-params
+   :end-before: snippet-u
 
 DFT suffers from the self-interaction error.  An electron interacts with
 the system electron density, to which it contributes itself.  The error is
@@ -193,21 +153,17 @@ most pronounced for highly localized orbitals.
 is used to mitigate the self-interaction error of the highly localized
 *3d*-electrons of Fe.  This is done in GPAW using the ``setups`` keyword.
 
-.. code::
-
-    params_GPAW['setups']      = {'Fe': ':d,4.3'}             # U=4.3 applied to d orbitals
+.. literalinclude:: bat2.py
+   :start-after: snippet-u
+   :end-before: snippet-calc
 
 Make a GPAW calculator and attach it to the atoms object.  Here you will
 use :meth:`ase:ase.Atoms.get_potential_energy`
 to start the calculation.
 
-.. code::
-
-    calc = GPAW(**params_GPAW)
-    fepo4.calc = calc
-    epot_fepo4_cell = fepo4.get_potential_energy()
-    print(epot_fepo4_cell)
-    write('fepo4_out.traj', fepo4)
+.. literalinclude:: bat2.py
+   :start-after: snippet-calc
+   :end-before: snippet-beef
 
 You will use the ensemble capability of the BEEF-vdW functional.  You will
 need this later so you should write it to file so you do not have to start
@@ -216,40 +172,18 @@ calculator, i.e., the individual energy of each term in the BEEF-vdW
 functional expansion.  Get the energy difference compared to BEEF-vdW for
 2000 ensemble functionals.
 
-.. code::
-
-    ens = BEEFEnsemble(calc)
-    dE = ens.get_ensemble_energies(2000)
+.. literalinclude:: bat2.py
+   :start-after: snippet-beef
+   :end-before: snippet-ensemble
 
 Print the energy differences to file.  This is not the most efficient way
 of printing to file but can allow easier subsequent data treatment.
 
-.. code::
+.. literalinclude:: bat2.py
+   :start-after: snippet-ensemble
+   :end-before: snippet-2
 
-    with paropen('ensemble_fepo4.dat', 'a') as result:
-        for e in dE:
-            print(e, file=result)
-
-You now have what you need to make a full script:
-
-.. code::
-
-    from ase.parallel import paropen
-    from ase.io import write
-    from ase.dft.bee import BEEFEnsemble
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-
-    # Read in the structure you made and wrote to file above
-    fepo4 = read('fepo4.traj')
-
-    params_GPAW = {...}
-
-    # do calculation ...
-    # BEEF ...
-    # write ensemble_fepo4.dat file ...
-
-    write('fepo4_out.traj', fepo4)
-
+You now have what you need to make a full script (call it ``fepo4.py``).
 Submit the calculation to the HPC cluster.  The calculation should take
 around 10 minutes.
 
@@ -279,7 +213,6 @@ the calculation is running.
 You will now do similar for :mol:`LiFePO_4`. In this case you will load in a
 template structure called ``lifepo4_wo_li.traj`` missing only the Li atoms.
 It is located in the resources folder.
-
 
 .. code::
 
@@ -374,7 +307,7 @@ and make sure that it runs.
     # Read in the structure you made and wrote to file above
     lifepo4 = read('lifepo4.traj')
 
-    params_GPAW = {...}
+    params = {...}
 
     # ...
     # ...
@@ -391,22 +324,22 @@ and make sure that it runs.
     #Read in the structure you made and wrote to file above
     lifepo4 = read('lifepo4.traj')
 
-    params_GPAW = {}
-    params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
-    params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
-    params_GPAW['kpts']        = {'size':  (2,4,5),            #The k-point mesh
+    params = {}
+    params['mode']        = PW(500)                     #The used plane wave energy cutoff
+    params['nbands']      = -40                           #The number on empty bands had the system been spin-paired
+    params['kpts']        = {'size':  (2,4,5),            #The k-point mesh
                                   'gamma': True}
-    params_GPAW['spinpol']     = True                          #Performing spin polarized calculations
-    params_GPAW['xc']          = 'BEEF-vdW'                    #The used exchange-correlation functional
-    params_GPAW['occupations'] = FermiDirac(width = 0.1,      #The smearing
+    params['spinpol']     = True                          #Performing spin polarized calculations
+    params['xc']          = 'BEEF-vdW'                    #The used exchange-correlation functional
+    params['occupations'] = FermiDirac(width = 0.1,      #The smearing
                                             fixmagmom = True)  #Total magnetic moment fixed to the initial value
-    params_GPAW['convergence'] = {'eigenstates': 1.0e-4,       #eV^2 / electron
+    params['convergence'] = {'eigenstates': 1.0e-4,       #eV^2 / electron
                                   'energy':      2.0e-4,       #eV / electron
                                   'density':     1.0e-3,}
-    params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
-    params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
+    params['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
+    params['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
 
-    calc = GPAW(**params_GPAW)
+    calc = GPAW(**params)
     lifepo4.calc = calc
     epot_lifepo4_cell=lifepo4.get_potential_energy()
     print('E_Pot=', epot_lifepo4_cell)

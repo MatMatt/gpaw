@@ -1,5 +1,8 @@
+from ase.io import write
+from ase.parallel import paropen
+from gpaw import GPAW, FermiDirac, Mixer, PW
+from ase.dft.bee import BEEFEnsemble
 from ase import Atoms
-
 fepo4 = Atoms('Fe4O16P4',
               positions=[[2.73015081, 1.46880951, 4.56541172],
                          [2.23941067, 4.40642872, 2.14957739],
@@ -27,3 +30,38 @@ fepo4 = Atoms('Fe4O16P4',
                          [5.87676435, 1.46881009, 0.52297232]],
               cell=[9.94012, 5.87524, 4.83157],
               pbc=[1, 1, 1])
+for atom in fepo4:
+    if atom.symbol == 'Fe':
+        atom.magmom = 5.0
+magmoms = fepo4.get_initial_magnetic_moments()
+print(magmoms)
+# snippet-params
+params = dict(
+    mode=PW(500),  # plane wave energy cutoff
+    nbands=-40,  # the number on empty bands had the system been spin-paired
+    kpts={'size': (2, 4, 5),  # k-point mesh
+          'gamma': True},
+    spinpol=True,  # performing spin polarized calculations
+    xc='BEEF-vdW',  # exchange-correlation functional
+    occupations=FermiDirac(
+        width=0.1,  # smearing
+        fixmagmom=True),  # total magnetic moment fixed to the initial value
+    convergence={'eigenstates': 1.0e-4,  # eV^2 / electron
+                 'energy': 2.0e-4,  # eV / electron
+                 'density': 1.0e-3},
+    mixer=Mixer(0.1, 5, weight=100.0))  # mixer used during SCF optimization
+# snippet-u
+params['setups'] = {'Fe': ':d,4.3'}  # U=4.3 applied to d orbitals
+# snippet-calc
+calc = GPAW(**params)
+fepo4.calc = calc
+epot_fepo4_cell = fepo4.get_potential_energy()
+print(epot_fepo4_cell)
+write('fepo4_out.traj', fepo4)
+# snippet-beef
+ens = BEEFEnsemble(calc)
+dE = ens.get_ensemble_energies(2000)
+# snippet-ensemble
+with paropen('ensemble_fepo4.dat', 'a') as result:
+    for e in dE:
+        print(e, file=result)

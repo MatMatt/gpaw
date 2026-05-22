@@ -239,8 +239,7 @@ Check out the contents of the output file (:download:`graphite-LDA.txt`),
 all relevant information about the scf cycle are printed therein.
 
 Then we optimize the unit cell of the structure.  We will take advantage
-of the :ref:`StrainFilter <ase:asdjkhdsfhj>`
-https://ase-lib.org/ase/constraints.html#the-strainfilter-class
+of the :class:`ase:ase.filters.StrainFilter`
 class.  This allows us to simultaneously optimize both C-C distance and
 interlayer distance.  We employ the
 `BFGS <https://aria42.com/blog/2014/12/understanding-lbfgs>`__ algorithm to
