@@ -211,24 +211,19 @@ the calculation is running.
 ===============
 
 You will now do similar for :mol:`LiFePO_4`. In this case you will load in a
-template structure called ``lifepo4_wo_li.traj`` missing only the Li atoms.
-It is located in the resources folder.
+template structure called :download:`lifepo4_wo_li.traj` missing only the Li atoms.
 
 .. code::
 
     lifepo4_wo_li = read('lifepo4_wo_li.traj')
 
-
 Visualize the structure.
-
 
 .. code::
 
     view(lifepo4_wo_li)
 
-
 You should now add Li into the structure using the fractional coordinates below:
-
 
 .. code::
 
@@ -237,53 +232,20 @@ You should now add Li into the structure using the fractional coordinates below:
     # Li  0.5  0.5  0.5
     # Li  0.5  0    0.5
 
-
 Add Li atoms into the structure, e.g., by following the example in
 this ASE tutorial:
 :ref:`ase:manipulatingatoms`.
-
-.. code::
-
-    from numpy import identity
-    from ase import Atom
-
-    cell = lifepo4_wo_li.get_cell()
-
-    # ...
-
-    # lifepo4 = lifepo4_wo_li.copy()
-
-    # Teacher:
-
-    lifepo4 = lifepo4_wo_li.copy()
-    cell = lifepo4.get_cell()
-    xyzcell = identity(3)
-    lifepo4.set_cell(xyzcell, scale_atoms=True)  # Set the unit cell and rescale
-    lifepo4.append(Atom('Li', (0, 0, 0)))
-    lifepo4.append(Atom('Li', (0, 0.5, 0)))
-    lifepo4.append(Atom('Li', (0.5, 0.5, 0.5)))
-    lifepo4.append(Atom('Li', (0.5, 0, 0.5)))
-    lifepo4.set_cell(cell, scale_atoms=True)
-
-
 Visualize the structure with added Li.
-
 
 .. code::
 
     view(lifepo4)
 
-
 Ensure that the magnetic moments are as they should be, once again assuming ferromagnetism for simplicity.
-
 
 .. code::
 
-    # ...
-
-    # teacher
     print(lifepo4.get_initial_magnetic_moments())
-
 
 At this point you should save your structure by writing it to a trajectory file.
 
@@ -292,117 +254,39 @@ At this point you should save your structure by writing it to a trajectory file.
     write('lifepo4.traj', lifepo4)
 
 You should now calculate the potential energy of this sytem using the
-method and same calculational parameters as for :mol:`FePO_4` above.  Make a
-full script in the cell below similar to what you did above for :mol:`FePO_4`
-and make sure that it runs.
+method and same calculational parameters as for :mol:`FePO_4` above.
+Make a full script in the cell below similar to what you did above for
+:mol:`FePO_4` and make sure that it runs.  If the code runs, submit to
+the HPC cluster as you did above.  The calculation takes approximately
+10 minutes.
+
+If you instantiate the GPAW calculator like this:
+
+.. code:: python
+
+   calc = GPAW(txt='lifepo4.txt, **params)
+
+then you can follow the calculation by looking at the ``lifepo4.txt``
+log-file.
 
 .. code::
 
-    # %% writefile 'lifepo4.py'
-    from ase.parallel import paropen
-    from ase.io import read, write
-    from ase.dft.bee import BEEFEnsemble
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-
-    # Read in the structure you made and wrote to file above
-    lifepo4 = read('lifepo4.traj')
-
-    params = {...}
-
-    # ...
-    # ...
-    # ...
-
-    # write('lifepo4_out.traj', lifepo4)
-
-    # teacher
-    from ase.parallel import paropen
-    from ase.io import read
-    from ase.dft.bee import BEEFEnsemble
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-
-    #Read in the structure you made and wrote to file above
-    lifepo4 = read('lifepo4.traj')
-
-    params = {}
-    params['mode']        = PW(500)                     #The used plane wave energy cutoff
-    params['nbands']      = -40                           #The number on empty bands had the system been spin-paired
-    params['kpts']        = {'size':  (2,4,5),            #The k-point mesh
-                                  'gamma': True}
-    params['spinpol']     = True                          #Performing spin polarized calculations
-    params['xc']          = 'BEEF-vdW'                    #The used exchange-correlation functional
-    params['occupations'] = FermiDirac(width = 0.1,      #The smearing
-                                            fixmagmom = True)  #Total magnetic moment fixed to the initial value
-    params['convergence'] = {'eigenstates': 1.0e-4,       #eV^2 / electron
-                                  'energy':      2.0e-4,       #eV / electron
-                                  'density':     1.0e-3,}
-    params['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
-    params['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-
-    calc = GPAW(**params)
-    lifepo4.calc = calc
-    epot_lifepo4_cell=lifepo4.get_potential_energy()
-    print('E_Pot=', epot_lifepo4_cell)
-
-    traj=Trajectory('lifepo4_out.traj', mode='w', atoms=lifepo4)
-    traj.write()
-
-    ens = BEEFEnsemble(calc)
-    dE = ens.get_ensemble_energies(2000)
-    result = paropen('ensemble_lifepo4.dat','a')
-    for e in dE:
-        print(e, file=result)
-    result.close()
-
-
-If the code runs, submit to the HPC cluster as you did above. The calculation takes approximately 10 minutes.
-
-
-.. code::
-
-    # magic: !mq submit lifepo4.py -R 8:1h  # submits the calculation to 8 cores, 1 hour
-
-
-Run the below cell to examine the status of your calculation. If no output is returned, the calculation has either finished or failed.
-
-
-.. code::
-
-    # magic: !mq ls
-
-
-Once the calculation begins, you can run the cells below to open the error log and output of the calculation in a new window.
-
-
-.. code::
-
-    # Error log
-    # magic: !cat "$(ls -t lifepo4.py.*err | head -1)"
-
-
-.. code::
-
-    # Output
-    # magic: !cat "$(ls -t lifepo4.py.*out | head -1)"
-
-
-When calculation has finished, load in the result. You can skip past this cell and return later.
-
-
-.. code::
-
-    try:
-        lifepo4=read('lifepo4_out.traj')
-        print('Calculation finished')
-    except FileNotFoundError:
-        print('Calculation has not yet finished')
-
+   $ mq submit lifepo4.py -R 8:1h
+   $ mq ls
+   $ mq ls
+   ...
+   $ mq ls  # OK, it started running
+   $ tail lifepo4.txt
 
 
 Li metal
 --------
 
-We use a Li metal reference to calculate the equilibrium potential. On exercise day 2 you used a Li metal reference to calculate the intercalation energy in the graphite anode. The approach is similar here. Just read in the result of the calculation with DFTD3 and attach a new calulator to it.
+We use a Li metal reference to calculate the equilibrium potential.  On
+exercise day 2 you used a Li metal reference to calculate the
+intercalation energy in the graphite anode.  The approach is similar
+here.  Just read in the result of the calculation with DFTD3 and attach
+a new calulator to it.
 
 
 .. code::
