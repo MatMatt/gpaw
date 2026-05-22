@@ -264,10 +264,11 @@ class ndarray:
     def all(self):
         return ndarray(self._data.all())
 
-    def sum(self, out=None, **kwargs):
+    def sum(self, axis=None, dtype=None, out=None, **kwargs):
         if out is not None:
             out = out._data
-        return ndarray(self._data.sum(out=out, **kwargs))
+        return ndarray(self._data.sum(axis=axis, dtype=dtype,
+                                      out=out, **kwargs))
 
     def __repr__(self):
         return 'cp.' + np.array_repr(self._data)
