@@ -242,7 +242,7 @@ def test_NiO_withU(in_tmp_dir, xc, comm, add_cwd_to_setup_paths):
 
     a0 = 4.17
     a = bulk('NiO', 'rocksalt', a=a0)
-    a.set_initial_magnetic_moments([2, 0])
+    a.set_initial_magnetic_moments([2, 2])
 
     if xc == 'LDA':
         e0_q = np.array([0., -2.98733, -0.03207])
@@ -257,7 +257,6 @@ def test_NiO_withU(in_tmp_dir, xc, comm, add_cwd_to_setup_paths):
                 setups={'Ni': ':d,4.0'},
                 kpts={'size': (2, 2, 2), 'gamma': True},
                 occupations=FermiDirac(0.001),
-                convergence={'density': 1e-5},
                 mixer={'method': 'difference',
                        'beta': 0.05,
                        'weight': 50},
