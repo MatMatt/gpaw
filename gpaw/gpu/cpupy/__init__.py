@@ -132,6 +132,14 @@ def mean(a, axis=None):
     return ndarray(np.mean(a._data, axis=axis))
 
 
+def min(a, *args, **kwargs):
+    return ndarray(np.min(a._data, *args, **kwargs))
+
+
+def max(a, *args, **kwargs):
+    return ndarray(np.max(a._data, *args, **kwargs))
+
+
 def conjugate(a):
     return ndarray(np.conjugate(a._data))
 
