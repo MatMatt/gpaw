@@ -182,7 +182,7 @@ class DFTCalculation:
             self.density.update(self.ibzwfs)
         self.potential.move(atomdist)
         self.scf_loop.hamiltonian.move(self.relpos_ac)
-        self.mixer.move(self.relpos_ac, atomdist)
+        self.scf_loop.mixer.move(self.relpos_ac, atomdist)
 
         self.potential, self.energies, _ = self.pot_calc.calculate(
             self.density, self.ibzwfs, self.potential.vHt_x)
