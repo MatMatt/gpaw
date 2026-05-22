@@ -9,6 +9,7 @@ from gpaw.typing import ArrayND, Self
 from gpaw.mixer.metric import BaseMetric
 from gpaw.mpi import MPIComm
 
+
 class BaseMixer:
     def __init__(self):
         self.metric = BaseMetric()

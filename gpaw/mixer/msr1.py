@@ -87,7 +87,8 @@ class MSR1Mixer(BaseMixer):
         self.calculate_residual(nt_sX, self.nt_hsX[-1][0], _R_sX)
         self.calculate_paw_residual(D_asii.data, self.nt_hsX[-1][1], _R_asii)
 
-        self.add_compensation_charge(_R_sX, _R_asii, density, out=self.Rc_hsX.next())
+        self.add_compensation_charge(_R_sX, _R_asii, density,
+                                     out=self.Rc_hsX.next())
 
         self.metric(self.Rc_hsX[-1], out=self.MRc_hsX.next())
 
@@ -254,8 +255,8 @@ class MSR1Mixer(BaseMixer):
 
         # Step 10: Update density history
         if increased_error > self.hard_lim:
-               for hist in self.histories:
-                   hist.delete_oldest()
+            for hist in self.histories:
+                hist.delete_oldest()
         self.nt_hsX.add_density(density)
         self.add_compensation_charge(nt_sX, D_asii, density,
                                      out=self.ntc_hsX.next(),
