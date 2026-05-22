@@ -129,6 +129,17 @@ class BaseMixer:
 
         return out
 
+    def move(self, relpos_ac: ArrayND, atomdist: AtomDistribution):
+        self.initialize(
+            relpos_ac=relpos_ac,
+            atomdist=atomdist,
+            desc=self.desc,
+            setups=self.setups,
+            ncomponents=self.ncomponents,
+            world=self.world,
+            xp=self.xp
+        )
+
     def reset(self):
         for hist in self.histories:
             hist.reset()
