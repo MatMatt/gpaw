@@ -32,7 +32,7 @@ def get_mixer_from_params(params: dict):
     # We should change how mixer metric is specified,
     # if we want to have more metric choices in the future.
     weight = params.pop('weight', 80)
-    sigma = params.pop('sigma', 1.0)
+    sigma = params.pop('sigma', 0.6)
     g_ss = params.pop('g_ss', None)
     if weight == 1:  # No metric
         metric = BaseMetric(g_ss=g_ss)

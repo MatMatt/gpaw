@@ -8,6 +8,7 @@ from gpaw.setup import Setups
 from gpaw.typing import ArrayND, Self
 from gpaw.mixer.metric import BaseMetric
 from gpaw.mpi import MPIComm
+from gpaw import GPAW_NO_C_EXTENSION
 
 
 class BaseMixer:
@@ -99,6 +100,10 @@ class BaseMixer:
             out = n_sX.copy()
         else:
             out.data[:] = n_sX.data
+
+        if GPAW_NO_C_EXTENSION:
+            # We can't compensate...
+            return out
 
         # Get compensation charge coefficients
         ccc_asL = AtomArraysLayout(
