@@ -11,7 +11,7 @@ class MSR1Mixer(BaseMixer):
     def __init__(self,
                  nmaxold: int = 10,
                  beta: float = 0.05,
-                 reg: float = 2e-3,
+                 reg: float = 4e-3,
                  gb_scale: float = 1.0,
                  max_A: float = 0.5,
                  trust_scale: float = 1.0,
