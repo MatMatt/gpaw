@@ -40,7 +40,7 @@ lifepo4.calc = calc
 epot_lifepo4_cell = lifepo4.get_potential_energy()
 print('E_Pot=', epot_lifepo4_cell)
 
-traj = Trajectory('lifepo4_out.traj', mode='w', atoms=lifepo4)
+traj = Trajectory('lifepo4.traj', mode='w', atoms=lifepo4)
 traj.write()
 
 ens = BEEFEnsemble(calc)
