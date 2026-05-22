@@ -29,6 +29,9 @@ mixer_names = {
 
 
 def get_mixer_from_params(params: dict):
+    # Ensure we don't touch the original dict:
+    params = params.copy()
+
     # We should change how mixer metric is specified,
     # if we want to have more metric choices in the future.
     weight = params.pop('weight', 80)
