@@ -25,6 +25,7 @@ class BaseMixer:
         self.desc = desc
         self.ncomponents = ncomponents
         self.xp = xp
+        self.setups = setups
         self.world = world  # For syncing across kpts
         self.atom_layout = AtomArraysLayout(
             [(setup.ni, setup.ni) for setup in setups],
