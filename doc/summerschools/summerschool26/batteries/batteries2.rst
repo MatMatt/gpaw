@@ -142,7 +142,7 @@ In the set-up of this calculator you will append relevant keyword values
 into a dictionary, which is fed to the calculator object.
 To save computational time while keeping the calculations physically sound, the following should be used:
 
-.. literalinclude:: bat2.py
+.. literalinclude:: fepo4.py
    :start-after: snippet-params
    :end-before: snippet-u
 
@@ -153,7 +153,7 @@ most pronounced for highly localized orbitals.
 is used to mitigate the self-interaction error of the highly localized
 *3d*-electrons of Fe.  This is done in GPAW using the ``setups`` keyword.
 
-.. literalinclude:: bat2.py
+.. literalinclude:: fepo4.py
    :start-after: snippet-u
    :end-before: snippet-calc
 
@@ -161,7 +161,7 @@ Make a GPAW calculator and attach it to the atoms object.  Here you will
 use :meth:`ase:ase.Atoms.get_potential_energy`
 to start the calculation.
 
-.. literalinclude:: bat2.py
+.. literalinclude:: fepo4.py
    :start-after: snippet-calc
    :end-before: snippet-beef
 
@@ -172,14 +172,14 @@ calculator, i.e., the individual energy of each term in the BEEF-vdW
 functional expansion.  Get the energy difference compared to BEEF-vdW for
 2000 ensemble functionals.
 
-.. literalinclude:: bat2.py
+.. literalinclude:: fepo4.py
    :start-after: snippet-beef
    :end-before: snippet-ensemble
 
 Print the energy differences to file.  This is not the most efficient way
 of printing to file but can allow easier subsequent data treatment.
 
-.. literalinclude:: bat2.py
+.. literalinclude:: fepo4.py
    :start-after: snippet-ensemble
    :end-before: snippet-2
 
@@ -210,8 +210,9 @@ the calculation is running.
 :mol:`LiFePO_4`
 ===============
 
-You will now do similar for :mol:`LiFePO_4`. In this case you will load in a
-template structure called :download:`lifepo4_wo_li.traj` missing only the Li atoms.
+You will now do similar for :mol:`LiFePO_4`. In this case you will load
+in a template structure called :download:`lifepo4_wo_li.traj` missing
+only the Li atoms.
 
 .. code::
 
@@ -223,7 +224,8 @@ Visualize the structure.
 
     view(lifepo4_wo_li)
 
-You should now add Li into the structure using the fractional coordinates below:
+You should now add Li into the structure using the fractional
+coordinates below:
 
 .. code::
 
@@ -241,13 +243,15 @@ Visualize the structure with added Li.
 
     view(lifepo4)
 
-Ensure that the magnetic moments are as they should be, once again assuming ferromagnetism for simplicity.
+Ensure that the magnetic moments are as they should be, once again
+assuming ferromagnetism for simplicity.
 
 .. code::
 
     print(lifepo4.get_initial_magnetic_moments())
 
-At this point you should save your structure by writing it to a trajectory file.
+At this point you should save your structure by writing it to a
+trajectory file.
 
 .. code::
 
@@ -288,47 +292,28 @@ intercalation energy in the graphite anode.  The approach is similar
 here.  Just read in the result of the calculation with DFTD3 and attach
 a new calulator to it.
 
-
-.. code::
-
-    from ase import Atoms
-    from gpaw import GPAW, FermiDirac, PW
-    from ase.io import read
-
-    li_metal = read('Li-metal-DFTD3.traj')  # Change file name accordingly
-
-    calc = GPAW(mode=PW(500),
-                kpts=(8, 8, 8),
-                occupations=FermiDirac(0.15),
-                nbands=-10,
-                txt=None,
-                xc='BEEF-vdW')
-
-    li_metal.calc = calc
-    li_metal.get_potential_energy()
-    li_metal.write('li_metal.traj')
+.. literalinclude:: li-metal.py
+   :end-before: snippet-beef
 
 Now calculate the ensemble in the same way as for :mol:`FePO_4` and
 :mol:`LiFePO_4`.
 
-.. code::
-
-    ens = BEEFEnsemble(calc)
-    li_metal_ens_cell= ens.get_ensemble_energies(2000)
-    with paropen('ensemble_li_metal.dat', 'a') as result:
-        for e in li_metal_ens_cell:
-            print(e, file=result)
+.. literalinclude:: li-metal.py
+   :start-after: snippet-beef
 
 
 Calculate equilibrium potential and uncertainty
 ===============================================
 
 You can now calculate the equilibrium potential for the case of a
-FePO$_4$/Li metal battery from the intercallation energy of Li in
-FePO$_4$. For simplicity, use that assumption that all vibrational
+:mol:`FePO_4/Li` metal battery from the intercallation energy of Li in
+:mol:`FePO_4`. For simplicity, use that assumption that all vibrational
 energies and entropic terms cancel each other.  You should now have
 completed all submitted calculations before you proceed.
 
+.. literalinclude:: eq_pot.py
+   :start-after: snippet-read
+   :end-before: snippet-read-end
 
 The calculated energies are for the full cells.  Convert them to the
 energy per formula unit.  The
@@ -336,19 +321,10 @@ energy per formula unit.  The
 
 .. code::
 
-    epot_fepo4_cell=fepo4.get_potential_energy()
-    epot_lifepo4_cell=lifepo4.get_potential_energy()
-    epot_li_metal_cell=li_metal.get_potential_energy()
-    print('epot_fepo4_cell =', epot_fepo4_cell)
-    print('epot_lifepo4_cell =', epot_lifepo4_cell)
-    print('epot_li_metal_cell =', epot_li_metal_cell)
-
-.. code::
-
-    epot_fepo4 = epot_fepo4_cell / len(fepo4) * 6  # student: epot_fepo4 = ...
-    epot_lifepo4 = epot_lifepo4_cell / len(lifepo4) * 7  # student: epot_lifepo4 = ...
-    epot_li_metal = epot_li_metal_cell / len(li_metal)  # student: epot_li_metal = ...
-    # print(epot_fepo4, ...)
+    epot_fepo4 = ...
+    epot_lifepo4 = ...
+    epot_li_metal = ...
+    print(epot_fepo4, ...)
 
 No calculate the equilibrium potential under the assumption that it is
 given by `V_{eq} = \Delta U / e`, where `U` is the electronic potential
@@ -358,24 +334,14 @@ energy of the system and `e` is the number of electrons transfered.
 
     # V_eq = ...
 
-    # teacher
-    V_eq = epot_lifepo4 - epot_fepo4 - epot_li_metal
-    print(V_eq)
-
-
 You will now calculate the error estimate for the Li intercallation
-energy in :mol:`FePO_4` using the BEEF ensemble results.  Start by loading in
-the files.  Wait a few minutes and rerun the cell if the number is not
-2000 for all of them.
+energy in :mol:`FePO_4` using the BEEF ensemble results.  Start by
+loading in the files.  Wait a few minutes and rerun the cell if the
+number is not 2000 for all of them.
 
-.. code::
-
-    fepo4_ens_cell = np.genfromtxt('ensemble_fepo4.dat', max_rows=2000)
-    lifepo4_ens_cell = np.genfromtxt('ensemble_lifepo4.dat', max_rows=2000)
-
-    print('number of functionals in ensemble=', len(fepo4_ens_cell))
-    print('number of functionals in ensemble=', len(lifepo4_ens_cell))
-    print('number of functionals in ensemble=', len(li_metal_ens_cell))
+.. literalinclude:: eq_pot.py
+   :start-after: snippet-beef
+   :end-before: snippet-end
 
 Note that these are energies per cell and not per formula unit.  Convert
 them as you did the potential energies above.  Note that you are now
@@ -388,19 +354,11 @@ value as before.
     # ...
     # ...
 
-    # teacher
-    fepo4_ens = fepo4_ens_cell / len(fepo4) * 6
-    lifepo4_ens = lifepo4_ens_cell / len(lifepo4) * 7
-    li_metal_ens = li_metal_ens_cell / len(li_metal)
-
 Make a list of equilibrium potentials.
 
 .. code::
 
     # V_eq_ens = lifepo4_ens - ...
-
-    # teacher
-    V_eq_ens = lifepo4_ens - fepo4_ens - li_metal_ens
 
 Use the plot command below to visualize the distribution.
 
@@ -409,6 +367,10 @@ Use the plot command below to visualize the distribution.
     plt.hist(V_eq_ens, 50)
     plt.grid(True)
 
+The result should look like this:
+
+.. image:: eq_pot.svg
+
 Use the :func:`numpy:numpy.std`
 to obtain the standard deviation of the ensemble.
 
@@ -416,10 +378,6 @@ to obtain the standard deviation of the ensemble.
 
     # error = ...
     # print(error)
-
-    # teacher
-    error = np.std(V_eq_ens)
-    print(error)
 
 The equilibrium potential for a :mol:`FePO_4/Li`
 battery is thus as a good estimate:
@@ -434,15 +392,13 @@ the intercallation energy of Li in graphite, that you calculated on Day
 2. What equilibrium potential do you find?  How does that compare to the
 cell voltage you can obtain from :mol:`FePO_4/C` batteries?
 
-.. code::
-
-    # You can use this cell for FePO4/C potential calculation
-
 Make sure you are able to discuss the bullet points at the top of this
-notebook.  You can use the cell below for calculations.
+notebook.
 
 
 Bonus
 =====
 
-How does the predicted error estimate change if you consider the full reaction from Li in graphite + :mol:`FePO_4` to empty graphite + :mol:`LiFePO_4`.
+How does the predicted error estimate change if you consider the full
+reaction from Li in graphite + :mol:`FePO_4` to empty graphite +
+:mol:`LiFePO_4`.
