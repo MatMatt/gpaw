@@ -50,8 +50,8 @@ class FFTMetric(BaseMetric):
         ekin_G = self.xp.asarray(self.pw.ekin_G)
         w_G = self.weight * (self.sigma + ekin_G) \
             / (self.sigma + self.weight * ekin_G)
-
         assert isinstance(n_sX, UGArray)
+
         n_sX_pbc = n_sX.to_pbc_grid()
         if n_sX_pbc is n_sX:
             n_sX_pbc = n_sX_pbc.copy()
