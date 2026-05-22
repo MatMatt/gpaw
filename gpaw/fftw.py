@@ -160,7 +160,6 @@ class FFTPlans:
             t[-n:, -m:] = t[n:0:-1, m:0:-1].conj()
             t[-n:, 0] = t[n:0:-1, 0].conj()
         self.ifft()
-
         if out_R is not None:
             out_R.scatter_from(self.tmp_R)
 
