@@ -13,10 +13,12 @@ def workflow():
                 shutil.copyfile(dir / file, file)
 
     # batteries1:
-    run(script='relax-graphite.py', tmax='1h')
-    with run(script='solution3.py', tmax='1h', cores=8) as d0:
-        run(script='solution4.py', tmax='1h', cores=8)
-        run(script='solution5.py', tmax='1h', cores=8)
+    run(script='relax_graphite.py', tmax='1h')
+    s2 = run(script='relax_graphite_xc.py', tmax='1h', cores=8)
+    s3 = run(script='li_metal_xc.py', tmax='1h', cores=8)
+    with (s2, s3):
+        run(script='lic8.py', tmax='1h', cores=8)
+        run(script='lic6.py', tmax='1h', cores=8)
 
     # batteries2:
     d1 = run(script='fepo4.py', tmax='1h', cores=8)
