@@ -14,7 +14,7 @@ class MSR1Mixer(BaseMixer):
                  reg: float = 4e-3,
                  gb_scale: float = 1.0,
                  max_A: float = 0.5,
-                 trust_scale: float = 1.0,
+                 trust_scale: float = 3.0,
                  soft_lim: float = 2.0,
                  hard_lim: float = 3.0):
         self.nmaxold = nmaxold
