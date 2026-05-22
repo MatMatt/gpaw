@@ -25,4 +25,4 @@ def workflow():
     run(script='eq_pot.py', deps=[d1, d2, d3])
 
     # batteries3:
-    run(script='batteries3.py', tmax='1h', cores=8, deps=[s21, s22])
+    run(script='batteries3.py', tmax='1h', cores=8, deps=[d1, d2, d3])
