@@ -11,7 +11,7 @@ class MSR1Mixer(BaseMixer):
     def __init__(self,
                  nmaxold: int = 10,
                  beta: float = 0.05,
-                 reg: float = 1e-4,
+                 reg: float = 2e-4,
                  gb_scale: float = 1.0,
                  max_A: float = 0.5,
                  trust_scale: float = 1.0,
@@ -153,7 +153,7 @@ class MSR1Mixer(BaseMixer):
         MRc_1sX = MRc_sX.new(data=MRc_sX.data[None], dims=(1,) + MRc_sX.dims)
         BR_h = t_hsX.matrix_elements(MRc_1sX).data[:, 0]
         alpha_h = A_hh @ BR_h
-        # TODO: Ensure ranks agree
+        self.world.broadcast(alpha_h, 0)
 
         # Step 7: Predict mixing coefficients
         tmp_1sX = self.uk_1sX.copy()
@@ -234,6 +234,7 @@ class MSR1Mixer(BaseMixer):
             A = max(A, self.A_lims[0])
         else:
             beta_h = alpha_h
+        self.world.broadcast(beta_h, 0)
 
         # Step 9: Finally mix the densities
         nt_sX.data[:] = self.nt_hsX[-1][0].data
@@ -260,7 +261,7 @@ class MSR1Mixer(BaseMixer):
                                      out=self.ntc_hsX.next(),
                                      add_delta0=True)
 
-        # Step 11: Return the mixing error and delte really bad steps
+        # Step 11: Return the mixing error
         return dNt
 
     def decide_good_broydenness(self, Ay_hh: ArrayND,

@@ -31,12 +31,13 @@ mixer_names = {
 def get_mixer_from_params(params: dict):
     # We should change how mixer metric is specified,
     # if we want to have more metric choices in the future.
-    weight = params.pop('weight', 100)
+    weight = params.pop('weight', 80)
     sigma = params.pop('sigma', 1.0)
+    g_ss = params.pop('g_ss', None)
     if weight == 1:  # No metric
-        metric = BaseMetric()
+        metric = BaseMetric(g_ss=g_ss)
     else:
-        metric = FFTMetric(weight=weight, sigma=sigma)
+        metric = FFTMetric(g_ss=g_ss, weight=weight, sigma=sigma)
     params.pop('method', None)
     name = params.pop('backend', 'msr1')
     mixer = mixer_names[name](**params)

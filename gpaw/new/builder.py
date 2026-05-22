@@ -333,6 +333,7 @@ class DFTComponentsBuilder:
             atomdist=self.atomdist,
             setups=self.setups,
             relpos_ac=self.relpos_ac,
+            world=self.communicators['w'],
             ncomponents=self.ncomponents,
             xp=self.xp
         )

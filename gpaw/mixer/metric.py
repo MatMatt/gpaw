@@ -18,6 +18,8 @@ class BaseMetric:
         self.xp = xp
         if self.g_ss is None or len(self.g_ss) != ncomponents:
             self.g_ss = xp.eye(ncomponents)
+        else:
+            self.g_ss = self.xp.array(self.g_ss)
         self.grid = grid
         self.pw = PWDesc(ecut=0.99 * grid.ekin_max(),
                          cell=grid.cell,
