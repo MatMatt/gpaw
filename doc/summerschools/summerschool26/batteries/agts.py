@@ -16,6 +16,6 @@ def workflow():
     with run(script='solution3.py', tmax='1h', cores=8):
         run(script='solution4.py', tmax='1h', cores=8)
         run(script='solution5.py', tmax='1h', cores=8)
-        s21 = run(script='solution2-1.py', tmax='1h', cores=8)
-        s22 = run(script='solution2-2.py', tmax='1h', cores=8)
+        s21 = run(script='fepo4.py', tmax='1h', cores=8)
+        s22 = run(script='lifepo4.py', tmax='1h', cores=8)
         run(script='batteries3.py', tmax='1h', cores=8, deps=[s21, s22])
