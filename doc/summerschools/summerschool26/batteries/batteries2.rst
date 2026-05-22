@@ -292,13 +292,13 @@ intercalation energy in the graphite anode.  The approach is similar
 here.  Just read in the result of the calculation with DFTD3 and attach
 a new calulator to it.
 
-.. literalinclude:: li-metal.py
+.. literalinclude:: li_metal.py
    :end-before: snippet-beef
 
 Now calculate the ensemble in the same way as for :mol:`FePO_4` and
 :mol:`LiFePO_4`.
 
-.. literalinclude:: li-metal.py
+.. literalinclude:: li_metal.py
    :start-after: snippet-beef
 
 
