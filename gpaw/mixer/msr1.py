@@ -194,8 +194,8 @@ class MSR1Mixer(BaseMixer):
         B = self.B
 
         # Step 8: Trust region control
-        tmp_1sX.data[:] = A * self.uk_1sX.data
-        tmp_1sX.data[:] += B * self.pk_1sX.data
+        tmp_1sX.data[:] = self.uk_1sX.data * A
+        tmp_1sX.data[:] += self.pk_1sX.data * B
         trust_radius = self.trust_scale * tmp_1sX.norm2().sum()**0.5
         if self.trust_radius is None:
             self.trust_radius = trust_radius
@@ -219,10 +219,12 @@ class MSR1Mixer(BaseMixer):
                 beta_h = self.xp.linalg.solve(
                     A_hh + lamb * self.xp.eye(nold - 1), BR_h
                 )
-                return (beta_h @ s_hh @ beta_h) - self.trust_radius**2
+                rtnval = (beta_h @ s_hh @ beta_h) - self.trust_radius**2
+                return rtnval if self.xp is np else rtnval.get()
 
             try:
-                lamb = root_scalar(err_fct, bracket=[0, 1000 * A_diag])
+                upplimscale = A_diag if self.xp is np else A_diag.get()
+                lamb = root_scalar(err_fct, bracket=[0, 1000 * upplimscale])
                 root = lamb.root
             except ValueError:
                 root = 1000 * A_diag
