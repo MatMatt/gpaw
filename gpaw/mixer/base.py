@@ -7,7 +7,7 @@ from gpaw.core.atom_arrays import AtomDistribution
 from gpaw.setup import Setups
 from gpaw.typing import ArrayND, Self
 from gpaw.mixer.metric import BaseMetric
-
+from gpaw.mpi import MPIComm
 
 class BaseMixer:
     def __init__(self):
@@ -19,10 +19,12 @@ class BaseMixer:
                    setups: Setups,
                    relpos_ac: ArrayND,
                    ncomponents: int,
+                   world: MPIComm,
                    xp=np):
         self.desc = desc
         self.ncomponents = ncomponents
         self.xp = xp
+        self.world = world  # For syncing across kpts
         self.atom_layout = AtomArraysLayout(
             [(setup.ni, setup.ni) for setup in setups],
             atomdist=atomdist, dtype=float if ncomponents < 4 else complex,

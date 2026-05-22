@@ -68,6 +68,7 @@ class PulayMixer(BaseMixer):
         H_hh = self.xp.linalg.inv(self.H_hh[:nold, :nold])
         alpha_h = H_hh.sum(1)
         alpha_h /= alpha_h.sum()
+        self.world.broadcast(alpha_h, 0)
 
         # Step 3: Mix the densities
         nt_sX.data[:] = 0
