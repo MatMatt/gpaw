@@ -1308,6 +1308,8 @@ def _definemixerfunc(method, backend):
         d = dict(method=method, backend=backend,
                  beta=beta, nmaxold=nmaxold, weight=weight)
         d.update(kwargs)
+        # Clear none values:
+        d = {k: v for k, v in d.items() if v is not None}
         return d
     return getmixer
 
