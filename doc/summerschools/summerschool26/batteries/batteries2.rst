@@ -181,7 +181,6 @@ of printing to file but can allow easier subsequent data treatment.
 
 .. literalinclude:: fepo4.py
    :start-after: snippet-ensemble
-   :end-before: snippet-2
 
 You now have what you need to make a full script (call it ``fepo4.py``).
 Submit the calculation to the HPC cluster.  The calculation should take
@@ -341,7 +340,7 @@ number is not 2000 for all of them.
 
 .. literalinclude:: eq_pot.py
    :start-after: snippet-beef
-   :end-before: snippet-end
+   :end-before: snippet-beef-end
 
 Note that these are energies per cell and not per formula unit.  Convert
 them as you did the potential energies above.  Note that you are now
