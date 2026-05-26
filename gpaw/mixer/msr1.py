@@ -38,33 +38,28 @@ class MSR1Mixer(BaseMixer):
             ncomponents=self.ncomponents,
             desc=self.desc,
             atom_layout=self.atom_layout,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.R_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
             atom_layout=self.atom_layout,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.ntc_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.Rc_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.MRc_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.histories = [self.nt_hsX, self.ntc_hsX, self.R_hsX,
                           self.Rc_hsX, self.MRc_hsX]
         self.uk_1sX = self.desc.empty((1, self.ncomponents), xp=self.xp)
@@ -279,10 +274,8 @@ class MSR1Mixer(BaseMixer):
         if (fracs_i <= 0).any():
             # Handle negative values in fracs_i
             # Set max_gb to a safe value
-            max_gb = min(
-                max_gb,
-                self.xp.min(-fracs_i[fracs_i <= 0])
-            )
+            max_gb = min(max_gb,
+                         self.xp.min(-fracs_i[fracs_i <= 0]))
 
         good_broydenness = 0.5 * max_gb
         for iter in range(2, 12):

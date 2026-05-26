@@ -17,21 +17,18 @@ class PulayMixer(BaseMixer):
             ncomponents=self.ncomponents,
             desc=self.desc,
             atom_layout=self.atom_layout,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.R_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
             atom_layout=self.atom_layout,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.Rc_hsX = DensityHistory(
             nmaxold=self.nmaxold,
             ncomponents=self.ncomponents,
             desc=self.desc,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.histories = [self.nt_hsX, self.R_hsX, self.Rc_hsX]
 
         # DIIS matrix:
