@@ -438,9 +438,6 @@ DFT-components
 .. autoclass:: gpaw.dft.DFT
     :members:
     :undoc-members:
-.. autoclass:: gpaw.dft.GPAW
-    :members:
-    :undoc-members:
 .. autoclass:: gpaw.new.calculation.DFTState
     :members:
     :undoc-members:
@@ -485,6 +482,9 @@ DFT-components
    :undoc-members:
 
 .. autoclass:: gpaw.new.extensions.Extension
+   :members:
+   :undoc-members:
+.. autoclass:: gpaw.new.logger.Logger
    :members:
    :undoc-members:
 
