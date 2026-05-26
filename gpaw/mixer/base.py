@@ -47,8 +47,7 @@ class BaseMixer:
             nmaxold=1,
             ncomponents=self.ncomponents,
             desc=self.desc,
-            xp=self.xp
-        )
+            xp=self.xp)
         self.histories = [self.density_history, ]
 
     def mix(self, density: Density) -> float:
@@ -112,11 +111,9 @@ class BaseMixer:
             xp=self.xp).empty(self.ncomponents)
 
         if not isinstance(D_asii_data, AtomArrays):
-            D_asii = AtomArrays(
-                layout=self.atom_layout,
-                dims=self.ncomponents,
-                data=D_asii_data,
-            )
+            D_asii = AtomArrays(layout=self.atom_layout,
+                                dims=self.ncomponents,
+                                data=D_asii_data)
         else:
             D_asii = D_asii_data
 
@@ -136,15 +133,13 @@ class BaseMixer:
         return out
 
     def move(self, relpos_ac: ArrayND, atomdist: AtomDistribution):
-        self.initialize(
-            relpos_ac=relpos_ac,
-            atomdist=atomdist,
-            desc=self.desc,
-            setups=self.setups,
-            ncomponents=self.ncomponents,
-            world=self.world,
-            xp=self.xp
-        )
+        self.initialize(relpos_ac=relpos_ac,
+                        atomdist=atomdist,
+                        desc=self.desc,
+                        setups=self.setups,
+                        ncomponents=self.ncomponents,
+                        world=self.world,
+                        xp=self.xp)
 
     def reset(self):
         for hist in self.histories:
