@@ -1,109 +1,71 @@
+======================================
+Transport barriers and Voltage profile
+======================================
 
-.. code::
+Today you will calculate the energy barriers for transport of Li
+intercalated in the graphite anode.  You will examine how sensitive this
+barrier is to the interlayer distance in graphite.  You will also examine
+the energy of intermediate states during the charge/discharge process.
+This will allow some basic discussion of the voltage profile of the
+battery.
 
-    # teacher
-    import ase.visualize as viz
-    viz.view = lambda atoms, repeat=None: None
-    # %%
-    """
-    # Battery Project
-    
-    ## Day 4 - Transport barriers and Voltage profile
-    """
+You will in general be provided less code than yesterday, especially
+towards the end of this notebook.  You will have to use what you have
+already seen and learned so far.
 
-
-Today you will calculate the energy barriers for transport of Li intercalated in the graphite anode. You will examine how sensitive this barrier is to the interlayer distance in graphite.  You will also examine the energy of intermediate states during the charge/discharge process. This will allow some basic discussion of the voltage profile of the battery.
-
-You will in general be provided less code than yesterday, especially towards the end of this notebook. You will have to use what you have already seen and learned so far.
-
-There will be some natural pauses while you wait for calculations to finish. If you do not finish this entire notebook today, do not despair.
-
-
-
-Initialize
-==========
-
-
-.. code::
-
-    # magic: %matplotlib notebook
-    from ase import Atom
-    from ase.visualize import view
-    from ase.io import read, write
-    from ase.mep import NEB
-    from ase.optimize import BFGS
-    from ase.parallel import paropen
-    from gpaw import GPAW, FermiDirac, Mixer, PW
-    from ase.constraints import FixAtoms
-
+There will be some natural pauses while you wait for calculations to
+finish.  If you do not finish this entire notebook today, do not despair.
 
 
 Transport barrier of Li in graphite
 ===================================
 
-You will now calculate the energy barrier for Li diffusion in the graphite anode. You will do this using the [Nudged Elastic Band (NEB) method](https://ase-lib.org/ase/neb.html#module-ase.neb)
+You will now calculate the energy barrier for Li diffusion in the graphite
+anode.  You will do this using the [Nudged Elastic Band (NEB)
+method](https://ase-lib.org/ase/neb.html#module-ase.neb)
 
-You can use your work from Day 2, but for simplicity you are advised to load in the initial atomic configuration from file.
+You can use your work from Day 2, but for simplicity you are advised to
+load in the initial atomic configuration from file.
 
+.. literalinclude:: li_barrier.py
+   :end-before: snippet-final
 
-.. code::
-
-    initial = read('NEB_init.traj')
-
-
-Visualize the structure.
-
-
-.. code::
-
-    view(initial)
-
-
-You will now make a final structure, where the Li atom has been moved to a neighbouring equivalent site. The [`get_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_positions), [`set_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.set_positions) and [`get_cell`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_cell) functions are highly useful for such a task. HINT: Displace the Li atom $\frac{1}{n} (\vec{a}+\vec{b})$
-
+You will now make a final structure, where the Li atom has been moved to a
+neighbouring equivalent site.  The
+[`get_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_positions),
+[`set_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.set_positions)
+and
+[`get_cell`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_cell)
+functions are highly useful for such a task.  HINT: Displace the Li atom
+$\frac{1}{n} (\vec{a}+\vec{b})$
 
 .. code::
 
     final = initial.copy()
-
-
-.. code::
-
-    # ...
-    # ...
-    
-    # teacher
-    cell = final.get_cell()
-    pos = final.get_positions()
-    pos[6] = pos[6] + cell[1] / 3 + cell[0] / 3
-    final.set_positions(pos)
-
+    ...
+    ...
 
 Visualize that you have made the final strcuture correctly.
 
-
 .. code::
 
+    from ase.visualize import view
     view(final)
-
 
 Make a band consisting of 7 images including the initial and final.
 
+.. literalinclude:: li_barrier.py
+   :start-after: snippet-neb1
+   :end-before: snippet-neb2
 
-.. code::
+It this point `images` consist of 6 copies of `initial` and one entry of
+`final`. Use the `NEB` method to create an initial guess for the minimum
+energy path (MEP). In the cell below a simple interpolation between the
+`initial` and `final` image is used as initial guess.
 
-    images = [initial]
-    images += [initial.copy() for i in range(5)]  # These will become the minimum energy path images.
-    images += [final]
-
-
-It this point `images` consist of 6 copies of `initial` and one entry of `final`. Use the `NEB` method to create an initial guess for the minimum energy path (MEP). In the cell below a simple interpolation between the `initial` and `final` image is used as initial guess.
-
-
-.. code::
-
-    neb = NEB(images, method='improvedtangent')
-    neb.interpolate()
+.. literalinclude:: li_barrier.py
+   :start-after: snippet-neb2
+   :end-before: snippet-neb2
 
 
 Visualize the NEB images.
@@ -114,7 +76,11 @@ Visualize the NEB images.
     view(images)
 
 
-It turns out, that while running the NEB calculation, the largest amount of resources will be spend translating the carbon layer without any noticeable buckling. You will thus [constrain](https://ase-lib.org/ase/constraints.html#constraints) the positions of the carbon atoms to save computational time.
+It turns out, that while running the NEB calculation, the largest amount
+of resources will be spend translating the carbon layer without any
+noticeable buckling.  You will thus
+[constrain](https://ase-lib.org/ase/constraints.html#constraints) the
+positions of the carbon atoms to save computational time.
 
 Each image in the NEB requires a unique calculator.
 
@@ -127,7 +93,7 @@ This very simple case is highly symmetric. To better illustrate how the NEB meth
         calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', txt=None, symmetry={'point_group': False})
         image.calc = calc
         image.set_constraint(FixAtoms(mask=[atom.symbol == 'C' for atom in image]))
-    
+
     images[3].rattle(stdev=0.05, seed=42)
 
 
@@ -164,50 +130,50 @@ Submit the calculation to the HPC cluster. Do this by first building a complete 
     #from ase.parallel import paropen
     #from gpaw import GPAW, FermiDirac, Mixer, PW
     #from ase.constraints import FixAtoms
-    
+
     # initial = read('NEB_init.traj')
-    
+
     # final = ...
-    
+
     # ...
     # ...
-    
+
     # optimizer.run(fmax=0.10)
-    
+
     # teacher
     from ase.io import read
     from ase.mep import NEB
     from ase.optimize import BFGS
     from gpaw import GPAW, PW
     from ase.constraints import FixAtoms
-    
+
     initial=read('NEB_init.traj')
-    
+
     final=initial.copy()
     cell=final.get_cell()
     pos=final.get_positions()
     pos[6]=pos[6]+cell[1]/3.+cell[0]/3.
     final.set_positions(pos)
-    
+
     images = [initial]
     images += [initial.copy() for i in range(5)]  #These will become the minimum energy path images.
     images += [final]
-    
+
     neb = NEB(images, method='improvedtangent')
     neb.interpolate()
-    
+
     for image in images[0:7]:
         calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
         image.calc = calc
         image.set_constraint(FixAtoms(mask=[atom.symbol == 'C' for atom in image]))
-    
+
     images[3].rattle(stdev=0.05, seed=42)
-    
+
     images[0].get_potential_energy()
     images[0].get_forces()
     images[6].get_potential_energy()
     images[6].get_forces()
-    
+
     optimizer = BFGS(neb, trajectory = 'neb.traj', logfile = 'neb.log' )
     optimizer.run(fmax = 0.10)
 
@@ -301,7 +267,7 @@ Now calculate the energy of the initial state (IS) image and the transition stat
 
     epot_IS = IS_image.get_potential_energy()
     #epot_TS= ...
-    
+
     # teacher
     epot_TS = TS_image.get_potential_energy()
 
@@ -331,7 +297,7 @@ Use the same calculator object as you did above and calculate the potential ener
 
     # calc = ...
     # ...
-    
+
     # teacher
     calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
     TS_image97.calc = calc
@@ -345,7 +311,7 @@ Now calculate the energy of the compressed IS and TS.
 .. code::
 
     # epot_TS97 = ...
-    
+
     # teacher
     epot_TS97 = TS_image97.get_potential_energy()
     epot_IS97 = IS_image97.get_potential_energy()
@@ -358,7 +324,7 @@ What is the energy barrier now?
 
     # barrier97 = ...
     # print('Energy barrier:', barrier97)
-    
+
     # teacher
     barrier97=epot_TS97-epot_IS97
     print("Energy barrier:", barrier97)
@@ -371,24 +337,24 @@ Now repeat the procedure but expanding the intergraphite distance by 3 %.
 
     # IS_image103 = IS_image.copy()
     # IS_image103.set_cell(...
-    
+
     # calc ...
-    
-    
+
+
     # epot_TS103 = ...
     # ...
-    
+
     # teacher
     IS_image103=IS_image.copy()
     IS_image103.set_cell([cell[0],cell[1],cell[2]*1.03], scale_atoms=True)
     TS_image103=TS_image.copy()
     TS_image103.set_cell([cell[0],cell[1],cell[2]*1.03], scale_atoms=True)
-    
+
     calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
     TS_image103.calc = calc
     calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
     IS_image103.calc = calc
-    
+
     epot_TS103=TS_image103.get_potential_energy()
     epot_IS103=IS_image103.get_potential_energy()
 
@@ -400,7 +366,7 @@ What is the energy barrier now?
 
     # barrier103 = ...
     # print('Energy barrier:', barrier103)
-    
+
     # teacher
     barrier103 = epot_TS103 - epot_IS103
     print('Energy barrier:', barrier103)
@@ -420,7 +386,7 @@ Load in the FePO$_4$ structure you wrote to file on in a previous exercise and a
 
     #fepo4=read('fepo4.traj')
     #fepo4_1li=fepo4.copy()
-    
+
     # teacher
     from ase import Atoms
     fepo4=Atoms('FeFeFeFeOOOOOOOOOOOOOOOOPPPP',
@@ -451,18 +417,18 @@ Load in the FePO$_4$ structure you wrote to file on in a previous exercise and a
                             ],
                  cell=[9.94012, 5.87524, 4.83157],
                  pbc=[1, 1, 1])
-    
+
     for atom in fepo4:
         if atom.symbol == 'Fe':
             atom.magmom = 5.0
-    
+
     fepo4_1li = fepo4.copy()
 
 
 .. code::
 
     # fepo4_1li.append(...)
-    
+
     # teacher
     fepo4_1li.append('Li')
 
@@ -483,7 +449,7 @@ Adjust the total magnetic moment of the cell such that it is 19.
     for atom in fepo4_1li:
         if atom.symbol == 'Fe':
             atom.magmom = 4.75
-    
+
     print(sum(fepo4_1li.get_initial_magnetic_moments()))
 
 
@@ -505,28 +471,28 @@ Make a full script in the cell below similar to those you made yesterday. Make s
     #from ase.io import read, write
     #from ase.dft.bee import BEEFEnsemble
     #from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     # Read in the structure you made and wrote to file above
     fepo4_1li = read('fepo4_1li.traj')
-    
+
     #...
     #...
-    
+
     # write('fepo4_1li_out.traj', fepo4_1li)
-    
+
     # ens = BEEFEnsemble(calc)
     # with paropen('ensemble_fepo4_1li.dat', 'a') as result:
     #     for e in dE:
     #         print(e, file=result)
-    
+
     # teacher
     from ase.io import read
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, PW
-    
+
     #Read in the structure you made and wrote to file above
     fepo4_1li=read('fepo4_1li.traj')
-    
+
     params_GPAW = {}
     params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
     params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
@@ -541,14 +507,14 @@ Make a full script in the cell below similar to those you made yesterday. Make s
                                   'density':     1.0e-3,}
     params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
     params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-    
+
     calc = GPAW(**params_GPAW)
     fepo4_1li.calc = calc
     epot_fepo4_1li_cell=fepo4_1li.get_potential_energy()
     print('E_Pot=', epot_fepo4_1li_cell)
-    
+
     write('fepo4_1li_out.traj', fepo4_1li)
-    
+
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
     result = paropen('ensemble_fepo4_1li.dat','a')
@@ -606,7 +572,7 @@ You are now ready to calculate the energy gained by intercalating a single Li io
     # Loading in files from exercise day 3.
     li_metal = read('li_metal.traj')
     fepo4 = read('fepo4_out.traj')
-    
+
     epot_li_metal = li_metal.get_potential_energy() / len(li_metal)
 
 
@@ -614,7 +580,7 @@ You are now ready to calculate the energy gained by intercalating a single Li io
 
     # epot_fepo4 = ...
     # ...
-    
+
     # teacher
     epot_fepo4=fepo4.get_potential_energy()
     epot_fepo4_1li=fepo4_1li.get_potential_energy()
@@ -627,7 +593,7 @@ Calculate the energy of intercalting a single Li in the FePO$_4$ cell. How does 
 
     # ...
     # print(...)
-    
+
     # teacher
     li_cost=epot_fepo4_1li-epot_fepo4-epot_li_metal
     print(li_cost)
@@ -646,11 +612,11 @@ There are numerous ways to obtain this structure. You can get inspiration from t
 .. code::
 
     # In this cell you create the vacancy in LiFePO4
-    
+
     # lifepo4_vac = ...
-    
+
     # ...
-    
+
     # teacher
     lifepo4_wo_li=read('lifepo4_wo_li.traj')
     from numpy import identity
@@ -681,7 +647,7 @@ Now ensure that the total magnetic moment is equal to 17.
     for atom in fepo4_1li:
         if atom.symbol == 'Fe':
             atom.magmom = 4.25
-    
+
     print(sum(fepo4_1li.get_initial_magnetic_moments()))
 
 
@@ -691,7 +657,7 @@ Write your atoms object to file giving it the name `lifepo4_vac.traj`.
 .. code::
 
     # ...
-    
+
     # teacher
     write('lifepo4_vac.traj', lifepo4_vac)
 
@@ -706,30 +672,30 @@ Make a full script in the cell below similar to that you made above. Make sure t
     # from ase.io import read, write
     # from ase.dft.bee import BEEFEnsemble
     # from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     # Read in the structure you made and wrote to file above
     # lifepo4_vac = read('lifepo4_vac.traj')
-    
-    
+
+
     # ...
-    
+
     # write('lifepo4_vac_out.traj', lifepo4_vac)
-    
+
     # ens = BEEFEnsemble(calc)
     # dE = ens.get_ensemble_energies(2000)
     # with paropen('ensemble_lifepo4_vac.dat','a') as results:
     #     for e in dE:
     #         print(e, file=result)
-    
+
     # teacher
     from ase.parallel import paropen
     from ase.io import read, write
     from ase.dft.bee import BEEFEnsemble
     from gpaw import GPAW, FermiDirac, Mixer, PW
-    
+
     # Read in the structure you made and wrote to file above
     lifepo4_vac = read('lifepo4_vac.traj')
-    
+
     params_GPAW = {}
     params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
     params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
@@ -744,14 +710,14 @@ Make a full script in the cell below similar to that you made above. Make sure t
                                   'density':     1.0e-3,}
     params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
     params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-    
+
     calc = GPAW(**params_GPAW)
     lifepo4_vac.calc = calc
     epot_lifepo4_vac_cell=lifepo4_vac.get_potential_energy()
     print('E_Pot=', epot_lifepo4_vac_cell)
-    
+
     write('lifepo4_vac_out.traj', lifepo4_vac)
-    
+
     ens = BEEFEnsemble(calc)
     dE = ens.get_ensemble_energies(2000)
     result = paropen('ensemble_lifepo4_vac.dat','a')
@@ -788,7 +754,7 @@ Once the calculation has finished you are ready to calculate the energy cost of 
     # Loading in files from exercise day 3.
     li_metal = read('li_metal.traj')   # you should have already read this in above
     lifepo4 = read('lifepo4_out.traj')
-    
+
     epot_li_metal = li_metal.get_potential_energy() / len(li_metal)
 
 
@@ -796,7 +762,7 @@ Once the calculation has finished you are ready to calculate the energy cost of 
 
     # epot_lifepo4 = ...
     # ...
-    
+
     # teacher
     epot_lifepo4=lifepo4.get_potential_energy()
     epot_lifepo4_vac=lifepo4_vac.get_potential_energy()
@@ -806,7 +772,7 @@ Once the calculation has finished you are ready to calculate the energy cost of 
 
     # vac_cost = ...
     # print(vac_cost)
-    
+
     # teacher
     vac_cost=epot_lifepo4_vac-epot_lifepo4+epot_li_metal
     print(vac_cost)
