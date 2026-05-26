@@ -33,8 +33,8 @@ def check_soc():
     phi = data['phi'][i]
     print(max(soc) - min(soc), theta, phi)
     assert abs(max(soc) - min(soc) - 3.85) < 0.1
-    assert abs(theta - 33) < 5
-    assert abs(phi - 301) < 30
+    assert abs(theta - 27) < 2
+    assert abs(phi - 329) < 2
 
 
 if __name__ == '__main__':
