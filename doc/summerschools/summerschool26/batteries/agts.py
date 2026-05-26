@@ -23,7 +23,7 @@ def workflow():
     # batteries2:
     d1 = run(script='fepo4.py', tmax='1h', cores=8)
     d2 = run(script='lifepo4.py', tmax='1h', cores=8)
-    d3 = run(script='li_metal.py', tmax='1h', cores=8, deps=[d0])
+    d3 = run(script='li_metal.py', tmax='1h', cores=8, deps=[s3])
     run(script='eq_pot.py', deps=[d1, d2, d3])
 
     # batteries3:
