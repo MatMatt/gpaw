@@ -108,10 +108,10 @@ Overview:
 See also: :download:`code.svg`.
 
 There are several ways to create a
-:class:`~gpaw.new.calculation.DFTCalculation`
+:class:`~gpaw.dft.DFT`
 object:
 
-* Via the the :func:`gpaw.GPAW` function which will create an
+* Via the the :func:`gpaw.dft.GPAW` function which will create an
   :class:`gpaw.new.ase_interface.ASECalculator` object that has a
   ``dft`` attribute::
 
@@ -129,7 +129,7 @@ object:
     dft = Parameters(<parameters>).dft_calculation(atoms)
 
   The :class:`~gpaw.dft.Parameters` is used by both
-  :class:`gpaw.dft.DFT` and :func:`gpaw.GPAW` to
+  the :class:`gpaw.dft.DFT` class and the :func:`gpaw.dft.GPAW` function to
   handle:
 
   * error checking
@@ -436,6 +436,9 @@ DFT-components
 --------------
 
 .. autoclass:: gpaw.dft.DFT
+    :members:
+    :undoc-members:
+.. autoclass:: gpaw.dft.GPAW
     :members:
     :undoc-members:
 .. autoclass:: gpaw.new.calculation.DFTState
