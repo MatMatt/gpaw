@@ -215,7 +215,7 @@ same parameters.
 
 First we set up an initial guess of the structure as before.
 
-.. literalinclude:: relax-graphite.py
+.. literalinclude:: relax_graphite.py
    :start-after: web
    :end-before: LDA
 
@@ -231,7 +231,7 @@ optimizing the lattice parameters.
 We will start by using the LDA exchange-correlation functional.  Later
 you will try other functionals.
 
-.. literalinclude:: relax-graphite.py
+.. literalinclude:: relax_graphite.py
    :start-at: LDA
    :end-before: sf
 
@@ -245,7 +245,7 @@ interlayer distance.  We employ the
 `BFGS <https://aria42.com/blog/2014/12/understanding-lbfgs>`__ algorithm to
 minimize the strain on the unit cell.
 
-.. literalinclude:: relax-graphite.py
+.. literalinclude:: relax_graphite.py
    :start-at: sf
 
 Read in the result of the relaxation and determine the C-C and interlayer
