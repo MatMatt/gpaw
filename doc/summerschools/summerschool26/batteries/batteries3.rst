@@ -190,180 +190,31 @@ How does the energy barrier change?
 FePO$_4$ with one Li
 ====================
 
+You will now calculate the energy gain of adding a single Li atom into
+the FePO$_4$ cell you made on Day 3. This corresponds to a charge of 25
+%. You can compare this energy to the equilibrium potential.
 
-You will now calculate the energy gain of adding a single Li atom into the FePO$_4$ cell you made on Day 3. This corresponds to a charge of 25 %. You can compare this energy to the equilibrium potential.
+Start preparing a new Python script (say, ``fepo4_1li.py``) and load in the FePO$_4$ structure you wrote to file on in a previous
+exercise and add Li.  Assume that the cell dimension remain unchanged.
 
-Load in the FePO$_4$ structure you wrote to file on in a previous exercise and add Li. Assume that the cell dimension remain unchanged.
+.. literalinclude:: fepo4_1li.py
+   :end-before: snippet-li
 
+Add a Li atoms at `(x,y,z)=(0,0,0)`:
 
-.. code::
+.. literalinclude:: fepo4_1li.py
+   :start-after: snippet-li
+   :end-before: snippet-gpaw
 
-    #fepo4=read('fepo4.traj')
-    #fepo4_1li=fepo4.copy()
+Now finish the script:
 
-    # teacher
-    from ase import Atoms
-    fepo4=Atoms('FeFeFeFeOOOOOOOOOOOOOOOOPPPP',
-                 positions=[[2.73015081, 1.46880951, 4.56541172],
-                    [2.23941067, 4.40642872, 2.14957739],
-                    [7.20997230, 4.40642925, 0.26615813],
-                    [7.70070740, 1.46880983, 2.68199421],
-                    [1.16033403, 1.46881052, 3.40240205],
-                    [3.80867172, 4.40642951, 0.98654342],
-                    [8.77981469, 4.40642875, 1.42923946],
-                    [6.13142032, 1.46881092, 3.84509827],
-                    [4.37288562, 1.46880982, 0.81812712],
-                    [0.59764596, 4.40643021, 3.23442747],
-                    [5.56702590, 4.40642886, 4.01346264],
-                    [9.34268360, 1.46880929, 1.59716233],
-                    [1.64001691, 0.26061277, 1.17298291],
-                    [3.32931769, 5.61463705, 3.58882629],
-                    [8.30013707, 3.19826250, 3.65857000],
-                    [6.61076951, 2.67698811, 1.24272700],
-                    [8.30013642, 5.61459688, 3.65856912],
-                    [6.61076982, 0.26063178, 1.24272567],
-                    [1.64001666, 2.67700652, 1.17298270],
-                    [3.32931675, 3.19822249, 3.58882660],
-                    [0.90585688, 1.46880966, 1.89272372],
-                    [4.06363530, 4.40642949, 4.30853266],
-                    [9.03398503, 4.40642957, 2.93877879],
-                    [5.87676435, 1.46881009, 0.52297232]
-                            ],
-                 cell=[9.94012, 5.87524, 4.83157],
-                 pbc=[1, 1, 1])
+* calculate the energy with the BEEF functional
+* write result to a ``.traj`` file:
+  ``from ase.io import write`` and
+  ``write('fepo4_1li_out.traj', fepo4_1li)``
+* calculate a BEEF-ensemble
 
-    for atom in fepo4:
-        if atom.symbol == 'Fe':
-            atom.magmom = 5.0
-
-    fepo4_1li = fepo4.copy()
-
-
-.. code::
-
-    # fepo4_1li.append(...)
-
-    # teacher
-    fepo4_1li.append('Li')
-
-
-Visualize the structure you made.
-
-
-.. code::
-
-    view(fepo4_1li)
-
-
-Adjust the total magnetic moment of the cell such that it is 19.
-
-
-.. code::
-
-    for atom in fepo4_1li:
-        if atom.symbol == 'Fe':
-            atom.magmom = 4.75
-
-    print(sum(fepo4_1li.get_initial_magnetic_moments()))
-
-
-Write your atoms object to file giving it the name `fepo4_1li.traj`.
-
-
-.. code::
-
-    write('fepo4_1li.traj', fepo4_1li)
-
-
-Make a full script in the cell below similar to those you made yesterday. Make sure the cell runs before interupting the notebook kernel.
-
-
-.. code::
-
-    # %%writefile 'fepo4_1li.py'
-    #from ase.parallel import paropen
-    #from ase.io import read, write
-    #from ase.dft.bee import BEEFEnsemble
-    #from gpaw import GPAW, FermiDirac, Mixer, PW
-
-    # Read in the structure you made and wrote to file above
-    fepo4_1li = read('fepo4_1li.traj')
-
-    #...
-    #...
-
-    # write('fepo4_1li_out.traj', fepo4_1li)
-
-    # ens = BEEFEnsemble(calc)
-    # with paropen('ensemble_fepo4_1li.dat', 'a') as result:
-    #     for e in dE:
-    #         print(e, file=result)
-
-    # teacher
-    from ase.io import read
-    from ase.dft.bee import BEEFEnsemble
-    from gpaw import GPAW, PW
-
-    #Read in the structure you made and wrote to file above
-    fepo4_1li=read('fepo4_1li.traj')
-
-    params_GPAW = {}
-    params_GPAW['mode']        = PW(500)                     #The used plane wave energy cutoff
-    params_GPAW['nbands']      = -40                           #The number on empty bands had the system been spin-paired
-    params_GPAW['kpts']        = {'size':  (2,4,5),            #The k-point mesh
-                                  'gamma': True}
-    params_GPAW['spinpol']     = True                          #Performing spin polarized calculations
-    params_GPAW['xc']          = 'BEEF-vdW'                    #The used exchange-correlation functional
-    params_GPAW['occupations'] = FermiDirac(width = 0.1,      #The smearing
-                                            fixmagmom = True)  #Total magnetic moment fixed to the initial value
-    params_GPAW['convergence'] = {'eigenstates': 1.0e-4,       #eV^2 / electron
-                                  'energy':      2.0e-4,       #eV / electron
-                                  'density':     1.0e-3,}
-    params_GPAW['mixer']       = Mixer(0.1, 5, weight=100.0)   #The mixer used during SCF optimization
-    params_GPAW['setups']      = {'Fe': ':d,4.3'}              #U=4.3 applied to d orbitals
-
-    calc = GPAW(**params_GPAW)
-    fepo4_1li.calc = calc
-    epot_fepo4_1li_cell=fepo4_1li.get_potential_energy()
-    print('E_Pot=', epot_fepo4_1li_cell)
-
-    write('fepo4_1li_out.traj', fepo4_1li)
-
-    ens = BEEFEnsemble(calc)
-    dE = ens.get_ensemble_energies(2000)
-    result = paropen('ensemble_fepo4_1li.dat','a')
-    for i in range(0,len(dE)):
-        print(dE[i], file=result)
-    result.close()
-
-
-Submit this calculation to the HPC cluster as you did on exercise day 3.
-
-
-.. code::
-
-    # magic: !mq submit fepo4_1li.py -R 8:1h # submits the calculation to 8 cores, 1 hour
-
-
-Run the below cell to examine the status of your calculation.
-
-
-.. code::
-
-    # magic: !mq ls
-
-
-You can run the cells below to open the error log and output of the calculation in a new window. This can be done while the calculation is running.
-
-
-.. code::
-
-    # magic: !cat "$(ls -t fepo4_1li.py.*err | head -1)"
-
-
-.. code::
-
-    # magic: !cat "$(ls -t fepo4_1li.py.*out | head -1)"
+and submit the job to the queue.
 
 
 You can move on while you wait for the calculation to finish. Once the calculation is finished load in the structure by running the cell below.
