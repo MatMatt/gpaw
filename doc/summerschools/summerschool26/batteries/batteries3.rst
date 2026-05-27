@@ -156,125 +156,34 @@ determine the transition state.  Why is it not required here?
 Bonus
 =====
 
-You will now study the influence of changing the interlayer graphite distance on the energy barrier. Due to the high degree of symmetry, this can be done easily in this case. Load in the initial state (IS) and transition state (TS) images from the converged MEP.
+You will now study the influence of changing the interlayer graphite
+distance on the energy barrier.  Due to the high degree of symmetry, this
+can be done easily in this case.  Load in the initial state (IS) and
+transition state (TS) images from the converged MEP.
 
+.. literalinclude:: li_barrier_2.py
+   :end-before: snippet-barrier
 
-.. code::
+Now calculate the energy of the initial state (IS) image and the
+transition state (TS) image using
+[`get_potential_energy()`](https://ase-lib.org/ase/atoms.html?highlight=get_potential_energy#ase.Atoms.get_potential_energy)
 
-    IS_image = images[0]
-    TS_image = images[3]
+.. literalinclude:: li_barrier_2.py
+   :start-after: snippet-barrier
+   :end-before: snippet-strain
 
+Why does this not fully align with what you found before?
 
-Now calculate the energy of the initial state (IS) image and the transition state (TS) image using [`get_potential_energy()`](https://ase-lib.org/ase/atoms.html?highlight=get_potential_energy#ase.Atoms.get_potential_energy)
+New change the graphite layer distance by changing the the size of the
+unit cell in the *z* direction by ±3 %. and use the same calculator
+object as you did above and calculate the potential energy of the
+compressed initial and final state.
 
+.. literalinclude:: li_barrier_2.py
+   :start-after: snippet-strain
+   :end-before: snippet-gpaw
 
-.. code::
-
-    epot_IS = IS_image.get_potential_energy()
-    #epot_TS= ...
-
-    # teacher
-    epot_TS = TS_image.get_potential_energy()
-
-
-.. code::
-
-    barrier = epot_TS - epot_IS
-    print('Energy barrier:', barrier)
-
-
-Why does this not fully align with what you found before? New reduce the graphite layer distance by change the the size of the unit cell in the *z* direction by 3 %.
-
-
-.. code::
-
-    cell = IS_image.get_cell()
-    IS_image97 = IS_image.copy()
-    IS_image97.set_cell([cell[0], cell[1], cell[2] * 0.97], scale_atoms=True)
-    TS_image97 = TS_image.copy()
-    TS_image97.set_cell([cell[0], cell[1], cell[2] * 0.97], scale_atoms=True)
-
-
-Use the same calculator object as you did above and calculate the potential energy of the compressed initial and final state.
-
-
-.. code::
-
-    # calc = ...
-    # ...
-
-    # teacher
-    calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
-    TS_image97.calc = calc
-    calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
-    IS_image97.calc = calc
-
-
-Now calculate the energy of the compressed IS and TS.
-
-
-.. code::
-
-    # epot_TS97 = ...
-
-    # teacher
-    epot_TS97 = TS_image97.get_potential_energy()
-    epot_IS97 = IS_image97.get_potential_energy()
-
-
-What is the energy barrier now?
-
-
-.. code::
-
-    # barrier97 = ...
-    # print('Energy barrier:', barrier97)
-
-    # teacher
-    barrier97=epot_TS97-epot_IS97
-    print("Energy barrier:", barrier97)
-
-
-Now repeat the procedure but expanding the intergraphite distance by 3 %.
-
-
-.. code::
-
-    # IS_image103 = IS_image.copy()
-    # IS_image103.set_cell(...
-
-    # calc ...
-
-
-    # epot_TS103 = ...
-    # ...
-
-    # teacher
-    IS_image103=IS_image.copy()
-    IS_image103.set_cell([cell[0],cell[1],cell[2]*1.03], scale_atoms=True)
-    TS_image103=TS_image.copy()
-    TS_image103.set_cell([cell[0],cell[1],cell[2]*1.03], scale_atoms=True)
-
-    calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
-    TS_image103.calc = calc
-    calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
-    IS_image103.calc = calc
-
-    epot_TS103=TS_image103.get_potential_energy()
-    epot_IS103=IS_image103.get_potential_energy()
-
-
-What is the energy barrier now?
-
-
-.. code::
-
-    # barrier103 = ...
-    # print('Energy barrier:', barrier103)
-
-    # teacher
-    barrier103 = epot_TS103 - epot_IS103
-    print('Energy barrier:', barrier103)
+How does the energy barrier change?
 
 
 
