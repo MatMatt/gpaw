@@ -2,12 +2,25 @@
 Transport barriers and Voltage profile
 ======================================
 
-Today you will calculate the energy barriers for transport of Li
-intercalated in the graphite anode.  You will examine how sensitive this
-barrier is to the interlayer distance in graphite.  You will also examine
-the energy of intermediate states during the charge/discharge process.
-This will allow some basic discussion of the voltage profile of the
-battery.
+You will calculate the energy barriers for transport of Li intercalated in the
+graphite anode. You will examine how sensitive this barrier is to the
+interlayer distance in graphite. You will also examine the energy of
+intermediate states during the charge/discharge process. This will allow some
+basic discussion of the voltage profile of the battery.
+
+* Create initial and final structures for a NEB calculation, that will
+  determine the transition state
+
+  - If time permits you can study the influence of changing the interlayer
+    graphite distance on the energy barrier.
+
+* Create structures for a Li vacancy in :mol:`LiFePO_4` and a single Li
+  in :mol:`FePO_4`
+
+* Calculate the Li vacancy/insertion energies and compare them to the
+  equilibrium potential
+
+  - What can they tell you about the charge/discharge potential curves?
 
 You will in general be provided less code than yesterday, especially
 towards the end of this notebook.  You will have to use what you have
@@ -84,7 +97,7 @@ NEB method works, the symmetry is broken using the
 
 .. literalinclude:: li_barrier.py
    :start-after: snippet-constraint-gpaw
-   :end-before: snippet-inittial-final
+   :end-before: snippet-initial-final
 
 Start by calculating the energy and forces of the first (`initial`) and
 last (`final`) images as this is not done during the actual NEB
@@ -92,9 +105,8 @@ calculation.
 
 Note, that this can take a while if you opt to do it inside the notebook.
 
-
 .. literalinclude:: li_barrier.py
-   :start-after: snippet-inittial-final
+   :start-after: snippet-initial-final
    :end-before: snippet-optimize
 
 You can run the NEB calculation by running an optimization on the NEB
