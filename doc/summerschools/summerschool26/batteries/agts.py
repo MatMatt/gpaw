@@ -27,5 +27,5 @@ def workflow():
     run(script='eq_pot.py', deps=[d1, d2, d3])
 
     # batteries3:
-    run(script='li_barrier.py', tmax='1h', cores=8)
-    # run(script='li_barrier.py', tmax='1h', cores=8, deps=[d1, d2, d3])
+    with run(script='li_barrier.py', tmax='1h', cores=8):
+        run(script='li_barrier_2.py', tmax='1h', cores=8)
