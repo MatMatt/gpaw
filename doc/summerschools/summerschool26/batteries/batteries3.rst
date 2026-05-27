@@ -65,16 +65,10 @@ energy path (MEP). In the cell below a simple interpolation between the
 
 .. literalinclude:: li_barrier.py
    :start-after: snippet-neb2
-   :end-before: snippet-neb2
+   :end-before: snippet-constraint-gpaw
 
-
-Visualize the NEB images.
-
-
-.. code::
-
-    view(images)
-
+Add a ``view(images)`` line to your script and run it so that you can
+visualize the NEB images.
 
 It turns out, that while running the NEB calculation, the largest amount
 of resources will be spend translating the carbon layer without any
@@ -84,168 +78,67 @@ positions of the carbon atoms to save computational time.
 
 Each image in the NEB requires a unique calculator.
 
-This very simple case is highly symmetric. To better illustrate how the NEB method works, the symmetry is broken using the [rattle](https://ase-lib.org/ase/atoms.html#ase.Atoms.rattle) function.
+This very simple case is highly symmetric.  To better illustrate how the
+NEB method works, the symmetry is broken using the
+[rattle](https://ase-lib.org/ase/atoms.html#ase.Atoms.rattle) function.
 
+.. literalinclude:: li_barrier.py
+   :start-after: snippet-constraint-gpaw
+   :end-before: snippet-inittial-final
 
-.. code::
-
-    for image in images[0:7]:
-        calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', txt=None, symmetry={'point_group': False})
-        image.calc = calc
-        image.set_constraint(FixAtoms(mask=[atom.symbol == 'C' for atom in image]))
-
-    images[3].rattle(stdev=0.05, seed=42)
-
-
-Start by calculating the energy and forces of the first (`initial`) and last (`final`) images as this is not done during the actual NEB calculation.
+Start by calculating the energy and forces of the first (`initial`) and
+last (`final`) images as this is not done during the actual NEB
+calculation.
 
 Note, that this can take a while if you opt to do it inside the notebook.
 
 
-.. code::
+.. literalinclude:: li_barrier.py
+   :start-after: snippet-inittial-final
+   :end-before: snippet-optimize
 
-    images[0].get_potential_energy()
-    images[0].get_forces()
-    images[6].get_potential_energy()
-    images[6].get_forces()
+You can run the NEB calculation by running an optimization on the NEB
+object the same way you would on an atoms object.  Note the `fmax` is
+larger for this tutorial example than you would normally use.
 
+.. literalinclude:: li_barrier.py
+   :start-after: snippet-optimize
 
-You can run the NEB calculation by running an optimization on the NEB object the same way you would on an atoms object. Note the `fmax` is larger for this tutorial example than you would normally use.
+Submit the calculation to the HPC cluster.  Do this by first building a
+complete script in the cell below using the cells above (minus the
+`view()` commands). Make sure the cell runs and then interrupt the kernel.
 
+.. code:: bash
 
-.. code::
-
-    optimizer = BFGS(neb, trajectory='neb.traj', logfile='neb.log' )
-    optimizer.run(fmax=0.10)
-
-
-Submit the calculation to the HPC cluster. Do this by first building a complete script in the cell below using the cells above (minus the `view()` commands). Make sure the cell runs and then interrupt the kernel.
-
-
-.. code::
-
-    #from ase.io import read, write
-    #from ase.mep import NEB
-    #from ase.optimize import BFGS
-    #from ase.parallel import paropen
-    #from gpaw import GPAW, FermiDirac, Mixer, PW
-    #from ase.constraints import FixAtoms
-
-    # initial = read('NEB_init.traj')
-
-    # final = ...
-
-    # ...
-    # ...
-
-    # optimizer.run(fmax=0.10)
-
-    # teacher
-    from ase.io import read
-    from ase.mep import NEB
-    from ase.optimize import BFGS
-    from gpaw import GPAW, PW
-    from ase.constraints import FixAtoms
-
-    initial=read('NEB_init.traj')
-
-    final=initial.copy()
-    cell=final.get_cell()
-    pos=final.get_positions()
-    pos[6]=pos[6]+cell[1]/3.+cell[0]/3.
-    final.set_positions(pos)
-
-    images = [initial]
-    images += [initial.copy() for i in range(5)]  #These will become the minimum energy path images.
-    images += [final]
-
-    neb = NEB(images, method='improvedtangent')
-    neb.interpolate()
-
-    for image in images[0:7]:
-        calc = GPAW(mode=PW(500), kpts=(5, 5, 6), xc='LDA', symmetry={'point_group': False})
-        image.calc = calc
-        image.set_constraint(FixAtoms(mask=[atom.symbol == 'C' for atom in image]))
-
-    images[3].rattle(stdev=0.05, seed=42)
-
-    images[0].get_potential_energy()
-    images[0].get_forces()
-    images[6].get_potential_energy()
-    images[6].get_forces()
-
-    optimizer = BFGS(neb, trajectory = 'neb.traj', logfile = 'neb.log' )
-    optimizer.run(fmax = 0.10)
-
-
-You can use the cell below to submit the calculation in the same way as on earlier days.
-
-
-.. code::
-
-    # magic: !mq submit NEB.py -R 8:1h  # submits the calculation to 8 cores, 1 hour
-
-
-Run the below cell to examine the status of your calculation.
-
-
-.. code::
-
-    # magic: !mq ls
-
-
-You can run the cells below to open the error log and output of the calculation in a new window. This can be done while the calculation is running.
-
-
-.. code::
-
-    # magic: !cat "$(ls -t NEB.py.*err | head -1)"
-
-
-.. code::
-
-    # magic: !cat "$(ls -t NEB.py.*out | head -1)"
-
-
-The optimiziation progress can be seen by running the below cell.
-
-
-.. code::
-
-    # magic: !cat neb.log
-
+    $ mq submit NEB.py -R 8:1h  # submits the calculation to 8 cores, 1 hour
+    $ ...
+    $ mq ls
+    $ ...
+    $ tail neb.log
 
 You can move on while you wait for the calculation to finish.
 
-Once the maximum force (`fmax`) in the log is below 0.1, the calculation is finished.
-Load in the full trajectory.
+Once the maximum force (`fmax`) in the log is below 0.1, the calculation
+is finished.  Load in the full trajectory.
 
-
-.. code::
-
-    full_neb = read('neb.traj@:')
-
-
-You will use the `ase gui` to inspect the result. The below line reads in the last 7 images in the file. In this case the MEP images.
-
+You will use the `ase gui` to inspect the result.  The below line reads in
+the last 7 images in the file.  In this case the MEP images.
 
 .. code::
 
-    # magic: !ase gui neb.traj@-7:
+    $ ase gui neb.traj@-7:
 
-
-In the GUI use `Tools` $\rightarrow$ `NEB`.
+In the GUI use :menuselection:`Tools --> NEB`.
 
 Now inspect how the TS image has developed.
 
-
 .. code::
 
-    # magic: !ase gui neb.traj@3::7
+   $ ase gui neb.traj@3::7
 
-
-For more complicated MEP's, use the [climbing image method](https://ase-lib.org/ase/neb.html?highlight=neb#climbing-image) to determine the transition state. Why is it not required here?
-
+For more complicated MEP's, use the [climbing image
+method](https://ase-lib.org/ase/neb.html?highlight=neb#climbing-image) to
+determine the transition state.  Why is it not required here?
 
 
 Bonus
