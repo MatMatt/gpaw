@@ -39,7 +39,14 @@ def test_all(kb):
         **kwargs)
     a.get_potential_energy()
     from gpaw.new.pw.bs import fixed
-    fixed(a.calc.dft, [[0, 0, 0]])
+    import numpy as np
+    print(a.calc.eigenvalues())
+    kpts = np.zeros((21, 3))
+    kpts[:, 2] = np.linspace(-0.25, 0.5, 21)
+    i = fixed(a.calc.dft, kpts)
+    import matplotlib.pyplot as plt
+    plt.plot(kpts[:, 2], [wfs.eig_n[0] for wfs in i])
+    plt.show()
 
 
 if __name__ == '__main__':
