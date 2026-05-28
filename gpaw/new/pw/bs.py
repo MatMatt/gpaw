@@ -1,6 +1,8 @@
+import numpy as np
+
 from gpaw.dft import DFT, Parameters
-from gpaw.new.pw.hybrids import ibz2bz
 from gpaw.new.logger import Logger
+from gpaw.new.pw.hybrids import ibz2bz
 
 
 def fixed(dft: DFT,
@@ -9,7 +11,8 @@ def fixed(dft: DFT,
     old_params = dft.params.todict()
     old_params.pop('h', None)
     kwargs = {**old_params,
-              'gpts': dft.density.nt_sR.desc.size}
+              'gpts': dft.density.nt_sR.desc.size,
+              'kpts': bp}
     params = Parameters(**kwargs)
     log = Logger(txt, dft.comm)
     builder = params.dft_component_builder(dft.atoms, log=log)
@@ -26,7 +29,9 @@ def fixed(dft: DFT,
                                  builder.atomdist,
                                  kbcomm1, kbcomm2)
     ibzwfs = builder.create_ibz_wave_functions(basis_set, potential)
-    # ibzwfs.fermi_levels = dft.ibzwfs.fermi_levels
+    for wfs in ibzwfs:
+        wfs._occ_n = np.zeros(ibzwfs.nbands)+1
+    ibzwfs.fermi_levels = dft.ibzwfs.fermi_levels
     scf_loop = builder.create_scf_loop()
     scf_loop.update_density_and_potential = False
     scf_loop.fix_fermi_level = True  # not update_fermi_level
@@ -42,6 +47,7 @@ def fixed(dft: DFT,
             plan=grid.fft_plans(),
             log=log)
     scf_loop.hamiltonian.update_wave_functions(dft.ibzwfs)
+    scf_loop.hamiltonian.update_wave_functions = lambda ibzwfs: None
     dft = DFT.from_components(
         dft.atoms, ibzwfs, density, potential,
         builder.setups,
@@ -51,4 +57,4 @@ def fixed(dft: DFT,
         params=params,
         energies=dft.energies)
 
-    return dft
+    return dft.ibzwfs
