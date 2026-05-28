@@ -30,4 +30,3 @@ for strain in [-0.03, 0.03]:
     epot_TS97 = TS_image97.get_potential_energy()
     barrier97 = epot_TS97 - epot_IS97
     print("Energy barrier:", barrier97)
-
