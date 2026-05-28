@@ -32,3 +32,15 @@ dE = ens.get_ensemble_energies(2000)
 with paropen('ensemble_fepo4_1li.dat', 'w') as fd:
     for i in range(len(dE)):
         print(dE[i], file=fd)
+# snippet-results
+li_metal = read('li_metal.traj')
+fepo4 = read('fepo4_out.traj')
+fepo4_1li = read('fepo4_1li_out.traj')
+epot_li_metal = li_metal.get_potential_energy() / len(li_metal)
+epot_fepo4 = ...
+epot_fepo4_1li = ...
+# snippet-results-end
+epot_fepo4 = fepo4.get_potential_energy()
+epot_fepo4_1li = fepo4_1li.get_potential_energy()
+li_cost = epot_fepo4_1li - epot_fepo4 - epot_li_metal
+assert abs(li_cost - 0.3333333333) < 1e-10

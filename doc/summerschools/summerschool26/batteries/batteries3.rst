@@ -216,53 +216,18 @@ Now finish the script:
 
 and submit the job to the queue.
 
+Once the calculation is finished, you are ready to calculate the energy
+gained by intercalating a single Li ion into the cathode.  Start by
+loading in the relevant reference structures and obtain the potential
+energies.  This should not require any new DFT calculations.
 
-You can move on while you wait for the calculation to finish. Once the calculation is finished load in the structure by running the cell below.
+.. literalinclude:: fepo4_1li.py
+   :start-after: snippet-results
+   :end-before: snippet-results-end
 
-
-.. code::
-
-    try:
-        fepo4_1li=read('fepo4_1li_out.traj')
-        print('Calculation finished')
-    except FileNotFoundError:
-        print('Calculation has not yet finished')
-
-
-You are now ready to calculate the energy gained by intercalating a single Li ion into the cathode. Start by loading in the relevant reference structures and obtain the potential energies. This should not require any new DFT calculations.
-
-
-.. code::
-
-    # Loading in files from exercise day 3.
-    li_metal = read('li_metal.traj')
-    fepo4 = read('fepo4_out.traj')
-
-    epot_li_metal = li_metal.get_potential_energy() / len(li_metal)
-
-
-.. code::
-
-    # epot_fepo4 = ...
-    # ...
-
-    # teacher
-    epot_fepo4=fepo4.get_potential_energy()
-    epot_fepo4_1li=fepo4_1li.get_potential_energy()
-
-
-Calculate the energy of intercalting a single Li in the FePO$_4$ cell. How does this energy compare with the equilibirum potential? What can it tell you about the charge/discharge potential curves?
-
-
-.. code::
-
-    # ...
-    # print(...)
-
-    # teacher
-    li_cost=epot_fepo4_1li-epot_fepo4-epot_li_metal
-    print(li_cost)
-
+Calculate the energy of intercalting a single Li in the FePO$_4$ cell.
+How does this energy compare with the equilibirum potential?  What can it
+tell you about the charge/discharge potential curves?
 
 
 Bonus: LiFePO$_4$ with one vacancy
