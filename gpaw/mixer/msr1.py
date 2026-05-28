@@ -13,8 +13,8 @@ class MSR1Mixer(BaseMixer):
                  beta: float = 0.05,
                  reg: float = 4e-3,
                  gb_scale: float = 1.0,
-                 max_A: float = 0.5,
-                 trust_scale: float = 3.0,
+                 max_A: float = 0.9,
+                 trust_scale: float = 1.0,
                  soft_lim: float = 1.75,
                  hard_lim: float = 2.50):
         self.nmaxold = nmaxold
