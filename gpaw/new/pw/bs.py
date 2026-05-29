@@ -12,7 +12,8 @@ def fixed(dft: DFT,
     old_params.pop('h', None)
     kwargs = {**old_params,
               'gpts': dft.density.nt_sR.desc.size,
-              'kpts': bp}
+              'kpts': bp,
+              'symmetry': 'off'}
     params = Parameters(**kwargs)
     log = Logger(txt, dft.comm)
     builder = params.dft_component_builder(dft.atoms, log=log)
@@ -31,6 +32,7 @@ def fixed(dft: DFT,
     ibzwfs = builder.create_ibz_wave_functions(basis_set, potential)
     for wfs in ibzwfs:
         wfs._occ_n = np.zeros(ibzwfs.nbands)+1
+        wfs.weight = 0.1
     ibzwfs.fermi_levels = dft.ibzwfs.fermi_levels
     scf_loop = builder.create_scf_loop()
     scf_loop.update_density_and_potential = False
@@ -48,6 +50,8 @@ def fixed(dft: DFT,
             log=log)
     scf_loop.hamiltonian.update_wave_functions(dft.ibzwfs)
     scf_loop.hamiltonian.update_wave_functions = lambda ibzwfs: None
+    print(scf_loop.hamiltonian.nbzk)
+    scf_loop.hamiltonian.nbzk = len(dft.ibzwfs.ibz.bz)
     dft = DFT.from_components(
         dft.atoms, ibzwfs, density, potential,
         builder.setups,
