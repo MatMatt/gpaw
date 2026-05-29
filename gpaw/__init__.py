@@ -27,7 +27,6 @@ boolean_envvars = {
     'GPAW_TRACE',
     'GPAW_NO_C_EXTENSION',
     'GPAW_DEBUG',
-    'GPAW_INITIALIZE_MPI',
     'GPAW_NO_GPU_MPI'}
 allowed_envvars = {
     *boolean_envvars,
@@ -69,7 +68,6 @@ ENVVAR_GPAW_NO_GPU_MPI = _get_gpaw_env_vars('GPAW_NO_GPU_MPI')
 GPAW_MPI_BACKEND = os.environ.get('GPAW_MPI_BACKEND', 'serial')
 
 if probably_get_mpiexec_implementation():
-    GPAW_INITIALIZE_MPI = True
     if GPAW_MPI_BACKEND == 'serial':
         GPAW_MPI_BACKEND = 'cgpaw'
 
