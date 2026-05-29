@@ -46,17 +46,17 @@ def _get_gpaw_env_vars(attr: str) -> bool | str:
     raise _module_attr_error(attr)
 
 
-def probably_get_mpiexec_implementation() -> str | None:
+def probably_executed_by_mpi_launcher() -> bool:
     if 'PMIX_RANK' in os.environ:
-        return 'pmix'
+        return True
     if 'OMPI_COMM_WORLD_SIZE' in os.environ:
-        return 'openmpi'
+        return True
     if 'PMI_SIZE' in os.environ:
-        return 'mpich'
+        return True
     if 'I_MPI_MPIRUN' in os.environ:
         # I have not been able to test this case.  --askhl
-        return 'intelmpi'
-    return None
+        return True
+    return False
 
 
 # When type-checking, we want the debug-wrappers enabled:
@@ -67,7 +67,7 @@ ENVVAR_GPAW_NO_GPU_MPI = _get_gpaw_env_vars('GPAW_NO_GPU_MPI')
 
 GPAW_MPI_BACKEND = os.environ.get('GPAW_MPI_BACKEND', 'serial')
 
-if probably_get_mpiexec_implementation():
+if probably_executed_by_mpi_launcher():
     if GPAW_MPI_BACKEND == 'serial':
         GPAW_MPI_BACKEND = 'cgpaw'
 
