@@ -31,7 +31,7 @@ def fixed(dft: DFT,
                                  kbcomm1, kbcomm2)
     ibzwfs = builder.create_ibz_wave_functions(basis_set, potential)
     for wfs in ibzwfs:
-        wfs._occ_n = np.zeros(ibzwfs.nbands)+1
+        wfs._occ_n = np.zeros(ibzwfs.nbands) + 1
         wfs.weight = 0.1
     ibzwfs.fermi_levels = dft.ibzwfs.fermi_levels
     scf_loop = builder.create_scf_loop()
