@@ -45,14 +45,9 @@ def test_all(kb):
     print(a.calc.eigenvalues())
     kpts = np.zeros((21, 3))
     kpts[:, 2] = np.linspace(-0.25, 0.5, 21)
-    kpts = np.zeros((4, 3))
-    kpts[:, 2] = np.linspace(-0.25, 0.5, 4)
-    kpts = np.zeros((1, 3))
-    kpts[0, 2] = 0.25
     i = fixed(a.calc.dft, kpts)
     for wfs in i:
         print(wfs.eig_n * Ha)
-    return
     import matplotlib.pyplot as plt
     plt.plot(kpts[:, 2], [wfs.eig_n[0] for wfs in i])
     plt.show()
