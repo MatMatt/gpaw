@@ -29,8 +29,10 @@ def mos2():
 def bandstructure(gs_calc, bp):
     """Calculate HSE06 bandstructure."""
     from gpaw.new.pw.bs import fixed
+    vacuum_level = gs_calc.dft.vacuum_level()
     kpts = fixed(gs_calc.dft, bp)
-    return kpts.get_all_eigs_and_occs()[0][0] * Ha
+    hse_skn, _ = kpts.get_all_eigs_and_occs()
+    return hse_skn[0] * Ha - vacuum_level
 
 
 def run():
