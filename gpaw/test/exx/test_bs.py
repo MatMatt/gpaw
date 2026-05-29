@@ -32,6 +32,7 @@ def test_all(kb):
         convergence={'density': 1e-7,
                      'forces': 1e-6},
         mixer={'beta': 0.25},
+        eigensolver='davidson',
         xc='HSE06')
     a.calc = GPAW(
         kpts={'size': (1, 1, 4), 'gamma': True},
@@ -40,10 +41,18 @@ def test_all(kb):
     a.get_potential_energy()
     from gpaw.new.pw.bs import fixed
     import numpy as np
+    from ase.units import Ha
     print(a.calc.eigenvalues())
     kpts = np.zeros((21, 3))
     kpts[:, 2] = np.linspace(-0.25, 0.5, 21)
+    kpts = np.zeros((4, 3))
+    kpts[:, 2] = np.linspace(-0.25, 0.5, 4)
+    kpts = np.zeros((1, 3))
+    kpts[0, 2] = 0.25
     i = fixed(a.calc.dft, kpts)
+    for wfs in i:
+        print(wfs.eig_n * Ha)
+    return
     import matplotlib.pyplot as plt
     plt.plot(kpts[:, 2], [wfs.eig_n[0] for wfs in i])
     plt.show()
