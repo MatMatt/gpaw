@@ -25,7 +25,7 @@ import sys
 from importlib.machinery import ModuleSpec, PathFinder
 
 import gpaw.cgpaw as cgpaw
-from gpaw import (probably_get_mpiexec_implementation, GPAW_INITIALIZE_MPI,
+from gpaw import (probably_get_mpiexec_implementation,
                   GPAW_MPI_BACKEND, GPAW_NO_C_EXTENSION)
 
 
@@ -56,23 +56,20 @@ def init_cgpaw():
     return cgpaw.Communicator()
 
 
-if GPAW_INITIALIZE_MPI:
-    if GPAW_MPI_BACKEND == 'mpi4py':
-        world = init_mpi4py()
-    elif GPAW_MPI_BACKEND == 'cgpaw':
-        if hasattr(cgpaw, 'Communicator'):
-            world = init_cgpaw()
-        else:
-            # Would be cleaner for this to be an error since we are not
-            # quite obeying the envvar.
-            world = None  # type: ignore
-    elif GPAW_MPI_BACKEND == 'serial':
-        world = None  # type: ignore
+if GPAW_MPI_BACKEND == 'mpi4py':
+    world = init_mpi4py()
+elif GPAW_MPI_BACKEND == 'cgpaw':
+    if hasattr(cgpaw, 'Communicator'):
+        world = init_cgpaw()
     else:
-        raise ValueError(
-            "GPAW_MPI_BACKEND must be one of 'serial', 'cgpaw', 'mpi4py'")
-else:
+        # Would be cleaner for this to be an error since we are not
+        # quite obeying the envvar.
+        world = None  # type: ignore
+elif GPAW_MPI_BACKEND == 'serial':
     world = None  # type: ignore
+else:
+    raise ValueError(
+        "GPAW_MPI_BACKEND must be one of 'serial', 'cgpaw', 'mpi4py'")
 
 
 if world is None:

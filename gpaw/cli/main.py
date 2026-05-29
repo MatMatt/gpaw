@@ -78,7 +78,6 @@ def hook(parser, args):
         env = dict(os.environ)
         if 'GPAW_MPI_BACKEND' not in env:
             env['GPAW_MPI_BACKEND'] = 'cgpaw'
-        env['GPAW_INITIALIZE_MPI'] = '1'
         if 'OMP_NUM_THREADS' not in env:
             env['OMP_NUM_THREADS'] = '1'
 
