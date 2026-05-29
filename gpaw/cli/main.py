@@ -32,12 +32,6 @@ def hook(parser, args):
     if args.command == 'python':
         args.traceback = True
 
-        if args.parallel is None:
-            # Let MPI decide nprocs when not given.  We use 0 to distinguish
-            # that value.  We cannot use None because that may be used
-            # by other commands that can run in parallel.
-            args.parallel = 0
-
     if hasattr(args, 'dry_run'):
         N = int(args.dry_run)
         if N:
