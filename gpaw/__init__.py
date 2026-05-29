@@ -48,6 +48,8 @@ def _get_gpaw_env_vars(attr: str) -> bool | str:
 
 
 def probably_get_mpiexec_implementation() -> str | None:
+    if 'PMIX_RANK' in os.environ:
+        return 'pmix'
     if 'OMPI_COMM_WORLD_SIZE' in os.environ:
         return 'openmpi'
     if 'PMI_SIZE' in os.environ:
