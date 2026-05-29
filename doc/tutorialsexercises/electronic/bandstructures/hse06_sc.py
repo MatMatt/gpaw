@@ -2,6 +2,7 @@ import pickle
 from pathlib import Path
 
 from ase.build import mx2
+from ase.units import Ha
 from gpaw.mpi import world
 from gpaw.new.ase_interface import GPAW
 
@@ -29,12 +30,16 @@ def bandstructure(gs_calc, bp):
     """Calculate HSE06 bandstructure."""
     from gpaw.new.pw.bs import fixed
     kpts = fixed(gs_calc.dft, bp)
-    return kpts.get_all_eigs_and_occs()[0][0]
+    return kpts.get_all_eigs_and_occs()[0][0] * Ha
 
 
 def run():
-    atoms = mos2()
+    if 1:
+        atoms = mos2()
+    else:
+        atoms = GPAW('hse06_sc.gpw').get_atoms()
     bp = atoms.cell.bandpath('GMKG', npoints=50)
+    # bp = atoms.cell.bandpath('GM', npoints=3)
     hse_kn = bandstructure(atoms.calc, bp)
     if world.rank == 0:
         Path('bs_sc.pckl').write_bytes(
