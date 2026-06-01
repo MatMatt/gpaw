@@ -44,7 +44,7 @@ def hook(parser, args):
 
     if args.parallel is not None:
         import gpaw.cgpaw as cgpaw
-        from gpaw.mpi import have_mpi
+        from gpaw.mpi import world
 
         warnings.warn(
             '\n\n'
@@ -62,7 +62,7 @@ def hook(parser, args):
         if not cgpaw.have_mpi:
             raise SystemExit('MPI not available')
 
-        if have_mpi:
+        if world.backend != 'serial':
             # When the user runs "gpaw -Pn python" then that's in serial
             # but it ends up calling itself recursively (!) after adding
             # some MPI options.  When it runs the second time (actually in
