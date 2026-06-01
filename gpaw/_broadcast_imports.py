@@ -88,10 +88,16 @@ elif GPAW_MPI_BACKEND == 'cgpaw':
 elif GPAW_MPI_BACKEND == 'serial':
     if probably_executed_by_mpi_launcher():
         warnings.warn(
-            'We appear to be running inside MPI launcher '
-            'or a variation thereof, but MPI parallelism is disabled.  Please launch gpaw with '
-            '`srun/mpirun/mpiexec gpaw python script.py` or set GPAW_MPI_BACKEND=cgpaw '
-            'to ensure that MPI is enabled.')
+            '\n\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+            '! WARNING!                                                                         !\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+            '! GPAW appears to be running inside MPI launcher, but MPI parallelism is disabled. !\n'
+            '! To enable MPI parallelization, run GPAW using `gpaw python` and MPI launcher:    !\n'
+            '! `mpiexec -n N gpaw python script.py` or `srun gpaw python script.py` or          !\n'
+            '! a variation thereof, or set the environment variable GPAW_MPI_BACKEND=cgpaw.     !\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+        )
     world = None  # type: ignore
 else:
     raise ValueError(
