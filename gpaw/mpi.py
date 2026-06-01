@@ -843,9 +843,7 @@ class SerialCommunicator:
 
 _serial_comm = SerialCommunicator()
 
-have_mpi = _world is not None
-
-if not have_mpi:
+if _world is None:
     _world = _serial_comm  # type: ignore
 
 if gpaw.debug:
