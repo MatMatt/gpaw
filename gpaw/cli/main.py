@@ -43,7 +43,8 @@ def hook(parser, args):
             mpi.world.size = N
 
     if args.parallel is not None:
-        from gpaw.mpi import compiled_with_mpi, have_mpi
+        import gpaw.cgpaw as cgpaw
+        from gpaw.mpi import have_mpi
 
         warnings.warn(
             '\n\n'
@@ -58,7 +59,7 @@ def hook(parser, args):
             '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
         )
 
-        if not compiled_with_mpi:
+        if not cgpaw.have_mpi:
             raise SystemExit('MPI not available')
 
         if have_mpi:
