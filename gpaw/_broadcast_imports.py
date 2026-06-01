@@ -24,10 +24,18 @@ import os
 import sys
 from importlib.machinery import ModuleSpec, PathFinder
 
+import gpaw
 import gpaw.cgpaw as cgpaw
 from gpaw import (probably_executed_by_mpi_launcher,
-                  GPAW_MPI_BACKEND, GPAW_NO_C_EXTENSION)
+                  GPAW_NO_C_EXTENSION)
 
+
+# Set default MPI backend to 'serial' if no-one has set it yet.
+# This should happen if the environment variable was not set
+# and user is executing plain `python` (not `gpaw python`)
+if gpaw.GPAW_MPI_BACKEND is None:
+    gpaw.GPAW_MPI_BACKEND = "serial"
+GPAW_MPI_BACKEND = gpaw.GPAW_MPI_BACKEND
 
 cgpaw_version = getattr(cgpaw, 'version', 0)
 if not GPAW_NO_C_EXTENSION and cgpaw_version != 12:

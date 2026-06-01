@@ -65,13 +65,11 @@ debug = TYPE_CHECKING or _get_gpaw_env_vars('GPAW_DEBUG')
 # Debug envvar for disabling GPU aware MPI
 ENVVAR_GPAW_NO_GPU_MPI = _get_gpaw_env_vars('GPAW_NO_GPU_MPI')
 
-# Set MPI backend based on the probably-logic if it's not explicitly set
+# Set MPI backend based on the env variable. If env variable is not set,
+# MPI backend remains None here, and it will be set either to
+# - 'cgpaw' in __main__.py if executing gpaw as an application or
+# - 'serial' in _broadcast_imports.py if using gpaw as a library
 GPAW_MPI_BACKEND = os.environ.get('GPAW_MPI_BACKEND')
-if GPAW_MPI_BACKEND is None:
-    if probably_executed_by_mpi_launcher():
-        GPAW_MPI_BACKEND = 'cgpaw'
-    else:
-        GPAW_MPI_BACKEND = 'serial'
 
 
 @contextlib.contextmanager
