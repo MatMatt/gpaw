@@ -22,6 +22,7 @@ data and will crash or deadlock if master sends anything else.
 import marshal
 import os
 import sys
+import warnings
 from importlib.machinery import ModuleSpec, PathFinder
 
 import gpaw
@@ -83,25 +84,18 @@ elif GPAW_MPI_BACKEND == 'cgpaw':
         world = init_cgpaw()
     else:
         raise ValueError(
-            "GPAW_MPI_BACKEND='cgpaw' requested but GPAW was not compiled with MPI")
+            "GPAW_MPI_BACKEND='cgpaw' requested but GPAW is not compiled with MPI")
 elif GPAW_MPI_BACKEND == 'serial':
+    if probably_executed_by_mpi_launcher():
+        warnings.warn(
+            'We appear to be running inside MPI launcher '
+            'or a variation thereof, but MPI parallelism is disabled.  Please launch gpaw with '
+            '`srun/mpirun/mpiexec gpaw python script.py` or set GPAW_MPI_BACKEND=cgpaw '
+            'to ensure that MPI is enabled.')
     world = None  # type: ignore
 else:
     raise ValueError(
         "GPAW_MPI_BACKEND must be one of 'serial', 'cgpaw', 'mpi4py'")
-
-
-if world is None and probably_executed_by_mpi_launcher():
-    # Check whether we might not have the same ideas about parallelism
-    # as the caller.
-    #
-    # This check is not portable to other MPIs.  Maybe we can have this
-    # sanity check for a few MPI implementations since it's nasty to get
-    # inconsistent MPI communicators.
-    raise RuntimeError(
-        'We appear to be running inside mpi launcher '
-        'or a variation thereof, but parallelism is disabled.  Please run '
-        'srun/mpirun/mpiexec gpaw python to ensure that MPI is enabled.')
 
 
 def marshal_broadcast(obj):
