@@ -26,8 +26,7 @@ from importlib.machinery import ModuleSpec, PathFinder
 
 import gpaw
 import gpaw.cgpaw as cgpaw
-from gpaw import (probably_executed_by_mpi_launcher,
-                  GPAW_NO_C_EXTENSION)
+from gpaw import GPAW_NO_C_EXTENSION
 
 
 # Set default MPI backend to 'serial' if no-one has set it yet.
@@ -45,6 +44,19 @@ if not GPAW_NO_C_EXTENSION and cgpaw_version != 12:
                        'optimized pwlfc_expand function in new GPAW. Enjoy. ')
 
     raise ImportError(improvement + 'Please recompile GPAW''s C-extensions!')
+
+
+def probably_executed_by_mpi_launcher() -> bool:
+    if 'PMIX_RANK' in os.environ:
+        return True
+    if 'OMPI_COMM_WORLD_SIZE' in os.environ:
+        return True
+    if 'PMI_SIZE' in os.environ:
+        return True
+    if 'I_MPI_MPIRUN' in os.environ:
+        # I have not been able to test this case.  --askhl
+        return True
+    return False
 
 
 def init_mpi4py():

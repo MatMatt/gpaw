@@ -46,19 +46,6 @@ def _get_gpaw_env_vars(attr: str) -> bool | str:
     raise _module_attr_error(attr)
 
 
-def probably_executed_by_mpi_launcher() -> bool:
-    if 'PMIX_RANK' in os.environ:
-        return True
-    if 'OMPI_COMM_WORLD_SIZE' in os.environ:
-        return True
-    if 'PMI_SIZE' in os.environ:
-        return True
-    if 'I_MPI_MPIRUN' in os.environ:
-        # I have not been able to test this case.  --askhl
-        return True
-    return False
-
-
 # When type-checking, we want the debug-wrappers enabled:
 debug = TYPE_CHECKING or _get_gpaw_env_vars('GPAW_DEBUG')
 
