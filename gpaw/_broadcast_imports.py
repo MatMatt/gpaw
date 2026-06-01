@@ -80,7 +80,7 @@ def init_cgpaw():
 if GPAW_MPI_BACKEND == 'mpi4py':
     world = init_mpi4py()
 elif GPAW_MPI_BACKEND == 'cgpaw':
-    if hasattr(cgpaw, 'Communicator'):
+    if cgpaw.have_mpi:
         world = init_cgpaw()
     else:
         raise ValueError(

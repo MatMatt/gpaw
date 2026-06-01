@@ -844,7 +844,6 @@ class SerialCommunicator:
 _serial_comm = SerialCommunicator()
 
 have_mpi = _world is not None
-compiled_with_mpi = hasattr(cgpaw, 'Communicator')
 
 if not have_mpi:
     _world = _serial_comm  # type: ignore
