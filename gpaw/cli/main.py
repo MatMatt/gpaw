@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import warnings
 
 commands = [
     ('run', 'gpaw.cli.run'),
@@ -43,6 +44,19 @@ def hook(parser, args):
 
     if args.parallel is not None:
         from gpaw.mpi import compiled_with_mpi, have_mpi
+
+        warnings.warn(
+            '\n\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+            '! WARNING!                                                                !\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+            '! The -P / --parallel option `gpaw -P N <sub-command>` is deprecated and  !\n'
+            '! will be removed in the next GPAW release.                               !\n'
+            '! To enable MPI parallelization, run GPAW using MPI launcher instead:     !\n'
+            '! `mpiexec -n N gpaw <sub-command>` or `srun gpaw <sub-command>` or       !\n'
+            '! a variation thereof.                                                    !\n'
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+        )
 
         if not compiled_with_mpi:
             raise SystemExit('MPI not available')
