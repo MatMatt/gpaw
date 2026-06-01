@@ -136,6 +136,8 @@ def rank0_call(func, comm):
 
 
 class _Communicator:
+    backend = 'cgpaw_debug'
+
     def __init__(self, comm, parent=None):
         """Construct a wrapper of the C-object for any MPI-communicator.
 
@@ -726,6 +728,7 @@ MPIComm = _Communicator  # for type hints
 
 # Serial communicator
 class SerialCommunicator:
+    backend = 'serial'
     size = 1
     rank = 0
 
