@@ -70,9 +70,8 @@ elif GPAW_MPI_BACKEND == 'cgpaw':
     if hasattr(cgpaw, 'Communicator'):
         world = init_cgpaw()
     else:
-        # Would be cleaner for this to be an error since we are not
-        # quite obeying the envvar.
-        world = None  # type: ignore
+        raise ValueError(
+            "GPAW_MPI_BACKEND='cgpaw' requested but GPAW was not compiled with MPI")
 elif GPAW_MPI_BACKEND == 'serial':
     world = None  # type: ignore
 else:
