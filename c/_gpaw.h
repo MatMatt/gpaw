@@ -396,6 +396,12 @@ static PyObject* moduleinit(void)
 #ifdef PARALLEL
     Py_INCREF(&MPIType);
     Py_INCREF(&GPAW_MPI_Request_type);
+
+    // Set class attribute: Communicator.backend = "cgpaw"
+    PyObject *val = PyUnicode_FromString("cgpaw");
+    PyDict_SetItemString(MPIType.tp_dict, "backend", val);
+    Py_DECREF(val);
+
     PyModule_AddObject(m, "Communicator", (PyObject *)&MPIType);
 #endif
 
