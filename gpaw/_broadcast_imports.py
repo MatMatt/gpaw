@@ -84,28 +84,38 @@ elif GPAW_MPI_BACKEND == 'cgpaw':
         world = init_cgpaw()
     else:
         raise ValueError(
-            "GPAW_MPI_BACKEND='cgpaw' requested but GPAW is not compiled with MPI")
+            "GPAW_MPI_BACKEND='cgpaw' requested "
+            "but GPAW is not compiled with MPI"
+        )
 elif GPAW_MPI_BACKEND == 'serial':
     if probably_executed_by_mpi_launcher():
         msg = (
-            '\n\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
-            '! WARNING!                                                                         !\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
-            '! GPAW appears to be running inside MPI launcher, but MPI parallelism is disabled. !\n'
-            '! Steps required to enable MPI parallelization:                                    !\n'
+'''\n
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WARNING!                                            !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GPAW appears to be running inside MPI launcher,     !
+! but MPI parallelism is disabled.                    !
+! Steps required to enable MPI parallelization:       !
+'''  # noqa: E122
         )
         if not cgpaw.have_mpi:
             msg += (
-            '! - Build GPAW with MPI support                                                    !\n'
+'''
+! - Build GPAW with MPI support                       !
+'''.lstrip()  # noqa: E122
             )
         msg += (
-            '! - Run GPAW using `gpaw python` and MPI launcher:                                 !\n'
-            '!   `mpiexec -n N gpaw python script.py` or `srun gpaw python script.py`           !\n'
-            '!   or a variation thereof                                                         !\n'
-            '! - Alternatively to `gpaw python`, set the environment variable                   !\n'
-            '!   GPAW_MPI_BACKEND=cgpaw before running python                                   !\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+'''
+! - Run GPAW using `gpaw python` and MPI launcher:    !
+!   - `mpiexec -n N gpaw python script.py` or         !
+!   - `srun gpaw python script.py` or                 !
+!   - a variation thereof                             !
+! - Alternatively to `gpaw python`, set               !
+!   the environment variable GPAW_MPI_BACKEND=cgpaw   !
+!   before running python                             !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''.lstrip()  # noqa: E122
         )
         warnings.warn(msg)
 

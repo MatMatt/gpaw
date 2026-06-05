@@ -18,7 +18,6 @@ from ase.parallel import world as aseworld
 from ase.parallel import broadcast as asebroadcast
 
 import gpaw
-import gpaw.cgpaw as cgpaw
 from gpaw.gpu import cupy, is_hip
 from gpaw.new.c import GPU_AWARE_MPI
 
