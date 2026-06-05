@@ -44,9 +44,10 @@ def hook(parser, args):
 
     if args.parallel is not None:
         import gpaw.cgpaw as cgpaw
+        from gpaw import GPAW_MPI_OPTIONS
         from gpaw.mpi import world
 
-        warnings.warn(
+        msg = (
             '\n\n'
             '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
             '! WARNING!                                                                !\n'
@@ -58,6 +59,7 @@ def hook(parser, args):
             '! a variation thereof.                                                    !\n'
             '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
         )
+        warnings.warn(msg)
 
         if not cgpaw.have_mpi:
             raise SystemExit('MPI not available')
@@ -77,7 +79,9 @@ def hook(parser, args):
             # Don't prepend a potentially unsafe path to sys.path
             pyargs.append('-P')
 
-        mpiargs = os.environ.get('GPAW_MPI_OPTIONS', '').split()
+        mpiargs = []
+        if GPAW_MPI_OPTIONS is not None:
+            mpiargs += GPAW_MPI_OPTIONS.split()
         if args.parallel != 0:
             mpiargs += ['-n', str(args.parallel)]
 
