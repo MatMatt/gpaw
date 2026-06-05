@@ -58,6 +58,18 @@ ENVVAR_GPAW_NO_GPU_MPI = _get_gpaw_env_vars('GPAW_NO_GPU_MPI')
 # - 'serial' in _broadcast_imports.py if using gpaw as a library
 GPAW_MPI_BACKEND = os.environ.get('GPAW_MPI_BACKEND')
 
+# Deprecated
+GPAW_MPI_OPTIONS = os.environ.get('GPAW_MPI_OPTIONS')
+if GPAW_MPI_OPTIONS is not None:
+    msg = (
+        "\n\n"
+        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+        "WARNING! The environment variable GPAW_MPI_OPTIONS is deprecated.\n"
+        "Setting it will raise an error in the future.\n"
+        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+    )
+    warnings.warn(msg)
+
 
 @contextlib.contextmanager
 def disable_dry_run():
