@@ -47,19 +47,19 @@ def hook(parser, args):
         from gpaw import GPAW_MPI_OPTIONS
         from gpaw.mpi import world
 
-        msg = (
-            '\n\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
-            '! WARNING!                                                                !\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
-            '! The -P / --parallel option `gpaw -P N <sub-command>` is deprecated and  !\n'
-            '! will be removed in the next GPAW release.                               !\n'
-            '! To enable MPI parallelization, run GPAW using MPI launcher instead:     !\n'
-            '! `mpiexec -n N gpaw <sub-command>` or `srun gpaw <sub-command>` or       !\n'
-            '! a variation thereof.                                                    !\n'
-            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+        warnings.warn(
+'''\n
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WARNING!                                                                !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! The -P / --parallel option `gpaw -P N <sub-command>` is deprecated and  !
+! will be removed in the next GPAW release.                               !
+! To enable MPI parallelization, run GPAW using MPI launcher instead:     !
+! `mpiexec -n N gpaw <sub-command>` or `srun gpaw <sub-command>` or       !
+! a variation thereof.                                                    !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''  # noqa: E122
         )
-        warnings.warn(msg)
 
         if not cgpaw.have_mpi:
             raise SystemExit('MPI not available')

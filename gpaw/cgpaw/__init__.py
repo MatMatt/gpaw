@@ -5,7 +5,7 @@ if GPAW_NO_C_EXTENSION:
 else:
     from _gpaw import *  # noqa: F401, F403
     try:
-        from _gpaw import Communicator
+        from _gpaw import Communicator  # noqa: F401
         have_mpi = True
     except ImportError:
         have_mpi = False
