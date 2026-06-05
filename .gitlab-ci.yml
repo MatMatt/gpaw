@@ -16,13 +16,6 @@ variables:
   # actually use the cache:
   PIP_NO_CACHE_DIR: ""
   COV: "--cov=gpaw --cov-report= "
-  # OpenMPI binds processes to specific physical cores (cf. mpiexec
-  # manpage) when there are <= 2 cores.  This will cause it to
-  # oversubscribe the /same/ physical cores when running simultaneous
-  # size==2 jobs.  We therefore tell GPAW to tell mpiexec not to do
-  # this.  This problem was not observed on camd-runner2 because it
-  # uses hyperthreading and so was equipped to redistribute the load.
-  RUNNER_MPI_OPTIONS: "--bind-to none"
 
 default:
   before_script:
