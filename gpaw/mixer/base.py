@@ -242,7 +242,8 @@ class DensityHistory:
 
     def dotprod(self, other: Self | XArray) -> ArrayND:
         if isinstance(other, DensityHistory):
-            H_hh = self._n_hsX.matrix_elements(other._n_hsX)
+            H_hh = self._n_hsX.matrix_elements(other._n_hsX,
+                                               symmetric=False)
             out = H_hh.data[self.current_indicies, :][
                 :, other.current_indicies]
         else:

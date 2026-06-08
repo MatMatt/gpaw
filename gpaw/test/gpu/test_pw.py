@@ -38,6 +38,9 @@ def test_gpu(dtype, gpu, mode, random):
             random=random,
             **{'symmetry': 'off'} if GPAW_NO_C_EXTENSION else {},
             convergence={'density': 1e-8},
+            eigensolver={'niter': 20,
+                         'min_niter': 2,
+                         'tolerances': [0, 0, 1e-1]},
             parallel={'gpu': gpu},
             setups='paw',
             **kwargs)
