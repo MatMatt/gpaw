@@ -93,12 +93,9 @@ class MSR1Mixer(BaseMixer):
             return self.pratt_step(density)
 
         dNt = self.calculate_charge_sloshing(self.Rc_hsX[-1])
-        ne = self.calculate_charge_sloshing(self.ntc_hsX[-1])
         increased_error = dNt / self.last_dNt
         ret_dNt = dNt
         last_step = -2
-        if self.world.rank == 0:
-            print(f'Inc error {increased_error}')
         if increased_error > self.soft_lim:
             dNt = self.last_dNt
             insert_pos = 0 if increased_error > self.hard_lim else -2
@@ -119,8 +116,6 @@ class MSR1Mixer(BaseMixer):
         # Step 4: Decide on good broydenness
         good_broydenness = self.decide_good_broydenness(
             Ay_hh, As_hh)
-        factor = np.clip(1e-2 * ne / dNt, 0.01, 1.00)
-        # good_broydenness *= factor
 
         # Step 5: Rescale the multisecants and define t_hsX
         y_norm = self.xp.diag(Ay_hh)
@@ -159,7 +154,7 @@ class MSR1Mixer(BaseMixer):
         self.world.broadcast(alpha_h, 0)
 
         # Step 7: Predict mixing coefficients
-        tmp_1sX = self.uk_1sX.copy() 
+        tmp_1sX = self.uk_1sX.copy()
         tmp_1sX.data -= self.Rc_hsX[last_step].data
         tmp_1sX.data *= -1
         A1 = self.uk_1sX.norm2().sum()
@@ -177,11 +172,7 @@ class MSR1Mixer(BaseMixer):
         B2 = B2_j @ B_hh @ B2_i
         B2 = B2 if self.xp is np else B2.get()
         trig_fact = self.A_lims[-1] * 2 / np.pi
-        # A_target = np.clip(
-            # np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact,
-        #     np.abs(A1 / A2),
-        #     self.A_lims[0], self.A_lims[1]
-        # )
+
         A_target = np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact
         if nold > 2:
             B_target = np.abs(B1 / B2) + self.B_boost
@@ -192,7 +183,8 @@ class MSR1Mixer(BaseMixer):
                 else 1.0)
             self.A = np.clip(self.A, self.A_lims[0], self.A_lims[1])
             B_ratio = (self.B + B_target) / (2 * self.B)
-            self.B *= np.clip(B_ratio, self.B_rate_ratio[0], self.B_rate_ratio[1])
+            self.B *= np.clip(B_ratio, self.B_rate_ratio[0],
+                              self.B_rate_ratio[1])
             self.B = np.clip(self.B, self.B_lims[0], self.B_lims[1])
         else:
             if self.A == 0:
@@ -206,10 +198,6 @@ class MSR1Mixer(BaseMixer):
         A = self.A
         B = self.B
 
-        if self.world.rank == 0:
-            print('A: ', A)
-            print('B; ', B)
-
         # Step 8: Trust region control
         tmp_1sX.data[:] = self.uk_1sX.data * A
         tmp_1sX.data += self.pk_1sX.data * B
@@ -217,9 +205,10 @@ class MSR1Mixer(BaseMixer):
         if self.trust_radius is None:
             self.trust_radius = trust_radius
         else:
-            rust_radius = (self.trust_radius * trust_radius) ** 0.5
-            self.trust_radius = trust_radius if increased_error < self.soft_lim \
-                    else min(trust_radius, self.trust_radius)
+            trust_radius = (self.trust_radius * trust_radius) ** 0.5
+            self.trust_radius = trust_radius if \
+                increased_error < self.soft_lim \
+                else min(trust_radius, self.trust_radius)
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
@@ -230,8 +219,6 @@ class MSR1Mixer(BaseMixer):
 
         predicted_radius = B * self.pk_1sX.norm2().sum()**0.5
         if predicted_radius > self.trust_radius * 1.02:
-            if self.world.rank == 0:
-                print('TRUST̈́')
             s_hh = s_hsX.matrix_elements(s_hsX)
             s_hh.tril2full()
             s_hh = s_hh.data
@@ -249,18 +236,13 @@ class MSR1Mixer(BaseMixer):
                 lamb = root_scalar(err_fct, bracket=[0, 5000])
                 root = lamb.root
             except ValueError:
-                print('Panic')
                 root = 5000
 
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h
             )
             scale_factor = self.trust_radius / predicted_radius
-            if self.world.rank == 0:
-                print(scale_factor)
             A *= np.clip(scale_factor, 0, 1)
-            # A = max(A, self.A_lims[0])
-            # self.A = A
         else:
             beta_h = alpha_h
         self.world.broadcast(beta_h, 0)
