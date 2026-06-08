@@ -48,6 +48,11 @@ class BaseMetric:
         out.matrix.data[:] = self.g_ss @ n_sX.matrix.data
         return out
 
+    def __str__(self) -> str:
+        if self.xp.all(self.g_ss == self.xp.eye(self.ncomponents)):
+            return 'No metric'
+        else:
+            return f'Spin metric: {self.g_ss.tolist()})'
 
 class FFTMetric(BaseMetric):
     def __init__(self,
@@ -99,3 +104,10 @@ class FFTMetric(BaseMetric):
         out.matrix.data[:] = self.g_ss @ out.matrix.data
 
         return out
+
+    def __str__(self) -> str:
+        base = f'Fourier metric: weight={self.weight}, sigma={self.sigma}'
+        super_str = super().__str__()
+        if super_str != 'No metric':
+            base += f'\n  {super_str}'
+        return base
