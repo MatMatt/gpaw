@@ -263,9 +263,9 @@ class MSR1Mixer(BaseMixer):
 
             try:
                 lamb = root_scalar(errfct, bracket=[-10, 10])
-                root = self.xp.exp(lamb.root)
+                root = np.exp(lamb.root)
             except ValueError as e:
-                root = self.xp.exp(10)
+                root = np.exp(10)
 
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h

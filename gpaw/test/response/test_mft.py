@@ -257,10 +257,8 @@ def test_NiO_withU(in_tmp_dir, xc, comm, add_cwd_to_setup_paths):
                 setups={'Ni': ':d,4.0'},
                 kpts={'size': (2, 2, 2), 'gamma': True},
                 occupations=FermiDirac(0.001),
-                mixer={'method': 'difference',
-                       'beta': 0.05,
-                       'weight': 50},
                 parallel=dict(domain=1),
+                mixer={'soft_lim': 100000, 'hard_lim': 100000},
                 communicator=comm)
     a.calc = calc
     a.get_potential_energy()
