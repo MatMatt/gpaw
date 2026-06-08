@@ -264,7 +264,7 @@ class MSR1Mixer(BaseMixer):
             try:
                 lamb = root_scalar(errfct, bracket=[-10, 10])
                 root = np.exp(lamb.root)
-            except ValueError as e:
+            except ValueError:
                 root = np.exp(10)
 
             beta_h = self.xp.linalg.solve(
