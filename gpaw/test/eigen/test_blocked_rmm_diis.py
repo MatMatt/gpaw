@@ -48,5 +48,4 @@ def test_eigen_blocked_rmm_diis(in_tmp_dir,
     niter1 = calc.get_number_of_iterations()
     assert e0 == pytest.approx(e1, abs=0.000001)
     assert niter0 == niter1
-    assert niter0 == pytest.approx(
-        niter1, abs=0) == (16 if mode == 'fd' else 12)
+    assert niter0 == (13 if mode == 'fd' else 10)

@@ -69,7 +69,8 @@ class FFTMetric(BaseMetric):
         g_ss:
             Spin-space metric matrix.
         **kwargs:
-            Additional arguments passed to :class:`~gpaw.mixer.metric.BaseMetric`.
+            Additional arguments passed to
+            :class:`~gpaw.mixer.metric.BaseMetric`.
         """
         self.weight = weight
         self.sigma = sigma
