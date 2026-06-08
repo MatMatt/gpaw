@@ -4,8 +4,7 @@ import importlib
 import warnings
 from collections.abc import Sequence
 from pathlib import Path
-from typing import (IO, TYPE_CHECKING, Any, Union, Literal, Dict,
-                    ArrayND)
+from typing import IO, TYPE_CHECKING, Any, Union, Literal, Dict
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -24,6 +23,7 @@ from gpaw.mixer.pulay import PulayMixer
 from gpaw.mixer.msr1 import MSR1Mixer
 from gpaw.mixer.metric import BaseMetric, FFTMetric
 from gpaw.new.symmetry import Symmetries, create_symmetries_object
+from gpaw.typing import ArrayND
 
 if TYPE_CHECKING:
     from gpaw.new.ase_interface import ASECalculator
