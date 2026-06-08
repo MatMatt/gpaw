@@ -9,14 +9,14 @@ from gpaw.typing import ArrayND
 
 class MSR1Mixer(BaseMixer):
     def __init__(self,
-                 nmaxold: int = 10,
-                 beta: float = 0.05,
-                 reg: float = 2e-4,
-                 gb_scale: float = 1.0,
-                 max_A: float = 1.0,
-                 trust_scale: float = 1.0,
-                 soft_lim: float = 1.5,
-                 hard_lim: float = 2.0,
+                 nmaxold: int,
+                 beta: float,
+                 reg: float,
+                 gb_scale: float,
+                 max_A: float,
+                 trust_scale: float,
+                 soft_lim: float,
+                 hard_lim: float,
                  *args,
                  **kwargs):
         """Multi-Secant Rank-1 (MSR1) density mixer.

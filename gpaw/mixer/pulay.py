@@ -6,8 +6,8 @@ from gpaw.mixer.base import DensityHistory, BaseMixer
 
 class PulayMixer(BaseMixer):
     def __init__(self,
-                 nmaxold: int = 16,
-                 beta: float = 0.08,
+                 nmaxold: int,
+                 beta: float,
                  *args,
                  **kwargs):
         """Pulay density mixer.

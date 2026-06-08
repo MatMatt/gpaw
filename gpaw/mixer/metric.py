@@ -51,8 +51,8 @@ class BaseMetric:
 
 class FFTMetric(BaseMetric):
     def __init__(self,
-                 weight: float = 100,
-                 sigma: float = 1.0,
+                 weight: float,
+                 sigma: float,
                  g_ss: ArrayND | None = None,
                  **kwargs):
         """Fourier-space metric for density mixing.
