@@ -19,7 +19,6 @@ from gpaw.core.domain import Domain
 from gpaw.gpu import cpupy as fake_cupy
 from gpaw.gpu.mpi import CuPyMPI
 from gpaw.lfc import BasisFunctions
-from gpaw.mixer import get_mixer_from_params
 from gpaw.mpi import (MPIComm, Parallelization, broadcast,
                       normalize_communicator, serial_comm, synchronize_atoms)
 from gpaw.new import prod
@@ -327,15 +326,13 @@ class DFTComponentsBuilder:
         return poisson_solvers[0]
 
     def create_mixer(self):
-        mixer = get_mixer_from_params(self.params.mixer.params)
-        mixer.initialize(desc=self.grid,
-                         atomdist=self.atomdist,
-                         setups=self.setups,
-                         relpos_ac=self.relpos_ac,
-                         world=self.communicators['w'],
-                         ncomponents=self.ncomponents,
-                         xp=self.xp)
-        return mixer
+        return self.params.mixer.build(desc=self.grid,
+                                       atomdist=self.atomdist,
+                                       setups=self.setups,
+                                       relpos_ac=self.relpos_ac,
+                                       world=self.communicators['w'],
+                                       ncomponents=self.ncomponents,
+                                       xp=self.xp)
 
     def create_ibz_wave_functions(self,
                                   basis: BasisFunctions,
