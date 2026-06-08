@@ -50,7 +50,7 @@ class BaseMetric:
 
     def __str__(self) -> str:
         assert isinstance(self.g_ss, self.xp.ndarray)
-        if self.xp.all(self.g_ss == self.xp.eye(self.ncomponents)):
+        if (self.g_ss == self.xp.eye(self.ncomponents)).all():
             return 'No metric'
         else:
             return f'Spin metric: {self.g_ss.tolist()})'
