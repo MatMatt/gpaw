@@ -95,3 +95,12 @@ class PulayMixer(BaseMixer):
 
         # Step 5: Return the mixing error
         return self.calculate_charge_sloshing(Rc_sX)
+
+    def __str__(self):
+        lines = ['density mixing:',
+                 'Pulay-Mixer',
+                 f'Linear mixing parameters: {self.beta}',
+                 f'Old densities: {self.nmaxold}',
+                 self.metric.__str__(),
+                 '']
+        return '\n  '.join(lines)

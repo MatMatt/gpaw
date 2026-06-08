@@ -365,3 +365,18 @@ class MSR1Mixer(BaseMixer):
         self.pk_1sX.data[:] = 0
         self.last_dNt = self.calculate_charge_sloshing(self.Rc_hsX[-1])
         return self.last_dNt
+
+    def __str__(self):
+        lines = ['density mixing:',
+                 'MSR1-Mixer',
+                 f'Pratt-step length: {self.beta}',
+                 f'Maximum mixing coefficient: {self.A_lims[-1]}',
+                 f'Old densities: {self.nmaxold}',
+                 f'SVD Regularization: {self.reg}',
+                 f'Good broyden scale: {self.gb_scale}',
+                 f'Trust region scale: {self.trust_scale}',
+                 f'Backstep threshold: {self.soft_lim}',
+                 f'History deletion threshold: {self.hard_lim}',
+                 self.metric.__str__(),
+                 '']
+        return '\n  '.join(lines)

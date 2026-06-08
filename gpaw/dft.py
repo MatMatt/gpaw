@@ -451,7 +451,7 @@ class Mixer(Parameter):
                     return mixer_names[name](**kwargs)
                 raise ValueError(f'Unknown mixer: {name}')
             case {**kwargs}:
-                return MSR1Mixer(**kwargs)
+                return MSR1(**kwargs)
             case cls():
                 return mixer
             case _:

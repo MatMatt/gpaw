@@ -172,7 +172,10 @@ class BaseMixer:
             hist.reset()
 
     def __str__(self):
-        return "No-mixing mixer"
+        lines = ['density mixing:',
+                 'No mixer',
+                 '']
+        return '\n  '.join(lines)
 
 
 class DensityHistory:
