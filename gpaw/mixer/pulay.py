@@ -10,6 +10,17 @@ class PulayMixer(BaseMixer):
                  beta: float = 0.08,
                  *args,
                  **kwargs):
+        """Pulay density mixer.
+
+        Parameters
+        ----------
+        nmaxold:
+            Number of previous iterations to include in the Pulay optimization.
+        beta:
+            Linear mixing parameter (step length).
+        *args, **kwargs:
+            Additional arguments passed to :class:`~gpaw.mixer.base.BaseMixer`.
+        """
         self.nmaxold = nmaxold
         self.beta = beta
         super().__init__(*args, **kwargs)

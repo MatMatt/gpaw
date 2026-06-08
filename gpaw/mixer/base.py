@@ -21,6 +21,29 @@ class BaseMixer:
                  ncomponents: int,
                  world: MPIComm,
                  xp=np):
+        """Base class for density mixers. Also operates as the
+        not-mixing mixer.
+
+        Parameters
+        ----------
+        metric:
+            Metric object used to calculate inner products between densities.
+        desc:
+            Domain descriptor for the density (e.g., UniformGrid).
+        atomdist:
+            Distribution of atoms across MPI ranks.
+        setups:
+            Collection of PAW setups.
+        relpos_ac:
+            Positions of atoms relative to the unit cell.
+        ncomponents:
+            Number of density components (1 for non-polarized, 2 for polarized,
+            4 for non-collinear).
+        world:
+            MPI communicator for synchronization across k-points/processes.
+        xp:
+            Array namespace (numpy or cupy).
+        """
         self.metric = metric
         self.desc = desc
         self.ncomponents = ncomponents
