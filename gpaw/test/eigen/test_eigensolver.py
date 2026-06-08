@@ -33,7 +33,8 @@ def test_eigensolver(k, b, d, s):
         eigensolver='davidson',
         kpts=(4, 1, 1),
         mixer={'backend': 'no-mixing'},
-        parallel=parallel)
+        parallel=parallel,
+        converge=False)
     dft.converge(steps=3)
     e = dft.calculate_energy()
     assert e == pytest.approx(-11.30653, rel=1e-6)
