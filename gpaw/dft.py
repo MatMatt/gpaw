@@ -430,9 +430,9 @@ class Mixer(Parameter):
     @classmethod
     def from_param(cls, mixer):
         mixer_names = {
-            'no-mixing': NotMixingMixer,
-            'pulay': PulayMixer,
-            'msr1': MSR1Mixer
+            'no-mixing': NoMixing,
+            'pulay': Pulay,
+            'msr1': MSR1
         }
 
         # Clean for dict for backwards compatibility
@@ -458,7 +458,7 @@ class Mixer(Parameter):
                 raise ValueError(f'Unknown mixer: {mixer}')
 
 
-class NotMixingMixer(Mixer):
+class NoMixing(Mixer):
     name = 'no-mixing'
     cls = BaseMixer
 
@@ -479,7 +479,7 @@ class NotMixingMixer(Mixer):
         return self.cls(metric=metric, **kwargs)
 
 
-class PulayMixer(Mixer):
+class Pulay(Mixer):
     name = 'pulay'
     cls = PulayMixer
 
@@ -505,7 +505,7 @@ class PulayMixer(Mixer):
         return self.cls(metric=metric, **self.mixer_params, **kwargs)
 
 
-class MSR1Mixer(Mixer):
+class MSR1(Mixer):
     name = 'msr1'
     cls = MSR1Mixer
 

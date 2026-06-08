@@ -152,13 +152,20 @@ class BaseMixer:
         return out
 
     def move(self, relpos_ac: ArrayND, atomdist: AtomDistribution):
-        self.initialize(relpos_ac=relpos_ac,
-                        atomdist=atomdist,
-                        desc=self.desc,
-                        setups=self.setups,
-                        ncomponents=self.ncomponents,
-                        world=self.world,
-                        xp=self.xp)
+        self.relpos_ac = relpos_ac
+        self.atomdist = atomdist
+        self.atom_layout = AtomArraysLayout(
+            [(setup.ni, setup.ni) for setup in self.setups],
+            atomdist=atomdist,
+            dtype=float if self.ncomponents < 4 else complex,
+            xp=self.xp)
+        self.histories = []
+        self.ghat_aLr = self.setups.create_compensation_charges(
+            self.desc,
+            relpos_ac,
+            atomdist,
+            xp=self.xp)
+        self._initialize_history_()
 
     def reset(self):
         for hist in self.histories:

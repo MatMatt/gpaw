@@ -2,15 +2,15 @@ import pytest
 
 from ase.build import molecule
 
-from gpaw.dft import NotMixingMixer, PulayMixer, MSR1Mixer
+from gpaw.dft import NoMixing, Pulay, MSR1
 from gpaw.mixer import Mixer as OldMixer
 from gpaw import GPAW
 
 
 @pytest.mark.parametrize('mixer',
-                         [NotMixingMixer(),
-                          PulayMixer(beta=0.5),
-                          MSR1Mixer(beta=0.5),
+                         [NoMixing(),
+                          Pulay(beta=0.5),
+                          MSR1(beta=0.5),
                           OldMixer(),
                           {'backend': 'pulay', 'beta': 0.5},
                           {'beta': 0.5}])
