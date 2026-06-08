@@ -254,18 +254,18 @@ class MSR1Mixer(BaseMixer):
             s_hh *= B**2
             A_hh = self.xp.linalg.inv(A_hh)
 
-            def err_fct(lamb):
+            def errfct(lamb):
                 beta_h = self.xp.linalg.solve(
-                    A_hh + lamb * self.xp.eye(nold - 1), BR_h
+                    A_hh + self.xp.exp(lamb) * self.xp.eye(nold - 1), BR_h
                 )
                 rtnval = (beta_h @ s_hh @ beta_h) - self.trust_radius**2
                 return rtnval if self.xp is np else rtnval.get()
 
             try:
-                lamb = root_scalar(err_fct, bracket=[0, 5000])
-                root = lamb.root
-            except ValueError:
-                root = 5000
+                lamb = root_scalar(errfct, bracket=[-10, 10])
+                root = self.xp.exp(lamb.root)
+            except ValueError as e:
+                root = self.xp.exp(10)
 
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h
