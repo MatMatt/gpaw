@@ -49,10 +49,12 @@ class BaseMetric:
         return out
 
     def __str__(self) -> str:
+        assert isinstance(self.g_ss, self.xp.ndarray)
         if self.xp.all(self.g_ss == self.xp.eye(self.ncomponents)):
             return 'No metric'
         else:
             return f'Spin metric: {self.g_ss.tolist()})'
+
 
 class FFTMetric(BaseMetric):
     def __init__(self,
