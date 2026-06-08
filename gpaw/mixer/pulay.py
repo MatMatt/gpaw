@@ -7,9 +7,12 @@ from gpaw.mixer.base import DensityHistory, BaseMixer
 class PulayMixer(BaseMixer):
     def __init__(self,
                  nmaxold: int = 16,
-                 beta: float = 0.08):
+                 beta: float = 0.08,
+                 *args,
+                 **kwargs):
         self.nmaxold = nmaxold
         self.beta = beta
+        super().__init__(*args, **kwargs)
 
     def _initialize_history_(self):
         self.nt_hsX = DensityHistory(

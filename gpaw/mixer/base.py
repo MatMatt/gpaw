@@ -12,17 +12,16 @@ from gpaw import GPAW_NO_C_EXTENSION
 
 
 class BaseMixer:
-    def __init__(self):
-        self.metric = BaseMetric()
-
-    def initialize(self,
-                   desc: DomainType,
-                   atomdist: AtomDistribution,
-                   setups: Setups,
-                   relpos_ac: ArrayND,
-                   ncomponents: int,
-                   world: MPIComm,
-                   xp=np):
+    def __init__(self,
+                 metric: BaseMetric,
+                 desc: DomainType,
+                 atomdist: AtomDistribution,
+                 setups: Setups,
+                 relpos_ac: ArrayND,
+                 ncomponents: int,
+                 world: MPIComm,
+                 xp=np):
+        self.metric = metric
         self.desc = desc
         self.ncomponents = ncomponents
         self.xp = xp

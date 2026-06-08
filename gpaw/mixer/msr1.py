@@ -16,7 +16,9 @@ class MSR1Mixer(BaseMixer):
                  max_A: float = 1.0,
                  trust_scale: float = 1.0,
                  soft_lim: float = 1.5,
-                 hard_lim: float = 2.0):
+                 hard_lim: float = 2.0,
+                 *args,
+                 **kwargs):
         self.nmaxold = nmaxold
         self.beta = beta
         self.reg = reg
@@ -32,6 +34,7 @@ class MSR1Mixer(BaseMixer):
         self.B: float = 1.0
         self.B_boost = 0.1
         self.trust_radius: None | float = None
+        super().__init__(*args, **kwargs)
 
     def _initialize_history_(self):
         self.nt_hsX = DensityHistory(
