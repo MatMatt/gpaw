@@ -34,8 +34,8 @@ Transport barrier of Li in graphite
 ===================================
 
 You will now calculate the energy barrier for Li diffusion in the graphite
-anode.  You will do this using the [Nudged Elastic Band (NEB)
-method](https://ase-lib.org/ase/neb.html#module-ase.neb)
+anode.  You will do this using the :class:`Nudged Elastic Band (NEB)
+method <ase.mep.neb.NEB>`.
 
 You can use your work from Day 2, but for simplicity you are advised to
 load in the initial atomic configuration from file.
@@ -45,12 +45,11 @@ load in the initial atomic configuration from file.
 
 You will now make a final structure, where the Li atom has been moved to a
 neighbouring equivalent site.  The
-[`get_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_positions),
-[`set_positions`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.set_positions)
-and
-[`get_cell`](https://ase-lib.org/ase/atoms.html?highlight=get_positions#ase.Atoms.get_cell)
-functions are highly useful for such a task.  HINT: Displace the Li atom
-$\frac{1}{n} (\vec{a}+\vec{b})$
+:meth:`~ase.Atoms.get_positions`,
+:meth:`~ase.Atoms.set_positions` and
+:meth:`~ase.Atoms.get_cell` methods
+are highly useful for such a task.  HINT: Displace the Li atom
+`\frac{1}{n} (\vec{a}+\vec{b})`
 
 .. code::
 
@@ -71,10 +70,10 @@ Make a band consisting of 7 images including the initial and final.
    :start-after: snippet-neb1
    :end-before: snippet-neb2
 
-It this point `images` consist of 6 copies of `initial` and one entry of
-`final`. Use the `NEB` method to create an initial guess for the minimum
+It this point ``images`` consist of 6 copies of ``initial`` and one entry of
+``final``. Use the ``NEB`` method to create an initial guess for the minimum
 energy path (MEP). In the cell below a simple interpolation between the
-`initial` and `final` image is used as initial guess.
+``initial`` and ``final`` image is used as initial guess.
 
 .. literalinclude:: li_barrier.py
    :start-after: snippet-neb2
@@ -86,21 +85,21 @@ visualize the NEB images.
 It turns out, that while running the NEB calculation, the largest amount
 of resources will be spend translating the carbon layer without any
 noticeable buckling.  You will thus
-[constrain](https://ase-lib.org/ase/constraints.html#constraints) the
+:mod:`constrain <ase:ase.constraints>` the
 positions of the carbon atoms to save computational time.
 
 Each image in the NEB requires a unique calculator.
 
 This very simple case is highly symmetric.  To better illustrate how the
 NEB method works, the symmetry is broken using the
-[rattle](https://ase-lib.org/ase/atoms.html#ase.Atoms.rattle) function.
+:meth:`ase:ase.Atoms.rattle` method.
 
 .. literalinclude:: li_barrier.py
    :start-after: snippet-constraint-gpaw
    :end-before: snippet-initial-final
 
-Start by calculating the energy and forces of the first (`initial`) and
-last (`final`) images as this is not done during the actual NEB
+Start by calculating the energy and forces of the first (``initial``) and
+last (``final``) images as this is not done during the actual NEB
 calculation.
 
 Note, that this can take a while if you opt to do it inside the notebook.
@@ -110,7 +109,7 @@ Note, that this can take a while if you opt to do it inside the notebook.
    :end-before: snippet-optimize
 
 You can run the NEB calculation by running an optimization on the NEB
-object the same way you would on an atoms object.  Note the `fmax` is
+object the same way you would on an atoms object.  Note the ``fmax`` is
 larger for this tutorial example than you would normally use.
 
 .. literalinclude:: li_barrier.py
@@ -118,7 +117,7 @@ larger for this tutorial example than you would normally use.
 
 Submit the calculation to the HPC cluster.  Do this by first building a
 complete script in the cell below using the cells above (minus the
-`view()` commands). Make sure the cell runs and then interrupt the kernel.
+``view()`` commands). Make sure the cell runs and then interrupt the kernel.
 
 .. code:: bash
 
@@ -130,10 +129,10 @@ complete script in the cell below using the cells above (minus the
 
 You can move on while you wait for the calculation to finish.
 
-Once the maximum force (`fmax`) in the log is below 0.1, the calculation
+Once the maximum force (``fmax``) in the log is below 0.1, the calculation
 is finished.  Load in the full trajectory.
 
-You will use the `ase gui` to inspect the result.  The below line reads in
+You will use the ``ase gui`` to inspect the result.  The below line reads in
 the last 7 images in the file.  In this case the MEP images.
 
 .. code::
@@ -186,14 +185,14 @@ compressed initial and final state.
 How does the energy barrier change?
 
 
-FePO$_4$ with one Li
-====================
+:mol:`FePO_4` with one Li
+=========================
 
 You will now calculate the energy gain of adding a single Li atom into
-the FePO$_4$ cell you made on Day 3. This corresponds to a charge of 25
+the :mol:`FePO_4` cell you made on Day 3. This corresponds to a charge of 25
 %. You can compare this energy to the equilibrium potential.
 
-Start preparing a new Python script (say, ``fepo4_1li.py``) and load in the FePO$_4$ structure you wrote to file on in a previous
+Start preparing a new Python script (say, ``fepo4_1li.py``) and load in the :mol:`FePO_4` structure you wrote to file on in a previous
 exercise and add Li.  Assume that the cell dimension remain unchanged.
 
 .. literalinclude:: fepo4_1li.py
@@ -224,7 +223,7 @@ energies.  This should not require any new DFT calculations.
    :start-after: snippet-results
    :end-before: snippet-results-end
 
-Calculate the energy of intercalting a single Li in the FePO$_4$ cell.
+Calculate the energy of intercalting a single Li in the :mol:`FePO_4` cell.
 How does this energy compare with the equilibirum potential?  What can it
 tell you about the charge/discharge potential curves?
 
@@ -233,14 +232,13 @@ Bonus: :mol:`LiFePO_4` with one vacancy
 =======================================
 
 If time permits, you will now do a similar calculation but this time with
-LiFePO$_4$ contraining one vacancy.  Once again you should assume that
-the cell dimension remain unchanged compaired to LiFePO$_4$.
+:mol:`LiFePO_4` contraining one vacancy.  Once again you should assume that
+the cell dimension remain unchanged compaired to :mol:`LiFePO_4`.
 
 There are numerous ways to obtain this structure.  You can get
-inspiration from the way LiFePO$_4$ was made on Exercise day 3, use the
-[`del` or `pop()`
-methods](https://ase-lib.org/ase/atoms.html?highlight=pop#list-methods),
-or even use the GUI to delete an atom and save the structure afterwards.
+inspiration from the way :mol:`LiFePO_4` was made on Exercise day 3, use
+``del atoms[index]``, the :meth:`ase.Atoms.pop` method
+or even the GUI to delete an atom and save the structure afterwards.
 
 .. literalinclude:: lifepo4_vac.py
    :start-after: snippet-results
@@ -248,15 +246,16 @@ or even use the GUI to delete an atom and save the structure afterwards.
 
 When you have made your script (say ``lifepo4_vac.py``), submit it to the
 HPC cluster.  Once the calculation has finished you are ready to
-calculate the energy cost of creating a li vacancy in the fully lithiated
-LiFePO$_4$. Start by loading in the relevant reference structures and
+calculate the energy cost of creating a Li vacancy in the fully lithiated
+:mol:`LiFePO_4`. Start by loading in the relevant reference structures and
 obtain the potential energies.  This should not require any calculations.
 
 .. literalinclude:: lifepo4_vac.py
    :start-after: snippet-results
    :end-before: snippet-results-end
 
-How does this energy compare with the equilibirum potential? What can it tell you about the charge/discharge potential curves?
+How does this energy compare with the equilibirum potential?  What can it
+tell you about the charge/discharge potential curves?
 
 
 Bonus

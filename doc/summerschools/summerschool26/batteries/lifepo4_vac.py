@@ -1,3 +1,19 @@
+from ase.io import read, write
+from ase.dft.bee import BEEFEnsemble
+from gpaw import GPAW, FermiDirac, Mixer, PW
+params = dict(
+    mode=PW(500),
+    nbands=-40,
+    kpts={'size': (2, 4, 5),
+          'gamma': True},
+    spinpol=True,
+    xc='BEEF-vdW',
+    occupations=FermiDirac(width=0.1),
+    convergence={'eigenstates': 1.0e-4,
+                 'energy': 2.0e-4,
+                 'density': 1.0e-3},
+    mixer=Mixer(0.1, 5, weight=100.0),
+    setups={'Fe': ':d,4.3'}
 # lifepo4_vac = ...
 
 # ...
@@ -15,9 +31,6 @@ lifepo4_wo_li.append(Atom('Li', (0.5, 0, 0.5)))
 lifepo4_wo_li.set_cell(cell, scale_atoms=True)
 lifepo4_vac=lifepo4_wo_li.copy()
 from ase.parallel import paropen
-from ase.io import read, write
-from ase.dft.bee import BEEFEnsemble
-from gpaw import GPAW, FermiDirac, Mixer, PW
 
 # Read in the structure you made and wrote to file above
 lifepo4_vac = read('lifepo4_vac.traj')

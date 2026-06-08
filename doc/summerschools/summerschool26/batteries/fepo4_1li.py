@@ -1,13 +1,14 @@
-from ase.io import read
-from gpaw import GPAW, PW
+from ase.io import read, write
+from gpaw import GPAW, PW, FermiDirac, Mixer
 from ase.dft.bee import BEEFEnsemble
+from ase.parallel import paropen
 
 fepo4 = read('fepo4.traj')
 fepo4_1li = fepo4.copy()
 print(fepo4_1li.get_initial_magnetic_moments())
 # snippet-li
 fepo4_1li.append('Li')
-positions[-1] = (0, 0, 0)  # not really needed
+fepo4_1li.positions[-1] = (0, 0, 0)  # not really needed
 # snippet-gpaw
 params = dict(
     mode=PW(500),
@@ -21,7 +22,7 @@ params = dict(
                  'energy': 2.0e-4,
                  'density': 1.0e-3},
     mixer=Mixer(0.1, 5, weight=100.0),
-    setups={'Fe': ':d,4.3'}
+    setups={'Fe': ':d,4.3'})
 calc = GPAW(**params)
 fepo4_1li.calc = calc
 epot_fepo4_1li_cell = fepo4_1li.get_potential_energy()
