@@ -412,13 +412,18 @@ class ExtensionInput(Parameter):
 
 
 class Mixer(Parameter):
-    def _build_metric(self, weight, sigma, g_ss):
+    def _build_metric(self, weight, sigma, g_ss, **kwargs):
+        metric_kwargs = {'ncomponents': kwargs['ncomponents'],
+                         'grid': kwargs['desc'],
+                         'xp': kwargs['xp']}
         if weight == 1:
-            return BaseMetric(g_ss=g_ss)
+            return BaseMetric(g_ss=g_ss,
+                              **metric_kwargs)
         else:
             return FFTMetric(g_ss=g_ss,
                              weight=weight,
-                             sigma=sigma)
+                             sigma=sigma,
+                             **metric_kwargs)
 
     @classmethod
     def from_param(cls, mixer):
@@ -467,7 +472,8 @@ class NotMixingMixer(Mixer):
                 'g_ss': self.g_ss}
 
     def build(self, **kwargs):
-        metric = self._build_metric(self.weight, self.sigma, self.g_ss)
+        metric = self._build_metric(self.weight, self.sigma, self.g_ss,
+                                    **kwargs)
         return self.cls(metric=metric, **kwargs)
 
 
@@ -493,7 +499,7 @@ class PulayMixer(Mixer):
                 **self.metric_params}
 
     def build(self, **kwargs):
-        metric = self._build_metric(**self.metric_params)
+        metric = self._build_metric(**self.metric_params, **kwargs)
         return self.cls(metric=metric, **self.mixer_params, **kwargs)
 
 
@@ -531,7 +537,7 @@ class MSR1Mixer(Mixer):
                 **self.metric_params}
 
     def build(self, **kwargs):
-        metric = self._build_metric(**self.metric_params)
+        metric = self._build_metric(**self.metric_params, **kwargs)
         return self.cls(metric=metric, **self.mixer_params, **kwargs)
 
 

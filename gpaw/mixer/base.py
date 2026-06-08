@@ -37,9 +37,6 @@ class BaseMixer:
                                                            atomdist,
                                                            xp=xp)
         self._initialize_history_()
-        self.metric.initialize(ncomponents=ncomponents,
-                               grid=desc,
-                               xp=xp)
 
     def _initialize_history_(self):
         self.density_history = DensityHistory(

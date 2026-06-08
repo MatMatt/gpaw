@@ -7,13 +7,12 @@ from gpaw.core.uniform_grid import UGDesc, UGArray
 
 
 class BaseMetric:
-    def __init__(self, g_ss: ArrayND | None = None):
+    def __init__(self,
+                 g_ss: ArrayND | None,
+                 ncomponents: int,
+                 grid: UGDesc,
+                 xp=np):
         self.g_ss = g_ss
-
-    def initialize(self,
-                   ncomponents: int,
-                   grid: UGDesc,
-                   xp=np) -> None:
         self.ncomponents = ncomponents
         self.xp = xp
         if self.g_ss is None or len(self.g_ss) != ncomponents:
@@ -37,10 +36,11 @@ class FFTMetric(BaseMetric):
     def __init__(self,
                  weight: float = 100,
                  sigma: float = 1.0,
-                 g_ss: ArrayND | None = None):
+                 g_ss: ArrayND | None = None,
+                 **kwargs):
         self.weight = weight
         self.sigma = sigma
-        super().__init__(g_ss)
+        super().__init__(g_ss, **kwargs)
 
     def __call__(self, n_sX: XArray,
                  out: XArray | None = None) -> XArray:
