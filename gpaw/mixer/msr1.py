@@ -126,7 +126,7 @@ class MSR1Mixer(BaseMixer):
         ret_dNt = dNt
         last_step = -2
         if increased_error > self.soft_lim:
-            dNt = self.last_dNt
+            dNt = self.last_dNt * 1.1  # avoid infinite loop
             insert_pos = 0 if increased_error > self.hard_lim else -2
             for hist in self.histories:
                 last_ind = hist.current_indicies.pop(-1)
