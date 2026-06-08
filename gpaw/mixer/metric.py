@@ -12,6 +12,23 @@ class BaseMetric:
                  ncomponents: int,
                  grid: UGDesc,
                  xp=np):
+        """Base class for mixer metrics.
+
+        This metric operates locally in real space, optionally applying a
+        mixing matrix in spin space.
+
+        Parameters
+        ----------
+        g_ss:
+            Spin-space metric. Can be None (identity) or a matrix of shape
+            (ncomponents, ncomponents).
+        ncomponents:
+            Number of density components.
+        grid:
+            Grid descriptor for the density.
+        xp:
+            Array namespace (numpy or cupy).
+        """
         self.g_ss = g_ss
         self.ncomponents = ncomponents
         self.xp = xp
@@ -38,6 +55,22 @@ class FFTMetric(BaseMetric):
                  sigma: float = 1.0,
                  g_ss: ArrayND | None = None,
                  **kwargs):
+        """Fourier-space metric for density mixing.
+
+        Applies a weight to the density in reciprocal space to suppress
+        long-wavelength charge sloshing (Kerker-style preconditioning).
+
+        Parameters
+        ----------
+        weight:
+            Preconditioning weight factor.
+        sigma:
+            Softening parameter for the Fourier-space weight.
+        g_ss:
+            Spin-space metric matrix.
+        **kwargs:
+            Additional arguments passed to :class:`~gpaw.mixer.metric.BaseMetric`.
+        """
         self.weight = weight
         self.sigma = sigma
         super().__init__(g_ss, **kwargs)

@@ -19,6 +19,32 @@ class MSR1Mixer(BaseMixer):
                  hard_lim: float = 2.0,
                  *args,
                  **kwargs):
+        """Multi-Secant Rank-1 (MSR1) density mixer.
+
+        Implementation based on:
+        J. Chem. Theory Comput. 2021, 17, 9, 5715–5732
+
+        Parameters
+        ----------
+        nmaxold:
+            Number of previous iterations to include in the history.
+        beta:
+            Initial linear mixing parameter (Pratt-step only).
+        reg:
+            Regularization parameter for SVD-based matrix inversion.
+        gb_scale:
+            Scaling factor for the "good Broyden" parameter.
+        max_A:
+            Maximum allowed value for the A mixing coefficient.
+        trust_scale:
+            Scaling factor for the trust region radius.
+        soft_lim:
+            Threshold for error increase to trigger step reordering.
+        hard_lim:
+            Threshold for error increase to trigger history deletion.
+        *args, **kwargs:
+            Additional arguments passed to :class:`~gpaw.mixer.base.BaseMixer`.
+        """
         self.nmaxold = nmaxold
         self.beta = beta
         self.reg = reg
