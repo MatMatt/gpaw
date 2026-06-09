@@ -85,14 +85,14 @@ visualize the NEB images.
 It turns out, that while running the NEB calculation, the largest amount
 of resources will be spend translating the carbon layer without any
 noticeable buckling.  You will thus
-:mod:`constrain <ase:ase.constraints>` the
+:mod:`constrain <ase.constraints>` the
 positions of the carbon atoms to save computational time.
 
 Each image in the NEB requires a unique calculator.
 
 This very simple case is highly symmetric.  To better illustrate how the
 NEB method works, the symmetry is broken using the
-:meth:`ase:ase.Atoms.rattle` method.
+:meth:`ase.Atoms.rattle` method.
 
 .. literalinclude:: li_barrier.py
    :start-after: snippet-constraint-gpaw
@@ -147,8 +147,7 @@ Now inspect how the TS image has developed.
 
    $ ase gui neb.traj@3::7
 
-For more complicated MEP's, use the [climbing image
-method](https://ase-lib.org/ase/neb.html?highlight=neb#climbing-image) to
+For more complicated MEP's, use the :ref:`ase:climbingimage` method to
 determine the transition state.  Why is it not required here?
 
 
@@ -164,8 +163,8 @@ transition state (TS) images from the converged MEP.
    :end-before: snippet-barrier
 
 Now calculate the energy of the initial state (IS) image and the
-transition state (TS) image using
-[`get_potential_energy()`](https://ase-lib.org/ase/atoms.html?highlight=get_potential_energy#ase.Atoms.get_potential_energy)
+transition state (TS) image using the
+:meth:`~ase.Atoms.get_potential_energy` method.
 
 .. literalinclude:: li_barrier_2.py
    :start-after: snippet-barrier
@@ -236,13 +235,9 @@ If time permits, you will now do a similar calculation but this time with
 the cell dimension remain unchanged compaired to :mol:`LiFePO_4`.
 
 There are numerous ways to obtain this structure.  You can get
-inspiration from the way :mol:`LiFePO_4` was made on Exercise day 3, use
+inspiration from the way :mol:`LiFePO_4` was made on Exercise day 3.  Use
 ``del atoms[index]``, the :meth:`ase.Atoms.pop` method
 or even the GUI to delete an atom and save the structure afterwards.
-
-.. literalinclude:: lifepo4_vac.py
-   :start-after: snippet-results
-   :end-before: snippet-results-end
 
 When you have made your script (say ``lifepo4_vac.py``), submit it to the
 HPC cluster.  Once the calculation has finished you are ready to
