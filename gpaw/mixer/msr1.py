@@ -235,9 +235,10 @@ class MSR1Mixer(BaseMixer):
             self.trust_radius = trust_radius
         else:
             trust_radius = (self.trust_radius * trust_radius) ** 0.5
-            self.trust_radius = trust_radius if \
-                increased_error < self.soft_lim \
-                else min(trust_radius, self.trust_radius)
+            # self.trust_radius = trust_radius if \
+            #     increased_error < self.soft_lim \
+            #     else min(trust_radius, self.trust_radius)
+            self.trust_radius = trust_radius
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
@@ -254,30 +255,38 @@ class MSR1Mixer(BaseMixer):
             s_hh *= B**2
             A_hh = self.xp.linalg.inv(A_hh)
 
+            self.trust_radius = max(self.trust_radius,
+                                    predicted_radius * 0.5)
+
             def errfct(lamb):
                 beta_h = self.xp.linalg.solve(
-                    A_hh + self.xp.exp(lamb) * self.xp.eye(nold - 1), BR_h
+                    A_hh + lamb * self.xp.eye(nold - 1), BR_h
                 )
                 rtnval = (beta_h @ s_hh @ beta_h) - self.trust_radius**2
                 return rtnval if self.xp is np else rtnval.get()
 
             try:
-                lamb = root_scalar(errfct, bracket=[-10, 10])
-                root = np.exp(lamb.root)
-            except ValueError:
-                root = np.exp(10)
+                lamb = root_scalar(errfct, bracket=[0, 1e3])
+                root = lamb.root
+            except ValueError as e:
+                print(e)
+                root = 1e3
 
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h
             )
             scale_factor = self.trust_radius / predicted_radius
             A *= np.clip(scale_factor, 0, 1)
+            # A = max(A, self.A_lims[0])
+            if self.world.rank == 0:
+                print('trust: ', scale_factor)
         else:
             beta_h = alpha_h
         self.world.broadcast(beta_h, 0)
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
+
 
         for h, (alpha, beta) in enumerate(zip(alpha_h, beta_h)):
             self.pk_1sX.data[:] += beta * s_hsX[h].data
