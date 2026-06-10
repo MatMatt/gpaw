@@ -3,7 +3,7 @@ from gpaw import GPAW, PW, FermiDirac, Mixer
 from ase.dft.bee import BEEFEnsemble
 from ase.parallel import paropen
 
-fepo4 = read('fepo4.traj')
+fepo4 = read('fepo4_out.traj')
 fepo4_1li = fepo4.copy()
 print(fepo4_1li.get_initial_magnetic_moments())
 # snippet-li
