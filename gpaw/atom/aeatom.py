@@ -536,7 +536,7 @@ class AllElectronAtom:
 
         ngpts: int
             Number of grid points for radial grid.  Default is
-            (max-number-of-nodes + 2) * 500.
+            (max-number-of-nodes + 2) * 500, but not less than 2000.
         rcut: float
             Cutoff for radial grid.
         alpha1: float
@@ -550,7 +550,7 @@ class AllElectronAtom:
 
         if ngpts == 0:
             maxnodes = max(len(f_sn[0]) for f_sn in self.f_lsn.values()) - 1
-            ngpts = (maxnodes + 2) * 500
+            ngpts = max((maxnodes + 2) * 500, 2000)
 
         if alpha2 is None:
             alpha2 = 50.0 * self.Z**2
