@@ -53,12 +53,12 @@ class MSR1Mixer(BaseMixer):
         self.soft_lim = soft_lim
         self.hard_lim = hard_lim
         self.A_lims: list[float] = [0.02, max_A]
-        self.B_lims: list[float] = [0.2, 1.0]
-        self.A_rate_ratio: list[float] = [0.5, 1.5]
-        self.B_rate_ratio: list[float] = [3 / 4, 4 / 3]
+        self.B_lims: list[float] = [0.7, 1.2]
+        self.A_rate_ratio: list[float] = [3 / 5, 5 / 3]
+        self.B_rate_ratio: list[float] = [9 / 10, 10 / 9]
         self.A: float = 0.0
         self.B: float = 1.0
-        self.B_boost = 0.1
+        self.B_boost = 1e-1
         self.trust_radius: None | float = None
         super().__init__(*args, **kwargs)
 
@@ -120,11 +120,11 @@ class MSR1Mixer(BaseMixer):
         # Step 2: Do a pratt-step if nold <= 1, else discard bad steps
         if nold <= 1:
             return self.pratt_step(density)
-
+        
+        Rc_last_sX = self.Rc_hsX[-2]
         dNt = self.calculate_charge_sloshing(self.Rc_hsX[-1])
         increased_error = dNt / self.last_dNt
         ret_dNt = dNt
-        last_step = -2
         if increased_error > self.soft_lim:
             dNt = self.last_dNt * 1.1  # avoid infinite loop
             insert_pos = 0 if increased_error > self.hard_lim else -2
@@ -169,11 +169,13 @@ class MSR1Mixer(BaseMixer):
         B_diag = self.xp.mean(self.xp.diag(B_hh))
 
         S, V, D = self.xp.linalg.svd(A_hh)
-        V /= V**2 + A_diag**2 * self.reg**2
+        V /= V**2 + A_diag**2 * self.reg**2  # Regularize
+        V *= (1 + self.reg**2)               # Renormalize
         A_hh = D.T @ self.xp.diag(V) @ S.T
 
         S, V, D = self.xp.linalg.svd(B_hh)
-        V /= V**2 + B_diag**2 * self.reg**2
+        V /= V**2 + B_diag**2 * self.reg**2  # Regulalize
+        V *= (1 + self.reg**2)               # Renormalize
         B_hh = D.T @ self.xp.diag(V) @ S.T
 
         MRc_sX = self.MRc_hsX[-1]
@@ -184,7 +186,7 @@ class MSR1Mixer(BaseMixer):
 
         # Step 7: Predict mixing coefficients
         tmp_1sX = self.uk_1sX.copy()
-        tmp_1sX.data -= self.Rc_hsX[last_step].data
+        tmp_1sX.data -= Rc_last_sX.data
         tmp_1sX.data *= -1
         A1 = self.uk_1sX.norm2().sum()
         B1 = tmp_1sX.norm2().sum()
@@ -200,12 +202,14 @@ class MSR1Mixer(BaseMixer):
         B2_j = tmp_1sX.matrix_elements(y_hsX).data[0, :]
         B2 = B2_j @ B_hh @ B2_i
         B2 = B2 if self.xp is np else B2.get()
-        trig_fact = self.A_lims[-1] * 2 / np.pi
 
+        trig_fact = self.A_lims[-1] * 2 / np.pi
         A_target = np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact
+        # A_target = np.abs(A1 / A2)
         if nold > 2:
-            B_target = np.abs(B1 / B2) + self.B_boost
-            A_ratio = np.sqrt(A_target * self.A) / self.A
+            B_target = max(min(1, B1 / B2 + self.B_boost),
+                           B1 / B2)
+            A_ratio = ((A_target * self.A) ** 0.5) / self.A
             self.A *= np.clip(
                 A_ratio, self.A_rate_ratio[0],
                 self.A_rate_ratio[1] if increased_error < self.soft_lim
@@ -213,7 +217,9 @@ class MSR1Mixer(BaseMixer):
             self.A = np.clip(self.A, self.A_lims[0], self.A_lims[1])
             B_ratio = (self.B + B_target) / (2 * self.B)
             self.B *= np.clip(B_ratio, self.B_rate_ratio[0],
-                              self.B_rate_ratio[1])
+                              self.B_rate_ratio[1] 
+                              if increased_error < self.soft_lim
+                              else 1.0)
             self.B = np.clip(self.B, self.B_lims[0], self.B_lims[1])
         else:
             if self.A == 0:
@@ -235,10 +241,10 @@ class MSR1Mixer(BaseMixer):
             self.trust_radius = trust_radius
         else:
             trust_radius = (self.trust_radius * trust_radius) ** 0.5
-            # self.trust_radius = trust_radius if \
-            #     increased_error < self.soft_lim \
-            #     else min(trust_radius, self.trust_radius)
-            self.trust_radius = trust_radius
+            self.trust_radius = trust_radius if \
+                increased_error < self.soft_lim \
+                else min(trust_radius, self.trust_radius)
+            # self.trust_radius = trust_radius
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
@@ -266,27 +272,24 @@ class MSR1Mixer(BaseMixer):
                 return rtnval if self.xp is np else rtnval.get()
 
             try:
-                lamb = root_scalar(errfct, bracket=[0, 1e3])
+                lamb = root_scalar(errfct, bracket=[0, 5e1])
                 root = lamb.root
             except ValueError as e:
-                print(e)
-                root = 1e3
+                root = 5e1
 
             beta_h = self.xp.linalg.solve(
                 A_hh + root * self.xp.eye(nold - 1), BR_h
             )
             scale_factor = self.trust_radius / predicted_radius
-            A *= np.clip(scale_factor, 0, 1)
-            # A = max(A, self.A_lims[0])
-            if self.world.rank == 0:
-                print('trust: ', scale_factor)
+            A *= scale_factor
+            self.A *= scale_factor**0.5
         else:
+            scale_factor = 1
             beta_h = alpha_h
         self.world.broadcast(beta_h, 0)
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
-
 
         for h, (alpha, beta) in enumerate(zip(alpha_h, beta_h)):
             self.pk_1sX.data[:] += beta * s_hsX[h].data
@@ -323,9 +326,13 @@ class MSR1Mixer(BaseMixer):
 
     def decide_good_broydenness(self, Ay_hh: ArrayND,
                                 As_hh: ArrayND) -> float:
+        if not self.gb_scale:
+            # Multi-secant bad Broyden
+            return 0
+
         Ay_norm = self.xp.linalg.norm(Ay_hh, ord='fro')
         As_norm = self.xp.linalg.norm(As_hh, ord='fro')
-        max_gb = max(Ay_norm / As_norm, 1)
+        max_gb = max(Ay_norm / As_norm, 0)
 
         y_norm = self.xp.diag(Ay_hh)
         s_norm = self.xp.diag(As_hh)
