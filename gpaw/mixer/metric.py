@@ -91,12 +91,11 @@ class FFTMetric(BaseMetric):
         # in real space. This may change in the future.
 
         ekin_G = self.xp.asarray(self.pw.ekin_G)
-        w_G = self.weight * (self.sigma + ekin_G) \
-            / (self.sigma + self.weight * ekin_G)
-        
-        # We want to mix total spin sloshing, but not too
-        # much:
-        w_G[ekin_G == 0] *= 0.2
+        # w_G = (self.sigma + ekin_G) \
+        #     / (self.sigma + self.weight * ekin_G)
+       
+        w_G = (self.weight * self.sigma + ekin_G) / (self.sigma + ekin_G)
+
         assert isinstance(n_sX, UGArray)
 
         n_sX_pbc = n_sX.to_pbc_grid()
