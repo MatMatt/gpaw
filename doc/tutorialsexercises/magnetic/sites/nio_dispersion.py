@@ -14,6 +14,8 @@ a0 = 4.17
 a = fcc111('Ni', size=(1, 1, 3), a=a0)
 pos_av = a.get_positions()
 cell = a.get_cell()
+print(cell)
+print(pos_av)
 a1 = pos_av[2] - pos_av[0]
 a2 = a1 + cell[0]
 a3 = a1 + cell[1]
@@ -26,7 +28,8 @@ bulk = Atoms('Ni2O2',
              pbc=True)
 magmoms_a = [2, -2, 0, 0]
 bulk.set_initial_magnetic_moments(magmoms_a)
-
+print(bulk.cell)
+asdfg
 # Calculations with 60 converged bands
 Nb = 60
 Nk = 18
