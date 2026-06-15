@@ -1,10 +1,27 @@
-=================================
-Curie temperature of :mol:`CrI_3`
-=================================
+.. _magnetism1:
+
+============================================
+Part 1: Critical temperature of :mol:`CrI_3`
+============================================
 
 In 2017, ferromagnetic order was observed in a monolayer of :mol:`CrI_3` below 45 `K` [*Nature* **546** 270 (2017)]. It comprises the first demonstration of magnetic order in a 2D material and has received a lot of attention due to the peculiar properties of magnetism in 2D. The physics of magnetic order in 2D is rather different than in 3D and in order to understand what is going on we will need to introduce a bit of theory. But before we get to that let us get started with the calculations.
 
 
+In this turorial you will set up and relax a monolayer of 
+:mol:`CrI_3` after which you will calculate its exchange contants and critical 
+temperature using different models
+
+The procedure will be as follows:
+
+1) Set up the atomic structure and optimize the geometry of :mol:`CrI_3`
+2) Calculate the nearest neighbor Heisenberg exchange coupling based on a total
+   energy mapping analysis
+3) Show that the magnetic ground state is thermodynamically unstable when
+   anisotropy is neglected (The Mermin-Wagner theorem)
+4) Calculate the single-ion magnetic anisotropy and estimate the critical
+   temperature
+
+   
 
 DFT calculation - finding the atomic structure of :mol:`CrI_3`
 ==============================================================
@@ -74,7 +91,7 @@ where `E_{\mathrm{FM}}` and `E_{\mathrm{AFM}}` are the energies *per magnetic at
 
 1.   Derive the expression for `J` from the classical Heisenberg model yourself. In particular, how does the factor of 3 arise?
 
-We have compiled a database of various 2D materials at https://cmrdb.fysik.dtu.dk/c2db/, which are relaxed with the PBE functional. We will therefore refrain from doing a full coverged geometry optimization and simply download the optimized structure from the database. Search the database for :mol:`CrI_3` (it appears as :mol:`Cr_2I_6` on the webpage). If you like, you can take a look at various properties of the material like band structure and stability. Download the ``.xyz`` file and save it as ``CrI3.xyz``. You can also setup the atomic structure similar by simply defining an atoms object with positions and lattice parameters stated at the webpage. With this input structure, run the code below to obtain a ``.gpw`` file containing a converged ferromagnetic calculation. The calculation will take about 30 minutes. To speed up the process, you can copy the cell contents to a python script and submit it as a batch job to the DTU computers with multiple CPU cores. To do so, follow the instructions [here](https://gpaw.readthedocs.io/summerschools/summerschool24/submitting.html). If the relaxation in the code above did not finish you may kill it. It is not crucial to complete in order to proceed with the rest of the exercise. Continue with the theory below while you wait for the calculations to finish.
+We have compiled a database of various 2D materials at https://cmrdb.fysik.dtu.dk/c2db/, which are relaxed with the PBE functional. We will therefore refrain from doing a full coverged geometry optimization and simply download the optimized structure from the database. Search the database for :mol:`CrI_3` (it appears as :mol:`Cr_2I_6` on the webpage). If you like, you can take a look at various properties of the material like band structure and stability. Download the ``.xyz`` file and save it as ``CrI3.xyz``. You can also setup the atomic structure similar by simply defining an atoms object with positions and lattice parameters stated at the webpage. With this input structure, run the code below to obtain a ``.gpw`` file containing a converged ferromagnetic calculation. The calculation will take about 30 minutes. To speed up the process, you can copy the code to a python script and submit it as a batch job to the DTU computers with multiple CPU cores. Try for example to send it to 16 cores for 30 minutes. If the relaxation in the code above did not finish you may kill it. It is not crucial to complete in order to proceed with the rest of the exercise. Continue with the theory below while you wait for the calculations to finish.
 
 
 .. literalinclude:: CrI3_fm.py
