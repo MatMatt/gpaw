@@ -46,8 +46,7 @@ params = dict(
     spinpol=True,  # performing spin polarized calculations
     xc='BEEF-vdW',  # exchange-correlation functional
     occupations=FermiDirac(
-        width=0.1,  # smearing
-        ),#fixmagmom=True),  # total magnetic moment fixed to the initial value
+        width=0.1),  # smearing
     convergence={'eigenstates': 1.0e-4,  # eV^2 / electron
                  'energy': 2.0e-4,  # eV / electron
                  'density': 1.0e-3},
