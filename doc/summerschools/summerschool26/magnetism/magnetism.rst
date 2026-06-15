@@ -21,54 +21,22 @@ a :mol:`CrI_3` monolayer. Afterwards, you will investigate the magnetic order in
 you will finish the project by performing a search for new magnetic 2D materials
 with high critical temperatures based on a database of hypothetical monolayers.
 
+.. toctree::
+   
+   magnetism1
+   magnetism2
 
-Part 1: Critical temperature of :mol:`CrI_3`
-============================================
-
-In the turorial :ref:`magnetism1` you will set up and relax a monolayer of 
-:mol:`CrI_3` after which you will calculate its exchange contants and critical 
-temperature using different models
-
-The procedure will be as follows:
-
-1) Set up the atomic structure and optimize the geometry of :mol:`CrI_3`
-2) Calculate the nearest neighbor Heisenberg exchange coupling based on a total
-   energy mapping analysis
-3) Show that the magnetic ground state is thermodynamically unstable when
-   anisotropy is neglected (The Mermin-Wagner theorem)
-4) Calculate the single-ion magnetic anisotropy and estimate the critical
-   temperature
-
-
-Part 2: Noncollinear magnetism in :mol:`CrI_3`
-==============================================
-
-In materials where the dominant magnetic exchange coupling is antiferromagnetic,
-or in cases where different exchange couplings compete, the ground state may
-have a complicated noncollinear magnetic order. In the tutorial :ref:`magnetism2`
-you will examine a prototypical monolayer with a noncollinear ground state,
-namely :mol:`VI_2`. Starting from the structure file :download:``VI2.xyz``,
-you will:
-
-1) Relax the atomic structure using LDA
-2) Compare a collinear antiferromagnetic structure with the ferromagnetic state
-3) Obtain the noncollinear ground state
-4) Calculate the magnetic anisotropy and discuss whether or not the material
-   will exhibit magnetic order at low temperatures
-
-
+=========================================================================
 Part 3: Find new ferromagnetic monolayers with high critical temperatures
 =========================================================================
 
-In this last part of the project, you will try to find new ferromagnetic
-monolayers that can preserve their magnetic ordering at elevated temperatures.
-The procedure is outlined in the tutorial :ref:`magnetism3`. In particular you
-will
+Now that you know how to calculate exchange coupling constants and single-ion anisotropies, you are in a position to search for new ferromagnetic monolayers yourself.
 
-1) Search through a database of monolayers to pick a material you might expect
-   to have a high critical temperature
-2) Carry out a total energy mapping analysis to obtain exchange coupling and
-   anisotropy parameters
-3) Calculate a first principles estimate of the critical temperature
+First, we will try to find some suitable candidates based on the data, which is already in the  Computational 2D Materials Database (C2DB).
 
-You are welcome to repeat this procedure for as many monolayers as you like.
+1.   Go to the C2DB website at https://cmrdb.fysik.dtu.dk/c2db and search for magnetic monolayers with finite band gaps (the theory developed so far is not applicable to metals, since these typically have long range interactions). (Hint: Toggle `Magnetic` to `yes` and set a minimum value for the `Band gap range` in the search menu, then press the search icon.)
+2.   Refine the query to sort out the magnetic monolayers with a ferromagnetic ground state. (Hint: Key values such as the nearest neighbor exchange coupling can be queried by entering `J>0` into the search field.)
+3.   Show the spin state, exchange coupling and magnetic anisotropy in the property overview. (Hint: You can add key values to the overview through the `Add Column` botton.)
+4.   Decide on a material you find promising to have a high Curie temperature, based on what you learned in previous notebooks. You may also want to choose a material with a limited number of atoms in the unit cell in order for the calculations to run fast.
+
+You are welcome to repeat the process for as many monolayers as you like.
