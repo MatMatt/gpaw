@@ -19,7 +19,7 @@ you will:
 
 Our basic reference point will still be the Heisenberg Hamiltonian given by:
 
-,, math::
+.. math::
   
   H = -\frac{1}{2}\sum_{i,j}J_{ij}\mathbf{S}_i\cdot \mathbf{S}_j+A\sum_i(S_i^z)^2
 
@@ -112,7 +112,7 @@ and
 where `E_0` is some reference energy.
 
 6.   Use these expressions to eliminate `E_0` and express `J` in terms of the energy difference per magnetic site of the two configurations.
-7.   Write code to extract `E_fm` and `E_afm` as outlined below.
+7.   Write code to extract `E_\mathrm{fm}` and `E_\mathrm{afm}` as outlined below.
 8.   Fill in the formula for `J` and evaluate it.
 
 You should get a value for `J` around -1.4 meV.
@@ -168,7 +168,7 @@ The noncollinear spin configuration can also be represented in a single unit cel
 boundary conditions from Bloch's theorem yields that translation by a lattice vector simply results in the multiplication of a phase factor
 onto the wave function, the boundary conditions from the generalized Bloch's theorem yields that translation by a lattice vector can
 additionally result in the rotation of spins. The rotation can be characterized by the spin spiral vector `\mathbf{q}` where, for example,
-`\mathbf{q}=[1/2,0,0]` represents that translating by the first lattice vector rotates the spins by 1/2 * 360\ `^\circ`\ =180`\ `^\circ` whereas
+`\mathbf{q}=[1/2,0,0]` represents that translating by the first lattice vector rotates the spins by 1/2 * 360\ `^\circ`\ =180\ `^\circ` whereas
 translating by the second and third lattice vectors leaves the spins unchanged.
 (See [this page](https://gpaw.readthedocs.io/tutorialsexercises/magnetic/spinspiral/spinspiral.html) for further information.)
 
@@ -178,9 +178,9 @@ translating by the second and third lattice vectors leaves the spins unchanged.
      generalized Bloch theorem as you can using the usual Bloch theorem and a super cell.
 
 You can generate a path of `\mathbf{q}`\ -points between the ferromagnetic boundary conditions and the 120\ `^\circ` spin rotating boundary
-conditions using the command `path = atoms.cell.bandpath('GK', npoints=7).kpts`.
+conditions using the command ``path = atoms.cell.bandpath('GK', npoints=7).kpts``.
 
-3.   Wrap the ground state calculation in a for-loop over `\mathbf{q}`\ -points (for i, `q_c` in enumerate(path):) and obtain the energy as a
+3.   Wrap the ground state calculation in a for-loop over `\mathbf{q}`\ -points (``for i, q_c in enumerate(path):``) and obtain the energy as a
      function of `\mathbf{q}`. Plot the energy vs. `\mathbf{q}` curve. Where is the minimum?
 
 
