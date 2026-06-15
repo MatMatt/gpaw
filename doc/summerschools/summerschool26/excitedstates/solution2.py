@@ -19,7 +19,7 @@ atoms.calc = calc
 atoms.get_potential_energy()
 
 calc.diagonalize_full_hamiltonian()  # determine all bands
-calc.write('Si_groundstate.gpw', 'all')  # student: '???_groundstate.gpw', 'all' # write out wavefunctions
+calc.write('Si_groundstate.gpw', 'all')
 # snippet-pw-groundstate-end
 
 nbands=30,# number of bands for calculation of self-energy
@@ -29,7 +29,7 @@ ecut=20.0, # plane-wave cutoff for self-energy (20-200)
 # snippet-pw-g0w0-start
 from gpaw.response.g0w0 import G0W0
 
-gw = G0W0(calc='Si_groundstate.gpw', # student: calc='???_groundstate.gpw',
+gw = G0W0(calc='Si_groundstate.gpw',
           nbands=nbands, # number of bands for calculation of self-energy
           bands=bands, # VB and CB
           ecut=ecut, # plane-wave cutoff for self-energy (20-200)
@@ -77,9 +77,9 @@ ecut=20.0
 
 # snippet-lcao-g0w0-start
 gw = G0W0(calc='Si_pw_from_lcao_groundstate.gpw',
-          nbands=nbands,  # student: nbands=???,  # number of bands for calculation of self-energy
-          bands=(3, 5), # student: bands=(?, ?), # VB and CB
-          ecut=20.0, # student: ecut=???, # plane-wave cutoff for self-energy (20-200)
+          nbands=nbands, # number of bands for calculation of self-energy
+          bands=bands,# VB and CB
+          ecut=ecut,# plane-wave cutoff for self-energy (20-200)
           integrate_gamma='WS',  # Use supercell Wigner-Seitz truncation for W.
           filename='Si-from-lcao-g0w0') 
 gw.calculate()
