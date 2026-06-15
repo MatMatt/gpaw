@@ -29,7 +29,7 @@ We start by calculating the ground state density and diagonalizing the resulting
    :end-before: # snippet-bse-groundstate-end
 
 
-Below we will set up the Bethe-Salpeter Hamiltonian in a basis of the ?? valence bands and ?? conduction bands.
+Below we will set up the Bethe-Salpeter Hamiltonian in a basis of valence bands and conduction bands (hint: the number of valence and conduction bands should be in the single digits).
 However, the screened interaction that enters the Hamiltonian needs to be converged with respect the number of unoccupied bands. Next we calculate the dynamical dielectric function using the Bethe-Salpeter equation. The imaginary part is proportional to the absorption spectrum. We will calculate the dielectric function within the Random Phase Approximation (with the same convergence parameters for comparison).
 
 
