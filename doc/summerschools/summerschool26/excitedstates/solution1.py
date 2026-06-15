@@ -5,7 +5,6 @@ from ase import Atoms  # Import atoms
 from ase.build import bulk
 # snippet-basic-imports-end
 
-# snippet-structures-start
 Si = bulk('Si', 'diamond', a=5.4)  # student:
 Ge = bulk('Ge', 'diamond', a=5.7)  # student:
 C = bulk('C', 'diamond', a=3.6)  # student:
@@ -16,9 +15,7 @@ BN = Atoms('BN', pbc=[True, True, False], positions=[[0., 0., 7.],[0., 2.5/np.sq
 atoms = Si  # student: atoms = ???
 label = 'Si'  # student: label = '???'
 
-#view(atoms)  # check your initial structure # student: view(atoms)
-# snippet-structures-end
-
+# view(atoms)  # check your initial structure # student: view(atoms)
 
 # snippet-calc-start-student
 from gpaw import GPAW, PW, FermiDirac
@@ -32,7 +29,7 @@ kpts = ...
 xc = 'PBE'
 occupations = FermiDirac(0.01)
 mode = PW(600)
-kpts = {'size': (6,6,6)} 
+kpts = {'size': (6,6,6)}
 
 # snippet-calculator-start
 # We create the calculator object

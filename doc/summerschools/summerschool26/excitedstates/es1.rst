@@ -29,16 +29,12 @@ Here is some information to help you build the :class:`ase:ase.Atoms` object:
 * GaAs crystalizes in the zincblende structure with lattice constant :math:`a=5.65` Å
 * Monolayer BN centered in a hexagonal unit cell with :math:`a=2.5` Å (and :math:`7` Å of vacuum at each side to prevent it from interacting with its periodic copies) and a basis of :math:`(0,0)` and :math:`(0, a / \sqrt{3})`
 
-The first thing you should do is to create an :class:`ase:ase.Atoms` object (click the link to see ways to build atoms objects). In order to do so, you might find it useful to use one of the crystal structures included in :func:`ase.build.bulk` (hint: if you have an element of the IV group you might be interested to follow this link :func:`ase:ase.build.bulk`) or you might have to create a list/array for the atomic positions and another one for the unit cell and then create an atoms object (hint: see above). 
+The first thing you should do is to create an :class:`ase:ase.Atoms` object (click the link to see ways to build atoms objects). In order to do so, you might find it useful to use one of the crystal structures included in :func:`ase.build.bulk` (hint: if you have an element of the IV group you might be interested to follow this link :func:`ase:ase.build.bulk`) or you might have to create a list/array for the atomic positions and another one for the unit cell and then create an atoms object (hint: see above).
 
 
 .. literalinclude:: solution1.py
    :start-after: # snippet-basic-imports-start
    :end-before: # snippet-basic-imports-end
-
-.. literalinclude:: solution1.py
-   :start-after: # snippet-structures-start-student
-   :end-before: # snippet-structures-start-student
 
 
 .. code-block:: python
@@ -53,12 +49,12 @@ The first thing you should do is to create an :class:`ase:ase.Atoms` object (cli
 	atoms = ...
 	label = '...'
 
-	#view(atoms) # check your initial structure
+	# view(atoms) # check your initial structure
 
 We are now going to relax the structure. To do so, we need to add a calculator, GPAW, to get DFT energies, and forces. We are going to use PBE exchange correlation functional.
 
 Since we are going to relax the unit cell, we need to use the plane wave mode, since it is the only that includes the stress-tensor. In order to do so, remember this mode requires you to specify the plane wave cut-off
-(hint: We recommend plane wave cut-off of :math:`600` eV and the k-point mesh size could be :math:`(6,6,6)` if you want it to run reasonably fast and to get a reasonable result). We will discuss convergence further in the next section. 
+(hint: We recommend plane wave cut-off of :math:`600` eV and the k-point mesh size could be :math:`(6,6,6)` if you want it to run reasonably fast and to get a reasonable result). We will discuss convergence further in the next section.
 
 The materials we are looking at are semiconductors. Thus, the default value for the Fermi-Dirac smearing (i.e. occupations function) is too high (it is set up to :math:`0.1` eV to work with metals). We recommend setting it to :math:`0.01` eV.
 
@@ -85,23 +81,12 @@ We are going to relax the atomic positions and the unit cell at the same time. T
    :end-before: # snippet-opt-end-student
 
 .. literalinclude:: solution1.py
-   :start-after: # snippet-optimizer-start
-   :end-before: # snippet-optimizer-end
-
-.. literalinclude:: solution1.py
-   :start-after: # snippet-run-opt-start-student
-   :end-before: # snippet-run-opt-end-student
-
-.. literalinclude:: solution1.py
    :start-after: # snippet-run-optimization-start
    :end-before: # snippet-run-optimization-end
 
 Make sure that you have understood the difference of optimizing a bare atoms object and using a filter!
 
 **Bonus**: You can attach a trajectory file (``filename.traj``) to the optimizer and visualize the trajectory using ``ase gui filename.traj``.
-
-
-
 
 
 Band gap and band structure
@@ -184,7 +169,7 @@ Finally, we compute the band structure using ASE's :class:`ase:ase.spectrum.band
    :end-before: # snippet-save-band-structure-end
 
 
-The following image shows the bandstructure we obtain for Silicon. 
+The following image shows the bandstructure we obtain for Silicon.
 
 .. image:: Si_bandstructure_LDA.png
 
