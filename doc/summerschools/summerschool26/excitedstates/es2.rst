@@ -38,7 +38,7 @@ number of conduction bands,
         :end-before: # snippet-pw-g0w0-end
 
 
-The dictionary is stored in ``???-g0w0_results.pckl``. From the dict it is for example possible to extract the direct bandgap at the Gamma point.
+The dictionary is stored in ``???_results.pckl``. From the dict it is for example possible to extract the direct bandgap at the Gamma point.
 
 .. literalinclude:: solution2.py
         :start-after: # snippet-pw-direct-gap-start
@@ -62,7 +62,7 @@ Before starting the G0W0 computation the LCAO groundstate needs to be converted 
         :start-after: # snippet-lcao-to-pw-start
         :end-before: # snippet-lcao-to-pw-end
 
-The converted groundstate is stored in ``???_pw_from_lcao_groundstate.gpw``. From this groundstate the G0W0 computation can be started.
+The converted groundstate is stored in ``Si_pw_from_lcao_groundstate.gpw``. From this groundstate the G0W0 computation can be started.
 
 
 .. code::
@@ -71,7 +71,10 @@ The converted groundstate is stored in ``???_pw_from_lcao_groundstate.gpw``. Fro
    bands = (..., ...)
    ecut = ...
 
-Hint: The number of bands cannot exceed the number of basis functions. So for example in Si with 2 atoms in a unit cell using the dzp basis there are :math:`2 \cdot 13=26` basis functions and therefore :code:`nbands` can at most be 26.
+Hint: The number of bands cannot exceed the number of basis functions. So for 
+example in Si with 2 atoms in a unit cell using the dzp basis there are 
+:math:`2 \cdot 13=26` basis functions and therefore :code:`nbands` can at most 
+be 26. Consider why we don't worry about this with a planewave calculation.
 
 .. literalinclude:: solution2.py
         :start-after: # snippet-lcao-g0w0-start
