@@ -114,7 +114,7 @@ The Mermin-Wagner theorem
 -------------------------
 Completing the previous calculations, you should have obtained a value of `T_c`, which is on the order of 100 K. This is much larger than the experimental value.  However in 2D materials mean-field theory fails miserably and the results cannot be trusted. In fact, at finite temperatures the Heisenberg model stated above does not exhibit magnetic order in two dimensions. The reason is that entropy is dominant over enthalpy, such that the free energy is always minimized by disordered configurations at finite temperatures. This is summarized by the Mermin-Wagner theorem, which states that:
 
-*Continuous symmetries cannot be spontaneously broken at finite temperature for systems with short range interactions in dimensions `d\le2`*.
+*Continuous symmetries cannot be spontaneously broken at finite temperature for systems with short range interactions in dimensions `d\le2` *.
 
 The Heisenberg model above has a continuous rotational symmetry in the spin degrees of freedom and magnetic order is obtained by choosing a certain direction for all the spins. This means that the spin rotation symmetry is spontaneously broken in the magnetically ordered state. However, the direction of magnetization is arbitrary and can still be rotated without any energy cost, as long as the spins remain aligned with respect to each other.
 
@@ -156,7 +156,7 @@ where we have chosen the `z`-direction to be orthogonal to the plane.
 Magnetic anisotropy from DFT
 ============================
 
-In the code below, the magnetic anisotropy is calculated for the ferromagnetic ground state. The function `calculate_band_energy()` will return the sum of Kohn-Sham eigenvalues for the occupied states. This energy will depend on the direction of the spins, which is specified by the polar and azimuthal angles `\theta` and `\varphi` respectively.
+In the code below, the magnetic anisotropy is calculated for the ferromagnetic ground state. The function ``calculate_band_energy()`` will return the sum of Kohn-Sham eigenvalues for the occupied states. This energy will depend on the direction of the spins, which is specified by the polar and azimuthal angles `\theta` and `\varphi` respectively.
 
 1.   What is the sign of `A` in the Hamiltonian above? (Fill in the formula for `A` and run the code)
 2.   Does spin-orbit coupling break the rotational symmetry of the ground state?
@@ -204,7 +204,16 @@ where `T_c^{\mathrm{Ising}}=1.52\cdot S^2J/k_B` is the critical temperature of t
 4.   Fill in the Monte-Carlo formula for `T_c` in the code below and calculate the Curie temperature using the values of `A` and `J` found above.
 
 
-.. literalinclude:: get_Tc_fit.py
+.. code::
+
+   from numpy import tanh, log
+
+   A = 0
+   J = 0
+
+   T0 = 1.52 # Ising limit
+   T_c = ???
+   print(f'T_c = {T_c:.1f} K')
 
 
 The result for `T_c` should be in reasonable agreement with the experimental value of 45 K (expect to obtain a value around 30 K). Of course one should carefully check the convergence of all calculations in the present tutorial. In fact a converged calculation yields `J = 3.1` meV and `A=-0.38` meV, which results in `T_c = 37` K.

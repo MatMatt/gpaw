@@ -18,3 +18,5 @@ layer_fm.calc = calc
 layer_fm.get_potential_energy()
 calc.write('V2I4_fm.gpw')
 
+# ...
+# Fill in code for ferromagnetic structure
