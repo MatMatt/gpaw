@@ -22,9 +22,9 @@ calc.diagonalize_full_hamiltonian()  # determine all bands
 calc.write('Si_groundstate.gpw', 'all')  # student: '???_groundstate.gpw', 'all' # write out wavefunctions
 # snippet-pw-groundstate-end
 
-  nbands=30,# number of bands for calculation of self-energy
-  bands=(3, 5),# VB and CB
-  ecut=20.0, # plane-wave cutoff for self-energy (20-200)
+nbands=30,# number of bands for calculation of self-energy
+bands=(3, 5),# VB and CB
+ecut=20.0, # plane-wave cutoff for self-energy (20-200)
 
 # snippet-pw-g0w0-start
 from gpaw.response.g0w0 import G0W0
