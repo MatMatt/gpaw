@@ -9,11 +9,29 @@ In this exercise we will calculate the quasiparticle band gap of the compound us
 
 First, we need to do a regular groundstate calculation. To start off, we do this in plane wave mode and choose the LDA exchange-correlation functional. In order to keep the computational efforts small, you should start with reasonable k-points and plane wave basis.
 
+
+.. code::
+
+   atoms = bulk(...)
+   pw_cut_off = ...
+   kpts_grid = (..., ..., ...)
+
+
 .. literalinclude:: solution_es2.py
         :start-after: # snippet-pw-groundstate-start
         :end-before: # snippet-pw-groundstate-end
 
 Next, we set up the G0W0 calculator and calculate the quasi-particle spectrum for all the k-points present in the irreducible Brillouin zone from the ground state calculation and the specified bands. For example Carbon has 4 valence electrons and the bands are double occupied. Setting bands=(3,5) means including band index 3 and 4 which is the highest occupied band and the lowest unoccupied band.
+
+
+.. code::
+   
+   nbands = ...
+   bands = (..., ...)
+   ecut = ...
+
+Hint: The bands keyword takes a tuple of two elements, the number of valence bands and the 
+number of conduction bands,
 
 .. literalinclude:: solution_es2.py
         :start-after: # snippet-pw-g0w0-start
@@ -45,6 +63,15 @@ Before starting the G0W0 computation the LCAO groundstate needs to be converted 
         :end-before: # snippet-lcao-to-pw-end
 
 The converted groundstate is stored in ``???_pw_from_lcao_groundstate.gpw``. From this groundstate the G0W0 computation can be started.
+
+
+.. code::
+
+   nbands = ...
+   bands = (..., ...)
+   ecut = ...
+
+Hint: The number of bands cannot exceed the number of basis functions. So for example in Si with 2 atoms in a unit cell using the dzp basis there are :math:`2 \cdot 13=26` basis functions and therefore :code:`nbands` can at most be 26.
 
 .. literalinclude:: solution_es2.py
         :start-after: # snippet-lcao-g0w0-start
