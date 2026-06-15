@@ -4,10 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.figure()
 
-# Of course you need to input the name you gave the files earlier own yourself and only plot the components you calculated.
+# Of course you need to input the name you gave the files earlier own
+# yourself and only plot the components you calculated.
 # Here is only showed hot to plot the x-component.
 
-absox = np.loadtxt('Si_rpa_x.csv', delimiter=',')  # student: absox = np.loadtxt('???_rpa_x.csv', delimiter=',')
+absox = np.loadtxt('Si_rpa_x.csv', delimiter=',')
 plt.plot(absox[:, 0], absox[:, 4], label='RPA_x Si 12x12x4', lw=2, color='b')
 
 plt.xlabel(r'$\hbar\omega\;[eV]$', size=20)
@@ -22,6 +23,7 @@ plt.legend()
 plt.savefig('rpa_Si.png')
 # snippet-plot-rpa-end
 
+from ase.build import bulk
 atoms = bulk('Si', 'diamond', a=5.4)
 pw_cut_off = 400
 kpts_grid = (8, 8, 8)
@@ -29,7 +31,6 @@ gamma = True
 nbands = 100
 
 # snippet-bse-groundstate-start
-from ase.build import bulk
 from gpaw import GPAW
 from gpaw import PW
 from gpaw.occupations import FermiDirac
@@ -65,7 +66,7 @@ eta = 0.2
 df = DielectricFunction('gs_atoms.gpw',
                         ecut=ecut,
                         frequencies=np.linspace(0, 10, 1001),
-                        nbands=my_nbands,
+                        nbands=nbands,
                         intraband=False,
                         hilbert=False,
                         eta=eta,
@@ -75,9 +76,9 @@ df.get_dielectric_function(filename='eps_rpa_atoms.csv')
 
 bse = BSE('gs_atoms.gpw',
           ecut=ecut,
-          valence_bands=my_valence_bands,
-          conduction_bands=my_conduction_bands,
-          nbands=my_nbands,
+          valence_bands=valence_bands,
+          conduction_bands=conduction_bands,
+          nbands=nbands,
           mode='BSE',
           integrate_gamma='sphere',
           txt='bse_atoms.txt')
