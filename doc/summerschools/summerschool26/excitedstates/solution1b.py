@@ -58,7 +58,7 @@ calc = GPAW(label + '_gs_LDA.gpw').fixed_density(
 
 # snippet-plot-band-structure-start
 bs = calc.band_structure()
-bs.plot(filename=label + '_bandstructure_LDA.png', show=True, emax=20)
+bs.plot(filename=label + '_bandstructure_LDA.png', show=True, emin = -10, emax=10)
 # snippet-plot-band-structure-end
 
 # snippet-save-band-structure-start
