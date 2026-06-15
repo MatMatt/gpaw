@@ -114,7 +114,7 @@ The Mermin-Wagner theorem
 -------------------------
 Completing the previous calculations, you should have obtained a value of `T_c`, which is on the order of 100 K. This is much larger than the experimental value.  However in 2D materials mean-field theory fails miserably and the results cannot be trusted. In fact, at finite temperatures the Heisenberg model stated above does not exhibit magnetic order in two dimensions. The reason is that entropy is dominant over enthalpy, such that the free energy is always minimized by disordered configurations at finite temperatures. This is summarized by the Mermin-Wagner theorem, which states that:
 
-*Continuous symmetries cannot be spontaneously broken at finite temperature for systems with short range interactions in dimensions `d\le2` *.
+*Continuous symmetries cannot be spontaneously broken at finite temperature for systems with short range interactions in dimensions* `d\le2`.
 
 The Heisenberg model above has a continuous rotational symmetry in the spin degrees of freedom and magnetic order is obtained by choosing a certain direction for all the spins. This means that the spin rotation symmetry is spontaneously broken in the magnetically ordered state. However, the direction of magnetization is arbitrary and can still be rotated without any energy cost, as long as the spins remain aligned with respect to each other.
 
