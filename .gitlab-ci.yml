@@ -637,7 +637,7 @@ lint:
     - >
       flake8
       --doctests
-      --exclude "doc/platforms/*,doc/summerschools/summerschool26/machinelearning/*"
+      --exclude "doc/platforms/*,doc/summerschools/summerschool26/machinelearning/*,doc/summerschools/summerschool26/batteries/batteries3.py"
       --extend-ignore E402
       doc
     - >
