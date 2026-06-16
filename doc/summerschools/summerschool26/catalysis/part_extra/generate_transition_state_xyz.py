@@ -1,6 +1,9 @@
-from ase.optimize import FIRE
+from ase.constraints import FixAtoms
+from ase.io import Trajectory, read, write
 from ase.mep import NEB
-from ase.io import Trajectory
+from ase.optimize import FIRE
+
+from gpaw import GPAW, PW
 
 initial = read('N2Ru.traj')
 final = read('2Nads.traj')

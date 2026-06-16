@@ -1,28 +1,30 @@
 # Intended values (hidden from student)
-my_kpts = (4, 4, 1)
-my_structure = 'tight-N2Ru-top.traj'
-my_indices = [8, 9]
+structure_file = 'tight-N2Ru-top.traj'
+kpts_size = (4, 4, 1)
+N2_indices = (8, 9)
 
 # snippet-vibrations-start
+import numpy as np
 from ase.io import read
 from ase.vibrations import Vibrations
+
 from gpaw import GPAW, PW
 
-slab = read(my_structure)  # student: slab = read('your_structure')
-calc = GPAW(xc='PBE',
-            mode=PW(500),
-            kpts={'size': my_kpts, 'gamma': True},  # student: kpts=?,
-            symmetry={'point_group': False},
-            txt='vib.txt')
-slab.calc = calc
-Uini = slab.get_potential_energy()
+slab = read(structure_file)
+slab.calc = GPAW(xc='PBE',
+                 mode=PW(500),
+                 kpts={'size': kpts_size, 'gamma': True},
+                 symmetry={'point_group': False},
+                 txt='vib_initial.txt')
+energy_initial = slab.get_potential_energy()
+np.savetxt('energy_initial.txt', [energy_initial])
 
-vib = Vibrations(slab,
-                 name=my_name,
-                 indices=my_indices,  # student: indices=[?, ?],
-                 nfree=4)
-vib.run()
-vib.summary(log='vib_summary.log')
+vib_initial = Vibrations(slab,
+                         indices=N2_indices,
+                         nfree=4,
+                         name='vib_initial')
+vib_initial.run()
+vib_initial.summary(log='vib_initial_summary.log')
 for i in range(6):
-    vib.write_mode(i)
+    vib_initial.write_mode(i)
 # snippet-vibrations-end
