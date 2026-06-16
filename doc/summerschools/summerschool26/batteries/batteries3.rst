@@ -170,8 +170,6 @@ transition state (TS) image using the
    :start-after: snippet-barrier
    :end-before: snippet-strain
 
-Why does this not fully align with what you found before?
-
 New change the graphite layer distance by changing the the size of the
 unit cell in the *z* direction by ±3 %. and use the same calculator
 object as you did above and calculate the potential energy of the
