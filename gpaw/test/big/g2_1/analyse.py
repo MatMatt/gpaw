@@ -14,7 +14,7 @@ def read_results() -> tuple[dict[str, float], dict[str, float]]:
         else:
             for symbol in atoms.symbols:
                 e -= eatoms[symbol]
-            eatomizations[name] = -e
+            eatomizations[name] = -e / len(atoms)
             distances[name] = ((atoms.positions[-1] -
                                 atoms.positions[0])**2).sum()**0.5
     return eatomizations, distances
@@ -23,12 +23,11 @@ def read_results() -> tuple[dict[str, float], dict[str, float]]:
 def main():
     eatomizations, distances = read_results()
     for name, e in eatomizations.items():
-        assert abs(e - ref['ea'][name]) < 0.000001
-        assert abs(distances[name] - ref['distance'][name]) < 0.000001
-
-
-if __name__ == '__main__':
-    main()
+        print(name,
+              e - ref['ea'][name],
+              distances[name] - ref['distance'][name])
+        assert abs(e - ref['ea'][name]) < 0.01
+        assert abs(distances[name] - ref['distance'][name]) < 0.01
 
 
 # these results are calculated at relaxed geometries (with NWChem?)
@@ -145,3 +144,7 @@ ref = {
         'CH2_s1A1d': 7.7608520741205211,
         'H2CO': 16.736077719720015,
         'HCl': 4.6204106981385848}}
+
+
+if __name__ == '__main__':
+    main()

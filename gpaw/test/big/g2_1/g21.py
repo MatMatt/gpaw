@@ -8,10 +8,18 @@ def relax(name):
     atoms = molecule(name)
     atoms.cell = [12, 13, 14]
     atoms.center()
+    if name == 'SiH2_s3B1d':
+        kwargs = dict(
+            occupations=dict(name='fermi-dirac',
+                             width=0.01,
+                             fixmagmom=True))
+    else:
+        kwargs = {}
     dft = DFT(
         atoms,
         mode=PW(800),
         xc='PBE',
+        **kwargs,
         txt=name + '.txt')
     atoms.calc = dft.ase_calculator()
     opt = BFGS(atoms, logfile=name + '.log')
