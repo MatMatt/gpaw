@@ -1,5 +1,9 @@
-# creates: magnetism/magnetism1.py
+# creates: magnetism/CrI3_gs.py
+# creates: magnetism/get_Tc_mf.py
+# creates: magnetism/CrI3_anisotropy.py
+
 from pathlib import Path
+
 
 def main():
     for path in Path().glob('*/*_teacher.py'):
@@ -10,7 +14,7 @@ def main():
                 a, b = (x.strip() for x in line.split('# student:'))
                 line = line.split(a)[0] + b + '\n'
             lines.append(line)
-        path.with_name(path.name.replace('_teacher', '')).write_text(
+        path.with_name(path.name.replace('_teacher', '_student')).write_text(
             '\n'.join(lines) + '\n')
 
 

@@ -41,7 +41,7 @@ In order to get the script running fast, we have set a few of the computational 
 
 Leave the script running and continue with the theory section below.
 
-.. literalinclude:: CrI3_gs.py
+.. literalinclude:: CrI3_gs_student.py
 
 
 A bit of theory
@@ -99,7 +99,7 @@ Now run the code again (copy it into a new script with a different name) but cha
 Finally, we can calculate `J` and `T_c^{\mathrm{MF}}` by extracting the *ab initio* energy difference from the ``.gpw`` files. Fill in the formulas for `J` and `T_c` below and run the code.
 
 
-.. literalinclude:: get_Tc_mf.py
+.. literalinclude:: get_Tc_mf_student.py
 
 
 
@@ -159,7 +159,7 @@ In the code below, the magnetic anisotropy is calculated for the ferromagnetic g
 2.   Does spin-orbit coupling break the rotational symmetry of the ground state?
 
 
-.. literalinclude:: CrI3_anisotropy.py
+.. literalinclude:: CrI3_anisotropy_student.py
 
 We can also plot the total energy of the ground state as a function of the polar angle `\theta`.
 
