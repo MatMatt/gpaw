@@ -161,34 +161,14 @@ In the code below, the magnetic anisotropy is calculated for the ferromagnetic g
 
 .. literalinclude:: CrI3_anisotropy.py
 
-
 We can also plot the total energy of the ground state as a function of the polar angle `\theta`.
 
 3.   Run the following below and inspect the plot. Does it look like you would expect?
 
 
-.. code::
+.. literalinclude:: CrI3_plot.py
 
-    from gpaw import GPAW
-    from gpaw.spinorbit import soc_eigenstates
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    calc_fm = GPAW('CrI3_fm.gpw')
-    thetas = np.linspace(0, 180, 13)
-
-    e_n = []
-    for theta in thetas:
-	soc = soc_eigenstates(calc_fm, theta=theta, phi=0)
-	e_n.append(soc.calculate_band_energy() / 2)
-
-    e_n = np.array(e_n) - e_n[0]
-
-    plt.figure()
-    plt.plot(thetas, e_n * 1000, 'o-')
-    plt.xlabel(r'$\theta$', size=18)
-    plt.ylabel('E [meV]', size=18)
-    plt.show()
+.. image:: CrI3.svg
 
 Now that we have calculated the anisotropy constant `A`, we are finally in a position to improve our estimate of the Curie temperature of :mol:`CrI_3`. But how do we get the critical temperature if we cannot apply mean-field theory? One way is to perform Monte-Carlo simulations of the classical Heisenberg model as a function of temperature and find the point where the total magnetization vanishes. The results of such simulations are well approximated by the expression [*2D Mater.* **6** 015028 (2019)] (https://iopscience.iop.org/article/10.1088/2053-1583/aaf06d)
 
