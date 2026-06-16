@@ -14,4 +14,4 @@ def workflow():
         with run(script='VI2_gs_teacher.py'):
             run(script='VI2_anisotropy.py')
             run(script='VI2_afm_teacher.py')
-            run(script='VI2_noncol.py')
+            run(script='VI2_noncol.py', cores=4)
