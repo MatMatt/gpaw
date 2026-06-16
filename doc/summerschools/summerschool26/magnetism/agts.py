@@ -11,7 +11,7 @@ def workflow():
         run(script='CrI3_anisotropy_teacher.py', deps=[fm])
         run(script='get_Tc_fit.py')
 
-        run(script='VI2_gs.py')
-        run(script='VI2_afm.py')
-        run(script='VI2_noncol.py')
-        run(script='VI2_anisotropy.py')
+        with run(script='VI2_gs_teacher.py'):
+            run(script='VI2_anisotropy.py')
+            run(script='VI2_afm_teacher.py')
+            run(script='VI2_noncol.py')

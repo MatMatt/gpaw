@@ -9,5 +9,6 @@ de_zx = e_z - e_x
 de_zy = e_z - e_y
 print(f'dE_zx = {de_zx * 1000:1.3f} meV')
 print(f'dE_zy = {de_zy * 1000:1.3f} meV')
+S = 1.5
 A = (de_zx + de_zy) / 2 / S**2
 print(f'A = {A * 1000:1.3f} meV')

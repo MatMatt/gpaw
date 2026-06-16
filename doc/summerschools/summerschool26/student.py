@@ -1,6 +1,8 @@
-# creates: magnetism/CrI3_gs.py
-# creates: magnetism/get_Tc_mf.py
-# creates: magnetism/CrI3_anisotropy.py
+# creates: magnetism/CrI3_gs_student.py
+# creates: magnetism/get_Tc_mf_student.py
+# creates: magnetism/CrI3_anisotropy_student.py
+# creates: magnetism/VI2_gs_student.py
+# creates: magnetism/VI2_afm_student.py
 
 from pathlib import Path
 

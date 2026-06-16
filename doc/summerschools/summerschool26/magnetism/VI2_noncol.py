@@ -2,7 +2,8 @@ import numpy as np
 from ase.io import read
 from ase.visualize import view
 from gpaw import GPAW, PW, MixerDif
-    
+
+layer = read('VI2_relaxed.gpw')
 m = 3
 cell_cv = layer.get_cell()
 layer_nc = layer.repeat((3, 1, 1))
@@ -23,12 +24,23 @@ calc = GPAW(mode=PW(400),
             symmetry='off',
             magmoms=magmoms,
             soc=False,
-            parallel={'domain': 1, 'band': 1},
             kpts=(2, 2, 1))
 layer_nc.calc = calc
 layer_nc.get_potential_energy()
 calc.write('nc_nosoc.gpw')
 
-# ...
 # Include similar calculations here for a ferromagnetic state using
 # the non-collinear framework
+# ...
+# snippet-stop
+magmoms[:] = [m, 0, 0]
+calc = GPAW(mode=PW(400),
+            xc='LDA',
+            mixer=MixerDif(),
+            symmetry='off',
+            magmoms=magmoms,
+            soc=False,
+            kpts=(2, 2, 1))
+layer_nc.calc = calc
+layer_nc.get_potential_energy()
+calc.write('nc_nosoc_fm.gpw')

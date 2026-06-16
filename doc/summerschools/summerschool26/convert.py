@@ -1,9 +1,6 @@
 # creates: batteries/batteries3.ipynb
 # creates: catalysis/n2_on_metal.ipynb, catalysis/neb.ipynb
 # creates: catalysis/vibrations.ipynb, catalysis/convergence.ipynb
-# creates: machinelearning/machinelearning.ipynb
-# creates: excitedstates/es1.ipynb, excitedstates/es2.ipynb
-# creates: excitedstates/es3.ipynb, excitedstates/es4.ipynb
 from pathlib import Path
 from gpaw.utilities.nbrun import py2ipynb
 import sys

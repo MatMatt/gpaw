@@ -20,7 +20,7 @@ you will:
 Our basic reference point will still be the Heisenberg Hamiltonian given by:
 
 .. math::
-  
+
   H = -\frac{1}{2}\sum_{i,j}J_{ij}\mathbf{S}_i\cdot \mathbf{S}_j+A\sum_i(S_i^z)^2
 
 but here we consider the antiferromagnetic case where `J<0`.
@@ -36,11 +36,9 @@ perform the relaxation in the ferromagnetic state, which has a smaller unit cell
 1.   First you should download the relaxed PBE crystal structure. Either, browse the C2DB at https://cmrdb.fysik.dtu.dk/c2db and download
      the ``.xyz`` file for :mol:`VI_2`.
 2.   Fill in the expected ionic value for the V spins `S` below and run the code below to relax the crystal structure. The calculation takes about
-     17 minutes. (Hint: V has the electronic configuration [Ar]3d\ `^3` 4s\ `^2`)
+     17 minutes. (Hint: V has the electronic configuration [Ar]3d\ `^3`\ 4s\ `^2`).
 
-
-.. literalinclude:: VI2_gs.py
-
+.. literalinclude:: VI2_gs_student.py
 
 
 Magnetic anisotropy
@@ -55,7 +53,6 @@ the magnetic anisotropy arising from the spin-orbit coupling.
 3.   Do you expect to the :mol:`VI_2` to exhibit magnetic order at finite temperatures?
 
 
-
 DFT calculations in a repeated cell
 ===================================
 
@@ -67,9 +64,8 @@ two V atoms in the unit cell and it is shown how do a DFT calculation for the an
 2.   Replace the `...` with code to calculate the ferromagnetic state.
 3.   Run the script once you have finalized the missing part for the ferromagnetic state. The calculation takes about 7 minutes.
 
-
-.. literalinclude:: VI2_afm.py
-
+.. literalinclude:: VI2_afm_student.py
+   :end-before: ferromagnetic
 
 
 Calculating J
@@ -143,14 +139,14 @@ As it turn out, the optimal spin structure on a trigonal lattice with antiferrom
 You should obtain the following energy for the 120\ `^\circ` noncollinear configuration:
 
 .. math::
-   
+
   E_{\mathrm{NC}}=E_0+\frac{3}{2}JS^2.
 
 We will now check if we can verify this prediction within the LSDA. To do that we need to perform a noncollinear DFT calculation, which is
 done by the code below.
 
 4.   Read and try to understand the code to perform a noncollinear LSDA calculation in the 120\ `^\circ` noncollinear configuration.
-5.   Replace the `...` with code to make a noncollinear LSDA calculation for the ferromagnetic state as well (we will need this for a late
+5.   Replace the `...` with code to make a noncollinear LSDA calculation for the ferromagnetic state as well (we will need this for a later
      comparison).
 
 Run the cell and verify that the energy per magnetic atom is lower in the 120\ `^\circ` noncollinear configuration compared to both of the
@@ -158,9 +154,9 @@ previous calculated states.
 
 
 .. literalinclude:: VI2_noncol.py
+   :end-before: snippet-stop
 
-    
-    
+
 Noncollinear configuration using spin spirals
 =============================================
 
@@ -189,15 +185,15 @@ conditions using the command ``path = atoms.cell.bandpath('GK', npoints=7).kpts`
 
     import numpy as np
     from ase.io import read
-    from gpaw.new.ase_interface import GPAW
-    
+    from gpaw import GPAW
+
     atoms = layer.copy()
     magmoms = np.zeros((3, 3), float)
     m = 3
     magmoms[0] = [m, 0, 0]
-    
+
     q_c = [?, ?, ?]
-    
+
     calc = GPAW(mode={'name': 'pw',
                       'ecut': 400,
                       'qspiral': q_c},
@@ -210,7 +206,6 @@ conditions using the command ``path = atoms.cell.bandpath('GK', npoints=7).kpts`
     atoms.calc = calc
     energy = atoms.get_potential_energy()
     print(energy)
-
 
 
 Anisotropy and exchange coupling from noncollinear DFT
@@ -230,7 +225,6 @@ the noncollinear calculation as well.
      takes as a reference the first V atom.
 
 How does the computed exchange constant compare to the one obtained from the collinear FM and AFM calculations above?
-
 
 
 Critical temperature?
