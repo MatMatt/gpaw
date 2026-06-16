@@ -6,7 +6,6 @@ tasks_path = Path(__file__).parent / 'tasks.py'
 globals().update(runpy.run_path(tasks_path))
 
 
-
 def workflow(runner):
     from ase.build import bulk
     wf = MaterialsWorkflow(
