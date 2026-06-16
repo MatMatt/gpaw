@@ -16,7 +16,7 @@ uf = UnitCellFilter(layer, mask=[1, 1, 0, 0, 0, 1])
 opt = BFGS(uf)
 opt.run(fmax=0.1)
 
-layer.calc = layer.calc.new(symmetry='off')
+# layer.calc = layer.calc.new(symmetry='off')
 layer.get_potential_energy()
 
 layer.calc.write('VI2_relaxed.gpw')
