@@ -22,9 +22,9 @@ calc.diagonalize_full_hamiltonian()  # determine all bands
 calc.write('Si_groundstate.gpw', 'all')
 # snippet-pw-groundstate-end
 
-nbands = 30,  # number of bands for calculation of self-energy
-bands = (3, 5),  # VB and CB
-ecut = 20.0,  # plane-wave cutoff for self-energy (20-200)
+nbands = 30  # number of bands for calculation of self-energy
+bands = (3, 5)  # VB and CB
+ecut = 20.0  # plane-wave cutoff for self-energy (20-200)
 
 # snippet-pw-g0w0-start
 from gpaw.response.g0w0 import G0W0
@@ -65,8 +65,8 @@ calc.write('Si_lcao_groundstate.gpw', 'all')
 # snippet-lcao-groundstate-end
 
 # snippet-lcao-to-pw-start
-from gpaw.new.calculation import DFTCalculation
-dft = DFTCalculation.from_gpw_file('Si_lcao_groundstate.gpw')
+from gpaw.dft import DFT
+dft = DFT.from_gpw_file('Si_lcao_groundstate.gpw')
 dft.change_mode('pw')
 dft.write_gpw_file('Si_pw_from_lcao_groundstate.gpw', include_wfs=True)
 # snippet-lcao-to-pw-end

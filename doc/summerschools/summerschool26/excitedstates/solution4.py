@@ -52,8 +52,8 @@ calc.write('gs_atoms.gpw', mode='all')
 
 ecut = 50
 nbands = 8
-valence_bands = np.range(0, 4)
-conduction_bands = np.range(4, 8)
+valence_bands = range(0, 4)
+conduction_bands = range(4, 8)
 nbands = 50
 
 # snippet-bse-spectrum-start
