@@ -7,8 +7,8 @@ Part 1: Critical temperature of :mol:`CrI_3`
 In 2017, ferromagnetic order was observed in a monolayer of :mol:`CrI_3` below 45 `K` [*Nature* **546** 270 (2017)]. It comprises the first demonstration of magnetic order in a 2D material and has received a lot of attention due to the peculiar properties of magnetism in 2D. The physics of magnetic order in 2D is rather different than in 3D and in order to understand what is going on we will need to introduce a bit of theory. But before we get to that let us get started with the calculations.
 
 
-In this turorial you will set up and relax a monolayer of 
-:mol:`CrI_3` after which you will calculate its exchange contants and critical 
+In this turorial you will set up and relax a monolayer of
+:mol:`CrI_3` after which you will calculate its exchange contants and critical
 temperature using different models
 
 The procedure will be as follows:
@@ -21,7 +21,7 @@ The procedure will be as follows:
 4) Calculate the single-ion magnetic anisotropy and estimate the critical
    temperature
 
-   
+
 
 DFT calculation - finding the atomic structure of :mol:`CrI_3`
 ==============================================================
@@ -41,14 +41,11 @@ In order to get the script running fast, we have set a few of the computational 
 
 Leave the script running and continue with the theory section below.
 
-
 .. literalinclude:: CrI3_gs.py
 
 
-		    
 A bit of theory
 ===============
-
 
 The Heisenberg model
 --------------------
@@ -58,7 +55,7 @@ If we want to calculate the Curie temperature of :mol:`CrI_3` it is, in principl
 Instead we will consider the Heisenberg Hamiltonian, which captures the basic physics of typical spin systems. It is given by
 
 .. math::
-   
+
   H = -\frac{1}{2}\sum_{i,j}J_{ij}\mathbf{S}_i\cdot \mathbf{S}_j,
 
 where `\mathbf{S}_i` denotes the spin operator at site `i` in units of `\hbar` and `J_{ij}` are magnetic exchange coupling constants. If we want to model a real material with the Heisenberg model we then need to identify a set of magnetic sites and calculate the exchange coupling constants `J_{ij}`.
@@ -71,7 +68,7 @@ where `\mathbf{S}_i` denotes the spin operator at site `i` in units of `\hbar` a
 In the following, we will assume that the physics is dominated by neareast neighbor interactions such that `J_{ij}\equiv J` if atoms `i` and `j` are nearest neighbors and zero otherwise. In 3D systems a reasonable estimate of the Curie temperature can be obtained from mean-field theory as
 
 .. math::
-   
+
   T_c^{\mathrm{MF}}=\frac{NJS(S+1)}{3k_B},
 
 where `k_B` is Boltzmann's constant, `N` is the number of nearest neighbors, and `S` is the maximum value of `S^z_i`
@@ -84,7 +81,7 @@ DFT calculation of `J`
 We now want to make a first principles calculation of the nearest neighbor exchange coupling constant `J`. Since the exchange coupling parametrizes the energy difference between aligned and anti-aligned spin configurations, we can obtain `J` by considering the energy difference between a ferromagnetic and an antiferromagnetic calculation. Note that both can be obtained as collinear DFT ground states subject to different spin constraints. For the :mol:`CrI_3` system, `J` can calculated as
 
 .. math::
-   
+
   J=\frac{E_{\mathrm{AFM}}-E_{\mathrm{FM}}}{3S^2},
 
 where `E_{\mathrm{FM}}` and `E_{\mathrm{AFM}}` are the energies *per magnetic atom* of the ferromagnetic and antiferromagnetic configurations respectively.
@@ -121,13 +118,13 @@ The Heisenberg model above has a continuous rotational symmetry in the spin degr
 In the Heisenberg model it is straightforward to calculate the collective magnetic excitations of the system, yielding a quadratic spin wave dispersion for ferromagnetic systems
 
 .. math::
-   
+
   \varepsilon(q)=Dq^2
 
 in the limit of `q\rightarrow 0`. The spin wave excitations are bosons lowering the total spin along the magnetized direction by a single unit. Hence, the magnetization at finite temperatures `T` can be calculated from
 
 .. math::
-   
+
   M=M_0 - \int_0^\infty\frac{g(\epsilon)d\varepsilon}{e^{\varepsilon/k_B T} - 1}
 
 where `M_0` is the ground state magnetization and `g(\varepsilon)` is the density of states for the spin waves.
@@ -144,7 +141,7 @@ Thanks to the Mermin-Wagner theorem, magnetic order is only possible in two dime
 We assume that :mol:`CrI_3` is isotropic in the plane of the monolayer and introduce an anisotropy term in the Heisenberg Hamiltonian of the form
 
 .. math::
-   
+
   H_{\mathrm{ani}}=A\sum_i(S_i^z)^2,
 
 where we have chosen the `z`-direction to be orthogonal to the plane.
@@ -179,14 +176,14 @@ We can also plot the total energy of the ground state as a function of the polar
 
     calc_fm = GPAW('CrI3_fm.gpw')
     thetas = np.linspace(0, 180, 13)
-    
+
     e_n = []
     for theta in thetas:
-        soc = soc_eigenstates(calc_fm, theta=theta, phi=0)
-        e_n.append(soc.calculate_band_energy() / 2)
-    
+	soc = soc_eigenstates(calc_fm, theta=theta, phi=0)
+	e_n.append(soc.calculate_band_energy() / 2)
+
     e_n = np.array(e_n) - e_n[0]
-    
+
     plt.figure()
     plt.plot(thetas, e_n * 1000, 'o-')
     plt.xlabel(r'$\theta$', size=18)
