@@ -23,6 +23,8 @@ More information:
 [2]: https://gpaw.readthedocs.io/documentation/basic.html#parameters
 
 .. literalinclude:: eads.py
+   :begin-after: web-page
+   :end-before: snippet-slab
 
 
 Clean slab
@@ -33,6 +35,8 @@ We use the [ase.build.hcp0001()][3] function to build the Ru(0001) surface.
 [3]: https://ase-lib.org/ase/build/surface.html#ase.build.hcp0001
 
 .. literalinclude:: eads.py
+   :start-after: snippet-slab
+   :end-before: snippet-nslab
 
 
 N/Ru(0001)
@@ -41,6 +45,8 @@ N/Ru(0001)
 Now, let's add a nitrogen atom in the "HCP" site:
 
 .. literalinclude:: eads.py
+   :start-after: snippet-nslab
+   :end-before: snippet-nslab
 
 Alternatively, you can just use the [add_adsorbate()][4] function:
 
@@ -48,12 +54,16 @@ Alternatively, you can just use the [add_adsorbate()][4] function:
 """
 
 .. literalinclude:: eads.py
+   :start-after: snippet-hcp
+   :end-before: snippet-hcp-end
 
 .. image:: nru2.png
 
 Now, calculate the total energy and the unrelaxed adsorption energy:
 
 .. literalinclude:: eads.py
+   :start-after: snippet-eads
+   :end-before: snippet-eads-end
 
 If you also calculate for forces (``f = nslab.get_forces()``),
 you will see that the force on the N-atom is quite big (``print(f[-1])``).
@@ -67,6 +77,7 @@ for this task.
 [6]: https://ase-lib.org/ase/constraints.html#ase.constraints.FixAtoms
 
 .. literalinclude:: eads.py
+   :start-after: snippet-eads-end
 
 
 Convergence
