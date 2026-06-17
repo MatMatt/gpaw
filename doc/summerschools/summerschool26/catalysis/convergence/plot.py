@@ -4,10 +4,14 @@ from pathlib import Path
 import json
 
 results = json.loads(Path('results.json').read_text())
-
+heights = {}
+eads = {}
+for n, k, ecut, h, e in results:
+    heights[(n, k, ecut)] = h
+    eads[(n, k, ecut)] = e
 N = range(1, 10)
-h = [results[(n, 7, 400)][0] for n in N]
-ea = [results[(n, 7, 400)][1] for n in N]
+h = [heights[(n, 7, 400)] for n in N]
+ea = [eads[(n, 7, 400)] for n in N]
 fig, axs = plt.subplots(2, 1, sharex=True)
 fig.subplots_adjust(hspace=0)
 axs[0].plot(N, h)
@@ -20,8 +24,8 @@ plt.savefig('layers.svg')
 
 # %%
 K = range(4, 18)
-h = [results[(2, k, 400)][0] for k in K]
-ea = [results[(2, k, 400)][1] for k in K]
+h = [heights[(2, k, 400)] for k in K]
+ea = [eads[(2, k, 400)] for k in K]
 fig, axs = plt.subplots(2, 1, sharex=True)
 fig.subplots_adjust(hspace=0)
 axs[0].plot(K, h)
@@ -33,8 +37,8 @@ plt.savefig('kpts.svg')
 
 # %%
 E = range(350, 801, 50)
-h = [results[(2, 7, e)][0] for e in E]
-ea = [results[(2, 7, e)][1] for e in E]
+h = [heights[(2, 7, e)] for e in E]
+ea = [eads[(2, 7, e)] for e in E]
 fig, axs = plt.subplots(2, 1, sharex=True)
 fig.subplots_adjust(hspace=0)
 axs[0].plot(E, h)

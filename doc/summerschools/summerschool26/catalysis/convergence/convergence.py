@@ -93,28 +93,28 @@ def main():
         en = atom_energy(ecut)
         eatom[ecut] = en
 
-    # Save height and adsorption energy in a dict where the
-    # keys are tuples of layers, k-point and ecut:
-    results: dict[tuple[int, int, int], tuple[float, float]] = {}
+    # Collect (layers, k-points, ecut, height, adsorption energy)
+    # tuple in a list:
+    results: list[tuple[int, int, int, float, float]] = []
 
     # ecut convergence:
     for ecut in range(350, 801, 50):
         h, enru, eru = adsorb(h, 2, 7, ecut)
-        results[(2, 7, ecut)] = (h, enru - eru - eatom[ecut])
+        results.append((2, 7, ecut, h, enru - eru - eatom[ecut]))
 
     # Number of layers convergence:
     for n in range(1, 10):
         if n == 2:
             continue  # already done
         h, enru, eru = adsorb(h, n, 7, 400)
-        results[(n, 7, 400)] = (h, enru - eru - eatom[ecut])
+        results.append((n, 7, 400, h, enru - eru - eatom[ecut]))
 
     # Number of k-points convergence:
     for k in range(4, 18):
         if k == 7:
             continue  # already done
         h, enru, eru = adsorb(h, 2, k, 400)
-        results[(2, k, 400)] = (h, enru - eru - eatom[ecut])
+        results.append((2, k, 400, h, enru - eru - eatom[ecut]))
 
     if world.rank == 0:
         Path('result.json').write_text(
