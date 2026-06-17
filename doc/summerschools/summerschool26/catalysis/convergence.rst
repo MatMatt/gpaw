@@ -1,10 +1,3 @@
-# %%
-# teacher
-import ase.visualize as viz
-viz.view = lambda atoms, repeat=None: None
-
-# %%
-"""
 Convergence checks
 ==================
 
@@ -15,10 +8,8 @@ respect to:
 * number of layers
 * number of k-points in the BZ
 * plane-wave cutoff energy
-"""
 
-# %%
-"""
+
 Nitrogen atom
 -------------
 

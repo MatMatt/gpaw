@@ -1,4 +1,4 @@
-.. _catalysis_part5_convergence:
+.. _catalysis_convergence:
 
 Convergence
 ===========
