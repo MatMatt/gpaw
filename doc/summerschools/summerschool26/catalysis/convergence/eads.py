@@ -1,6 +1,6 @@
 # web-page: nru2.png
 from ase import Atoms
-from gpaw import GPAW, PW, Davidson
+from gpaw import GPAW, PW
 
 ecut = 400.0
 vacuum = 4.0

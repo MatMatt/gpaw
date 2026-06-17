@@ -17,10 +17,7 @@ Nitrogen atom
 
 First step is an isolated nitrogen atom which has a magnetic moment of 3.
 More information:
-[Atoms][1] and [GPAW parameters][2].
-
-[1]: https://ase-lib.org/ase/atoms.html#ase.Atoms
-[2]: https://gpaw.readthedocs.io/documentation/basic.html#parameters
+:class:`ase.Atoms` and :ref:`GPAW parameters <parameters>`.
 
 .. literalinclude:: eads.py
    :begin-after: web-page
@@ -30,9 +27,7 @@ More information:
 Clean slab
 ----------
 
-We use the [ase.build.hcp0001()][3] function to build the Ru(0001) surface.
-
-[3]: https://ase-lib.org/ase/build/surface.html#ase.build.hcp0001
+We use the :func:`ase.build.hcp0001` function to build the Ru(0001) surface.
 
 .. literalinclude:: eads.py
    :start-after: snippet-slab
@@ -48,10 +43,8 @@ Now, let's add a nitrogen atom in the "HCP" site:
    :start-after: snippet-nslab
    :end-before: snippet-nslab
 
-Alternatively, you can just use the [add_adsorbate()][4] function:
-
-[4]: https://ase-lib.org/ase/build/surface.html#ase.build.add_adsorbate
-"""
+Alternatively, you can just use the
+:func:`ase.build.add_adsorbate` function:
 
 .. literalinclude:: eads.py
    :start-after: snippet-hcp
@@ -69,12 +62,9 @@ If you also calculate for forces (``f = nslab.get_forces()``),
 you will see that the force on the N-atom is quite big (``print(f[-1])``).
 Let's freeze the surface and relax the
 adsorbate.  We use
-[ase.optimize.BFGSLineSearch][5] and
-[ase.constraints.FixAtoms][6]
+:class:`ase.optimize.BFGSLineSearch` and
+:class:`ase.constraints.FixAtoms`
 for this task.
-
-[5]: https://ase-lib.org/ase/optimize.html#module-ase.optimize
-[6]: https://ase-lib.org/ase/constraints.html#ase.constraints.FixAtoms
 
 .. literalinclude:: eads.py
    :start-after: snippet-eads-end
