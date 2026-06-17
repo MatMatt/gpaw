@@ -20,5 +20,5 @@ def main():
             '\n'.join(lines) + '\n')
 
 
-if __name__ == '__main__':
+if 1:  # __name__ == '__main__':
     main()
