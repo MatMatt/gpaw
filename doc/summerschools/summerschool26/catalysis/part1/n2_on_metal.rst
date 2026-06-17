@@ -128,8 +128,7 @@ The calculation will take a while (10-15 minutes). While it is running please
 follow the guidelines in the **Exercise** section below.
 
 Once the calculation is finished we can calculate the adsorption energy as:
-
-:math:`E_{\mathrm{ads}} = E_{\mathrm{slab+N}_2} - (E_{\mathrm{slab}} + E_{\mathrm{N}_2})`
+`E_{\mathrm{ads}} = E_{\mathrm{slab+N}_2} - (E_{\mathrm{slab}} + E_{\mathrm{N}_2})`.
 
 
 

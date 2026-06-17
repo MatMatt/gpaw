@@ -71,7 +71,7 @@ def adsorb(height: float = 1.2,
     return height, enru, eru
 
 
-def atom(ecut: float = 400) -> float:
+def atom_energy(ecut: float = 400) -> float:
     """Calculate energy of spin-polarized nitrogen atom."""
     molecule = Atoms('N', magmoms=[3])
     molecule.center(vacuum=4.0)
@@ -90,11 +90,11 @@ def main():
     # N-atom energies:
     eatom = {}
     for ecut in range(350, 801, 50):
-        en = atom(ecut)
+        en = atom_energy(ecut)
         eatom[ecut] = en
 
     # Save height and adsorption energy in a dict where the
-    # key is a tuple of layers, k-point and ecut:
+    # keys are tuples of layers, k-point and ecut:
     results: dict[tuple[int, int, int], tuple[float, float]] = {}
 
     # ecut convergence:
