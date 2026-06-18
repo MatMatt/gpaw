@@ -119,8 +119,9 @@ class BaseMixer:
         else:
             out.data[:] = n_sX.data
 
-        if GPAW_NO_C_EXTENSION:
+        if self.xp is not np or GPAW_NO_C_EXTENSION:
             # We can't compensate...
+            # Hopefully one day, we will be able to handle this.
             return out
 
         # Get compensation charge coefficients
