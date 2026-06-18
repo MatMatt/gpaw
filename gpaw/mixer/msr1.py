@@ -205,7 +205,6 @@ class MSR1Mixer(BaseMixer):
 
         trig_fact = self.A_lims[-1] * 2 / np.pi
         A_target = np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact
-        # A_target = np.abs(A1 / A2)
         if nold > 2:
             B_target = np.abs(B1 / B2) + self.B_boost
             A_ratio = np.sqrt(A_target * self.A) / self.A
