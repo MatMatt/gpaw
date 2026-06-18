@@ -76,7 +76,11 @@ class PulayMixer(BaseMixer):
         self.H_hh[:nold, nold - 1] = H_h
         self.H_hh[nold - 1, :nold] = H_h
 
-        H_hh = self.xp.linalg.inv(self.H_hh[:nold, :nold])
+        try:
+            H_hh = self.xp.linalg.inv(self.H_hh[:nold, :nold])
+        except (self.xp.linalg.LinAlgError, ZeroDivisionError):
+            H_hh = self.xp.zeros((nold, nold))
+            H_hh[-1, -1] = 1
         alpha_h = H_hh.sum(1)
         alpha_h /= alpha_h.sum()
         self.world.broadcast(alpha_h, 0)
