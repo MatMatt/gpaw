@@ -91,7 +91,7 @@ now analyse the results.
 Try this:
 
 .. literalinclude:: plot.py
-   :start-after: web-page
+   :start-after: creates
    :end-before: layers.svg
 
 This should produce this:
