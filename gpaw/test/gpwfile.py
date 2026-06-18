@@ -1785,7 +1785,7 @@ class GPWFiles(CachedFilesHandler):
             nbands=50,
             occupations=FermiDirac(0.001),
             parallel={'domain': 1},
-            convergence={'bands': 26},
+            convergence={'bands': 26, 'density': 1e-5},
             kpts={'size': (3, 3, 1), 'gamma': True},
             symmetry=symmetry)
         atoms.get_potential_energy()

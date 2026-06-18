@@ -513,7 +513,7 @@ class MSR1(Mixer):
                  nmaxold: int = 10,
                  beta: float = 0.05,
                  reg: float = 5e-3,
-                 gb_scale: float = 1.9,
+                 gb_scale: float = 1.0,
                  max_A: float = 0.75,
                  trust_scale: float = 1.0,
                  soft_lim: float = 1.5,
