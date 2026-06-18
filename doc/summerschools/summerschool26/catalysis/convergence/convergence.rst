@@ -20,7 +20,7 @@ More information:
 :class:`ase.Atoms` and :ref:`GPAW parameters <parameters>`.
 
 .. literalinclude:: eads.py
-   :begin-after: web-page
+   :start-after: web-page
    :end-before: snippet-slab
 
 
@@ -91,7 +91,7 @@ now analyse the results.
 Try this:
 
 .. literalinclude:: plot.py
-   :begin-after: web-page
+   :start-after: web-page
    :end-after: layers
 
 This should produce this:
