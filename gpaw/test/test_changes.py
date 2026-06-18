@@ -8,7 +8,6 @@ from gpaw.new.ase_interface import GPAW
 
 
 def test_changes():
-
     etot_hse = -9.773299
     fz = 1.44907
     forces_hse = np.array([[0, 0, fz], [0, 0, -fz]])
@@ -116,18 +115,18 @@ def test_lcao_to_x(mode):
     atoms = Atoms('H', magmoms=[1])
     atoms.center(vacuum=1.5)
 
-    dft = DFT(atoms, mode='lcao', symmetry='off')
+    dft = DFT(atoms, mode='lcao', symmetry='off',
+              convergence={'density': 1e-5})
     dft.converge()
 
     dft.change_mode(mode)
     dft.converge()
-
     atoms.positions[:] += 0.1
     dft.move_atoms(atoms)
     dft.converge()
     e1 = dft.calculate_energy()
 
-    dft = DFT(atoms, mode=mode)
+    dft = DFT(atoms, mode=mode, convergence={'density': 1e-5})
     dft.converge()
     e2 = dft.calculate_energy()
     assert e1 == pytest.approx(e2)
