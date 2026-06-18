@@ -256,7 +256,8 @@ def test_NiO_withU(in_tmp_dir, xc, comm, add_cwd_to_setup_paths):
                 xc=xc,
                 setups={'Ni': ':d,4.0'},
                 kpts={'size': (2, 2, 2), 'gamma': True},
-                occupations=FermiDirac(0.001),
+                eigensolver={'niter': 3},
+                occupations=FermiDirac(0.01),
                 parallel=dict(domain=1),
                 communicator=comm)
     a.calc = calc
