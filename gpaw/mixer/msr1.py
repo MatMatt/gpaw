@@ -120,7 +120,7 @@ class MSR1Mixer(BaseMixer):
         # Step 2: Do a pratt-step if nold <= 1, else discard bad steps
         if nold <= 1:
             return self.pratt_step(density)
-        
+
         Rc_last_sX = self.Rc_hsX[-2]
         dNt = self.calculate_charge_sloshing(self.Rc_hsX[-1])
         increased_error = dNt / self.last_dNt
@@ -216,7 +216,7 @@ class MSR1Mixer(BaseMixer):
             self.A = np.clip(self.A, self.A_lims[0], self.A_lims[1])
             B_ratio = (self.B + B_target) / (2 * self.B)
             self.B *= np.clip(B_ratio, self.B_rate_ratio[0],
-                              self.B_rate_ratio[1] 
+                              self.B_rate_ratio[1]
                               if increased_error < self.soft_lim
                               else 1.0)
             self.B = np.clip(self.B, self.B_lims[0], self.B_lims[1])
@@ -269,7 +269,7 @@ class MSR1Mixer(BaseMixer):
             try:
                 lamb = root_scalar(errfct, bracket=[0, 5e1])
                 root = lamb.root
-            except ValueError as e:
+            except ValueError:
                 root = 5e1
 
             beta_h = self.xp.linalg.solve(
