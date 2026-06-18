@@ -37,6 +37,9 @@ gpaw-runscript = 'gpaw.tools.gpaw_runscript:main'
 gpaw-setup = 'gpaw.atom.gpaw_setup:main'
 gpaw-upfplot = 'gpaw.upf:main_plot'
 
+[project.entry-points."ase.ioformats"]
+gpaw-log = "gpaw.ase_plugin:io"
+
 [project.optional-dependencies]
 docs = [
     'sphinx-rtd-theme',
@@ -51,7 +54,7 @@ docs = [
 devel = [
     'flake8',
     'mypy',
-    'pytest>=7.0.0',
+    'pytest>=7.0.0,<9.1',
     'pytest-xdist',
 ]
 
