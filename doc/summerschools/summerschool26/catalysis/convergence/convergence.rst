@@ -92,7 +92,7 @@ Try this:
 
 .. literalinclude:: plot.py
    :start-after: web-page
-   :end-after: layers
+   :end-before: layers.svg
 
 This should produce this:
 
