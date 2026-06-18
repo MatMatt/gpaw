@@ -91,9 +91,6 @@ class FFTMetric(BaseMetric):
         # in real space. This may change in the future.
 
         ekin_G = self.xp.asarray(self.pw.ekin_G)
-        # w_G = (self.sigma + ekin_G) \
-        #     / (self.sigma + self.weight * ekin_G)
-       
         w_G = (self.weight * self.sigma + ekin_G) / (self.sigma + ekin_G)
 
         assert isinstance(n_sX, UGArray)
