@@ -1,4 +1,4 @@
-# web-page: layers.svg, kpts.svg, ecut.svg
+# creates: layers.svg, kpts.svg, ecut.svg
 from matplotlib import pyplot as plt
 from pathlib import Path
 import json
@@ -9,6 +9,7 @@ eads = {}
 for n, k, ecut, h, e in results:
     heights[(n, k, ecut)] = h
     eads[(n, k, ecut)] = e
+
 N = range(1, 10)
 h = [heights[(n, 7, 400)] for n in N]
 ea = [eads[(n, 7, 400)] for n in N]

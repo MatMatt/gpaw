@@ -117,7 +117,7 @@ def main():
         results.append((2, k, 400, h, enru - eru - eatom[ecut]))
 
     if world.rank == 0:
-        Path('result.json').write_text(
+        Path('results.json').write_text(
             json.dumps(results, indent=1))
 
 
