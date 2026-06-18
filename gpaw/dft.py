@@ -468,10 +468,7 @@ class NoMixing(Mixer):
         self.g_ss = None
 
     def todict(self):
-        return {'name': self.name,
-                'weight': self.weight,
-                'sigma': self.sigma,
-                'g_ss': self.g_ss}
+        return {'name': self.name}
 
     def build(self, **kwargs):
         metric = self._build_metric(self.weight, self.sigma, self.g_ss,

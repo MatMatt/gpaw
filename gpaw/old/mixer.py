@@ -991,8 +991,7 @@ class SeparateSpinMixerDriver:
     def get_basemixers(self, nspins):
         if 'name' in self.kwargs:
             # Forwards compatibility
-            name = self.kwargs.pop('name')
-            self.kwargs['backend'] = name
+            self.kwargs.pop('name')
         return [self.basemixerclass(**self.kwargs)
                 for _ in range(nspins)]
 
