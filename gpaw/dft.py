@@ -487,7 +487,7 @@ class Pulay(Mixer):
                  nmaxold: int = 16,
                  beta: float = 0.08,
                  weight: float = 200.0,
-                 sigma: float = 4.0,
+                 sigma: float = 0.02,
                  g_ss: ArrayND | None = None):
         self.mixer_params = {'nmaxold': nmaxold,
                              'beta': beta}
@@ -513,13 +513,13 @@ class MSR1(Mixer):
                  nmaxold: int = 10,
                  beta: float = 0.05,
                  reg: float = 5e-3,
-                 gb_scale: float = 0.95,
+                 gb_scale: float = 1.9,
                  max_A: float = 0.75,
-                 trust_scale: float = 1.2,
+                 trust_scale: float = 1.0,
                  soft_lim: float = 1.5,
                  hard_lim: float = 2.0,
                  weight: float = 200.0,
-                 sigma: float = 4.0,
+                 sigma: float = 0.02,
                  g_ss: ArrayND | None = None):
         self.mixer_params = {'nmaxold': nmaxold,
                              'beta': beta,
