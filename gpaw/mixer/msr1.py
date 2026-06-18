@@ -53,12 +53,12 @@ class MSR1Mixer(BaseMixer):
         self.soft_lim = soft_lim
         self.hard_lim = hard_lim
         self.A_lims: list[float] = [0.02, max_A]
-        self.B_lims: list[float] = [0.7, 1.2]
-        self.A_rate_ratio: list[float] = [3 / 5, 5 / 3]
-        self.B_rate_ratio: list[float] = [9 / 10, 10 / 9]
+        self.B_lims: list[float] = [0.2, 1.0]
+        self.A_rate_ratio: list[float] = [0.5, 1.5]
+        self.B_rate_ratio: list[float] = [3 / 4, 4 / 3]
         self.A: float = 0.0
         self.B: float = 1.0
-        self.B_boost = 1e-1
+        self.B_boost = 0.1
         self.trust_radius: None | float = None
         super().__init__(*args, **kwargs)
 
@@ -207,9 +207,8 @@ class MSR1Mixer(BaseMixer):
         A_target = np.arctan(np.abs(A1 / (A2 * trig_fact))) * trig_fact
         # A_target = np.abs(A1 / A2)
         if nold > 2:
-            B_target = max(min(1, B1 / B2 + self.B_boost),
-                           B1 / B2)
-            A_ratio = ((A_target * self.A) ** 0.5) / self.A
+            B_target = np.abs(B1 / B2) + self.B_boost
+            A_ratio = np.sqrt(A_target * self.A) / self.A
             self.A *= np.clip(
                 A_ratio, self.A_rate_ratio[0],
                 self.A_rate_ratio[1] if increased_error < self.soft_lim
@@ -240,11 +239,7 @@ class MSR1Mixer(BaseMixer):
         if self.trust_radius is None:
             self.trust_radius = trust_radius
         else:
-            trust_radius = (self.trust_radius * trust_radius) ** 0.5
-            self.trust_radius = trust_radius if \
-                increased_error < self.soft_lim \
-                else min(trust_radius, self.trust_radius)
-            # self.trust_radius = trust_radius
+            self.trust_radius = (self.trust_radius * trust_radius) ** 0.5
 
         self.pk_1sX.data[:] = 0
         self.uk_1sX.data[:] = self.Rc_hsX[-1].data
@@ -282,7 +277,6 @@ class MSR1Mixer(BaseMixer):
             )
             scale_factor = self.trust_radius / predicted_radius
             A *= scale_factor
-            self.A *= scale_factor**0.5
         else:
             scale_factor = 1
             beta_h = alpha_h
