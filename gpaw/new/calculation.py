@@ -547,8 +547,7 @@ class DFT:
         ibzwfs.fermi_levels = fermi_levels
 
         potential = Potential(vt_sR=vt_sR, dH_asii=dH_asp.to_full(),
-                              dedtaut_sR=dedtaut_sR, vHt_x=vHt_x,
-                              e_stress=self.potential.e_stress)
+                              dedtaut_sR=dedtaut_sR, vHt_x=vHt_x)
 
         density = Density.from_data_and_setups(
             nt_sR, taut_sR, D_asp.to_full(),
