@@ -109,7 +109,7 @@ class PotentialCalculator:
                   vHt_x: XArray | None = None,
                   kpt_band_comm: MPIComm | None = None
                   ) -> tuple[Potential, DFTEnergies, AtomArrays]:
-        energies, vt_sR, dedtaut_sr, vHt_x, V_aL, e_stress = (
+        energies, vt_sR, dedtaut_sr, vHt_x, V_aL = (
             self.calculate_pseudo_potential(density, ibzwfs, vHt_x))
 
         for ext in self.extensions:
@@ -158,7 +158,7 @@ class PotentialCalculator:
                 print(f'{key:10} {energies[key] * Ha:15.9f} {e * Ha:15.9f}')
             energies[key] += e
 
-        return (Potential(vt_sR, dH_asii, dedtaut_sR, vHt_x, e_stress),
+        return (Potential(vt_sR, dH_asii, dedtaut_sR, vHt_x),
                 DFTEnergies(**energies),
                 V_aL)
 
