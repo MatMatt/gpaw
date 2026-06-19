@@ -147,7 +147,7 @@ def write_dft_state(writer: ulm.Writer | ulm.DummyWriter,
     """Common function shared between DFT and RTTDDFT. """
     density.write_to_gpw(writer.child('density'), flags)
     potential.write_to_gpw(writer.child('hamiltonian'), flags)
-    writer.write(e_stress=potential.e_stress * Ha)
+    # writer.write(e_stress=potential.e_stress * Ha)
     energies.write_to_gpw(writer.child('energy_contributions'))
     wf_writer = writer.child('wave_functions')
     ibzwfs.write(wf_writer, flags=flags)
@@ -419,7 +419,7 @@ def read_dft_state(reader: ulm.Reader,
     if reader.version >= 6:
         ec = {name: e / ha
               for name, e in reader.energy_contributions.asdict().items()}
-        e_stress = reader.e_stress / ha
+        # e_stress = reader.e_stress / ha
     else:
         NAMES = ['kinetic', 'coulomb', 'zero', 'external',
                  'xc', 'entropy',
@@ -432,11 +432,11 @@ def read_dft_state(reader: ulm.Reader,
         ec['kinetic_correction'] = ec['kinetic'] - ec['band']
         ec['extrapolation'] = (ec.pop('total_extrapolated') -
                                ec.pop('total_free'))
-        e_stress = ec.pop('stress', np.nan) / ha
+        # e_stress = ec.pop('stress', np.nan) / ha
 
     energies = DFTEnergies(**ec)
 
-    potential = Potential(vt_sR, dH_asp.to_full(), dedtaut_sR, vHt_x, e_stress)
+    potential = Potential(vt_sR, dH_asp.to_full(), dedtaut_sR, vHt_x)
     ibzwfs = builder.read_ibz_wave_functions(reader)
 
     return builder, params, (ibzwfs, density, potential, energies)
