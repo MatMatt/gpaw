@@ -65,8 +65,7 @@ class PotentialCalculator:
                                               UGArray,
                                               UGArray,
                                               XArray,
-                                              AtomArrays,
-                                              float]:
+                                              AtomArrays]:
         raise NotImplementedError
 
     def move(self, relpos_ac, atomdist):

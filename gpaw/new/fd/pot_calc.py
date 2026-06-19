@@ -139,8 +139,7 @@ class FDPotentialCalculator(PotentialCalculator):
                 vt_sR,
                 dedtaut_sr,
                 vHt_r,
-                V_aL,
-                np.nan)
+                V_aL)
 
     def move(self, relpos_ac, atomdist):
         super().move(relpos_ac, atomdist)
