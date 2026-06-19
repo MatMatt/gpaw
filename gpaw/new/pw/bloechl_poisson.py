@@ -216,7 +216,7 @@ class BloechlPAWPoissonSolver(PAWPoissonSolver):
         e_coulomb = comm.sum_scalar(e_coulomb1 / comm.size +
                                     e_coulomb2 +
                                     e_coulomb3)
-        self.de_stress = -(e_coulomb2 + e_coulomb3)
+        self.de_stress = -(0*e_coulomb2 + e_coulomb3)
 
         return e_coulomb, vHt_g, V_aL
 
@@ -263,8 +263,8 @@ class BloechlPAWPoissonSolver(PAWPoissonSolver):
         v_vv = self.vhat_aLg.stress_contribution(nt_g, Q_aL)
         g_vv = self.ghat_aLg.stress_contribution(vHt_g, Q_aL)
         from ase.units import Ha, Bohr
-        print(pair_pot_stress_vv * Ha / Bohr**3 / self.pwg.volume)
-        print(v_vv * Ha / Bohr**3 / self.pwg.volume)
-        print(g_vv * Ha / Bohr**3 / self.pwg.volume)
+        print(np.trace(pair_pot_stress_vv) * Ha / Bohr**3 / self.pwg.volume)
+        print(np.trace(v_vv) * Ha / Bohr**3 / self.pwg.volume)
+        print(np.trace(g_vv) * Ha / Bohr**3 / self.pwg.volume)
         print(self.de_stress * Ha / Bohr**3 / self.pwg.volume)
-        return v_vv + g_vv - pair_pot_stress_vv - self.de_stress * np.eye(3)
+        return v_vv + g_vv + pair_pot_stress_vv - self.de_stress * np.eye(3)
