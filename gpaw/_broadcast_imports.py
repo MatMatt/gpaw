@@ -117,7 +117,7 @@ elif GPAW_MPI_BACKEND == 'serial':
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 '''.lstrip()  # noqa: E122
         )
-        warnings.warn(msg)
+        raise RuntimeError(msg)
 
     world = None  # type: ignore
 else:
