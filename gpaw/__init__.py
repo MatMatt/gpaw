@@ -62,12 +62,13 @@ GPAW_MPI_BACKEND = os.environ.get('GPAW_MPI_BACKEND')
 GPAW_MPI_OPTIONS = os.environ.get('GPAW_MPI_OPTIONS')
 if GPAW_MPI_OPTIONS is not None:
     msg = (
-        "\n\n"
-        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        "WARNING! The environment variable GPAW_MPI_OPTIONS is deprecated.\n"
-        "Setting it will raise an error in the future.\n"
-        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-    )
+        '\n\n'
+        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+        'WARNING! The environment variable GPAW_MPI_OPTIONS is deprecated.\n'
+        'Setting it will raise an error in the future.\n'
+        'More information here:\n'
+        '  https://gpaw.readthedocs.io/releasenotes.html#mpichanges\n'
+        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n')
     warnings.warn(msg)
 
 
