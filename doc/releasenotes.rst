@@ -16,6 +16,8 @@ Git master branch
 
 * **Important changes in launching GPAW with MPI parallelization**
 
+  .. _mpichanges:
+
   * GPAW no longer enables MPI automatically when imported from a normal
     Python interpreter (``python``).
     To run GPAW with MPI parallelization, use ``gpaw python`` or
@@ -133,7 +135,6 @@ Git master branch
   Systems with inversion symmetry and calculations with ``symmetry='off'``
   were not affected by this bug.
 
-
 * PW and FD eigensolvers will now automatically use Scalapack for sub-space
   diagonalization when we have 1000 or more bands.
 
@@ -223,6 +224,7 @@ Git master branch
 * Updated the reciprocal density metric to not deal with the G=(0,0,0)
   component in an arbitrary manner. This should ensure more consistent SCF
   performance.
+
 
 Version 25.7.0
 ==============

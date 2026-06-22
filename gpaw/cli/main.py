@@ -57,6 +57,8 @@ def hook(parser, args):
 ! To enable MPI parallelization, run GPAW using MPI launcher instead:     !
 ! `mpiexec -n N gpaw <sub-command>` or `srun gpaw <sub-command>` or       !
 ! a variation thereof.                                                    !
+! More information here:                                                  !
+!   https://gpaw.readthedocs.io/releasenotes.html#mpichanges              !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 '''  # noqa: E122
         )
