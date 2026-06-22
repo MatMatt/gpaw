@@ -32,16 +32,11 @@ with the ``--dry-run=N`` command line option::
 The output will contain also the "Calculator" RAM Memory estimate per process.
 
 In order to run GPAW in parallel, you
-do one of these two::
+do this::
 
     $ mpiexec -n <cores> gpaw python script.py
-    $ gpaw -P <cores> python script.py
-    $ mpiexec -n <cores> python3 script.py
 
-The first two are the recommended ones:  The *gpaw* script will make sure
-that imports are done in an efficient way.
-
-.. tip::
+.. tippppppppppppppppppppppppppppppppppp::
 
    You can use the :envvar:`GPAW_MPI_OPTIONS` to pass options to ``mpiexex``.
    Example::
