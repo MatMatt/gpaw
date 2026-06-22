@@ -69,11 +69,22 @@ Git master branch
   * The ``gpaw -P N python`` shortcut and ``GPAW_MPI_OPTIONS`` environment
     variable has been deprecated.
 
-    * Instead of the previous ``GPAW_MPI_OPTIONS="--mpi-options" gpaw -P N python``
-      triggering hard-coded ``mpiexec``,
-      GPAW should now be launched explicitly through the MPI
-      launcher, for example with ``mpiexec -n N --mpi-options gpaw python`` or
-      ``srun gpaw python``.
+    Instead of the previous
+    ``GPAW_MPI_OPTIONS="--mpi-options" gpaw -P N python``
+    triggering hard-coded ``mpiexec``,
+    GPAW should now be launched explicitly through the MPI
+    launcher, for example with ``mpiexec -n N --mpi-options gpaw python`` or
+    ``srun gpaw python``.
+
+    .. tip::
+
+       In Bash, one can make a shortcut like this::
+
+         $ gp() { N=$1; shift; mpiexec -n $N --mpi-options gpaw python $*; }
+
+       and then run GPAW scripts in parallel like this::
+
+         $ gp 16 script.py
 
 * :ref:`newgpaw` is now the default.
 
