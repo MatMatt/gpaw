@@ -22,7 +22,6 @@ data and will crash or deadlock if master sends anything else.
 import marshal
 import os
 import sys
-import warnings
 from importlib.machinery import ModuleSpec, PathFinder
 
 import gpaw
