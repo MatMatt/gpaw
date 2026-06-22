@@ -90,30 +90,32 @@ elif GPAW_MPI_BACKEND == 'serial':
     if probably_executed_by_mpi_launcher():
         msg = (
 '''\n
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! WARNING!                                            !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! GPAW appears to be running inside MPI launcher,     !
-! but MPI parallelism is disabled.                    !
-! Steps required to enable MPI parallelization:       !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WARNING!                                                    !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GPAW appears to be running inside MPI launcher,             !
+! but MPI parallelism is disabled.                            !
+! Steps required to enable MPI parallelization:               !
 '''  # noqa: E122
         )
         if not cgpaw.have_mpi:
             msg += (
 '''
-! - Build GPAW with MPI support                       !
+! - Build GPAW with MPI support                               !
 '''.lstrip()  # noqa: E122
             )
         msg += (
 '''
-! - Run GPAW using `gpaw python` and MPI launcher:    !
-!   - `mpiexec -n N gpaw python script.py` or         !
-!   - `srun gpaw python script.py` or                 !
-!   - a variation thereof                             !
-! - Alternatively to `gpaw python`, set               !
-!   the environment variable GPAW_MPI_BACKEND=cgpaw   !
-!   before running python                             !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! - Run GPAW using `gpaw python` and MPI launcher:            !
+!   - `mpiexec -n N gpaw python script.py` or                 !
+!   - `srun gpaw python script.py` or                         !
+!   - a variation thereof                                     !
+! - Alternatively to `gpaw python`, set                       !
+!   the environment variable GPAW_MPI_BACKEND=cgpaw           !
+!   before running python                                     !
+! More information here:                                      !
+!   https://gpaw.readthedocs.io/releasenotes.html#mpichanges  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 '''.lstrip()  # noqa: E122
         )
         raise RuntimeError(msg)
