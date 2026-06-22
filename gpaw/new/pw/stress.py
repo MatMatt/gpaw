@@ -45,7 +45,7 @@ def calculate_stress(pot_calc: PlaneWavePotentialCalculator,
         s_vv += pot_calc.vbar_ag.stress_contribution(nt_g)
         s_vv += density.nct_aX.stress_contribution(vt_g)
         if ibzwfs.domain_comm.rank == 0:
-            s_vv -= np.eye(3) * potential.e_stress
+            s_vv -= xp.eye(3) * potential.e_stress
         if dedtaut_g is not None:
             s_vv += density.tauct_aX.stress_contribution(dedtaut_g)
 
