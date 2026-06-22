@@ -213,9 +213,6 @@ class PlaneWavePotentialCalculator(PotentialCalculator):
                                      vt_g, nt_g, dedtaut_g)
         for ext in self.extensions:
             stress_vv += ext.stress_contribution()
-        if ibzwfs.domain_comm.rank == 0:
-            vol = vt_g.desc.volume
-            stress_vv -= np.eye(3) * potential.e_stress / vol
         return stress_vv
 
 
