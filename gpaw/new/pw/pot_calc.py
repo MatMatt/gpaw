@@ -138,7 +138,7 @@ class PlaneWavePotentialCalculator(PotentialCalculator):
 
         self._reset()
 
-        self.e_stress = e_coulomb + e_zero
+        e_stress = e_coulomb + e_zero
 
         return ({'coulomb': e_coulomb,
                  'zero': e_zero,
@@ -147,7 +147,8 @@ class PlaneWavePotentialCalculator(PotentialCalculator):
                 vt_sR,
                 dedtaut_sr,
                 vHt_h,
-                V_aL)
+                V_aL,
+                e_stress)
 
     def move(self, relpos_ac, atomdist):
         super().move(relpos_ac, atomdist)
@@ -213,9 +214,8 @@ class PlaneWavePotentialCalculator(PotentialCalculator):
         for ext in self.extensions:
             stress_vv += ext.stress_contribution()
         if ibzwfs.domain_comm.rank == 0:
-            print('PC', self.e_stress)
             vol = vt_g.desc.volume
-            stress_vv -= np.eye(3) * self.e_stress / vol
+            stress_vv -= np.eye(3) * potential.e_stress / vol
         return stress_vv
 
 
