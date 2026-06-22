@@ -16,11 +16,13 @@ class Potential:
                  vt_sR: UGArray,
                  dH_asii: AtomArrays,
                  dedtaut_sR: UGArray | None,
-                 vHt_x: XArray | None = None):
+                 vHt_x: XArray | None = None,
+                 e_stress: float = np.nan):
         self.vt_sR = vt_sR
         self.dH_asii = dH_asii
         self.dedtaut_sR = dedtaut_sR
         self.vHt_x = vHt_x  # initial guess for Hartree potential
+        self.e_stress = e_stress  # isotropic stress contribution
 
     def __repr__(self):
         return (f'Potential({self.vt_sR}, {self.dH_asii}, '
