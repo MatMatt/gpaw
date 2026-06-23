@@ -3,6 +3,7 @@ from pathlib import Path
 
 from ase.build import mx2
 from ase.units import Ha
+from gpaw.band_structure import band_structure
 from gpaw.mpi import world
 from gpaw.new.ase_interface import GPAW
 
@@ -28,9 +29,8 @@ def mos2():
 
 def bandstructure(gs_calc, bp):
     """Calculate HSE06 bandstructure."""
-    from gpaw.new.pw.bs import fixed
     vacuum_level = gs_calc.dft.vacuum_level()
-    kpts = fixed(gs_calc.dft, bp)
+    kpts = band_structure(gs_calc.dft, bp)
     hse_skn, _ = kpts.get_all_eigs_and_occs()
     return hse_skn[0] * Ha - vacuum_level
 
