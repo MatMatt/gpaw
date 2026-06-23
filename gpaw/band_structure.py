@@ -2,7 +2,6 @@ import numpy as np
 
 from gpaw.dft import DFT, Parameters
 from gpaw.new.logger import Logger
-from gpaw.new.pw.hybrids import ibz2bz
 
 
 def band_structure(dft: DFT,
