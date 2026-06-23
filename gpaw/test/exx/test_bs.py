@@ -1,5 +1,8 @@
+import numpy as np
 import pytest
 from ase import Atoms
+from ase.units import Ha
+from gpaw.band_structure import band_structure
 from gpaw.dft import GPAW, PW
 from gpaw.mpi import world
 
@@ -39,13 +42,10 @@ def test_all(kb):
         parallel={'kpt': k, 'band': b},
         **kwargs)
     a.get_potential_energy()
-    from gpaw.new.pw.bs import fixed
-    import numpy as np
-    from ase.units import Ha
     print(a.calc.eigenvalues())
     kpts = np.zeros((21, 3))
     kpts[:, 2] = np.linspace(-0.25, 0.5, 21)
-    i = fixed(a.calc.dft, kpts)
+    i = band_structure(a.calc.dft, kpts)
     for wfs in i:
         print(wfs.eig_n * Ha)
     import matplotlib.pyplot as plt
