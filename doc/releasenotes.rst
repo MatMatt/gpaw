@@ -15,7 +15,7 @@ Git master branch
 * Minimum version requirements: Python 3.10, ASE 3.27.0.
 
 * **Important changes in launching GPAW with MPI parallelization**
-  (see also :ref:`parallel_running_jobs:`)
+  (see also :ref:`parallel_running_jobs`)
 
   .. _mpichanges:
 
