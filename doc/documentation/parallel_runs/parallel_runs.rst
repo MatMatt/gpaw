@@ -36,16 +36,32 @@ do this::
 
     $ mpiexec -n <cores> gpaw python script.py
 
-.. tippppppppppppppppppppppppppppppppppp::
+The default MPI backend is GPAW's own MPI wrapper.  This can be
+overridden by setting the ``GPAW_MPI_BACKEND`` environment variable.
 
-   You can use the :envvar:`GPAW_MPI_OPTIONS` to pass options to ``mpiexex``.
-   Example::
+* Supported values are:
 
-     GPAW_MPI_OPTIONS="--oversubscribe"
+  * ``serial``: disable MPI parallelism
+  * ``cgpaw``: use GPAW's internal MPI implementation
+  * ``mpi4py``: use ``mpi4py`` as the MPI backend
 
-.. envvar:: GPAW_MPI_OPTIONS
+* The active backend can be inspected by ``backend`` attribute of the
+  communicator object, for example:
 
-    Options for ``mpiexec``.
+  .. code::
+
+      from gpaw.mpi import world
+      world.backend  # 'serial', 'cgpaw', or 'mpi4py'
+
+.. tip::
+
+   In Bash, one can make a shortcut like this::
+
+     $ gp() { N=$1; shift; mpiexec -n $N --mpi-options gpaw python $*; }
+
+   and then run GPAW scripts in parallel like this::
+
+     $ gp 16 script.py
 
 
 Submitting a job to a queuing system
@@ -213,8 +229,6 @@ In words:
   unspecified, the calculator will choose a parallelization itself which
   maximizes the k-point parallelization unless that leads to load imbalance; in
   that case, it may prioritize domain decomposition.
-  Note: parallelization over spin is not possible in
-  :ref:`GPAW 20.10.0 and newer versions <releasenotes>`.
 
 * The ``'domain'`` value specifies either an integer ``n`` or a tuple
   ``(nx,ny,nz)`` of 3 integers for

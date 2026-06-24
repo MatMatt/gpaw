@@ -15,6 +15,7 @@ Git master branch
 * Minimum version requirements: Python 3.10, ASE 3.27.0.
 
 * **Important changes in launching GPAW with MPI parallelization**
+  (see also :ref:`parallel_running_jobs:`)
 
   .. _mpichanges:
 
@@ -77,16 +78,6 @@ Git master branch
     GPAW should now be launched explicitly through the MPI
     launcher, for example with ``mpiexec -n N --mpi-options gpaw python`` or
     ``srun gpaw python``.
-
-    .. tip::
-
-       In Bash, one can make a shortcut like this::
-
-         $ gp() { N=$1; shift; mpiexec -n $N --mpi-options gpaw python $*; }
-
-       and then run GPAW scripts in parallel like this::
-
-         $ gp 16 script.py
 
 * :ref:`newgpaw` is now the default.
 
