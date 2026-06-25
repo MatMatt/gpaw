@@ -68,5 +68,3 @@ def print_parallelization_details(wfs, ham, log):
     if get_num_threads() > 1:  # OpenMP threading
         log(f'OpenMP threads: {get_num_threads()}')
     log()
-
-
