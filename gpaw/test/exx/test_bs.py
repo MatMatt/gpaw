@@ -18,39 +18,21 @@ def par(size):
     return kb
 
 
+@pytest.mark.parametrize('xc', ['LDA', 'HSE06'])
 @pytest.mark.parametrize(
     'kb',
     [pytest.param((k, b), id=f'k{k}b{b}') for k, b in par(world.size)])
-def test_all(kb):
+def test_all(xc, kb, gpw_files):
     k, b = kb
-    L = 2.6
-    a = Atoms('Li2',
-              [[0, 0, 0], [0.9, 0.9, 0]],
-              cell=[L, L, 1.4],
-              pbc=1)
-    a.center()
-
-    kwargs = dict(
-        mode=PW(400),
-        convergence={'density': 1e-7,
-                     'forces': 1e-6},
-        mixer={'beta': 0.25},
-        eigensolver='davidson',
-        xc='HSE06')
-    a.calc = GPAW(
-        kpts={'size': (1, 1, 4), 'gamma': True},
-        parallel={'kpt': k, 'band': b},
-        **kwargs)
-    a.get_potential_energy()
-    print(a.calc.eigenvalues())
-    kpts = np.zeros((21, 3))
-    kpts[:, 2] = np.linspace(-0.25, 0.5, 21)
-    i = band_structure(a.calc.dft, kpts)
-    for wfs in i:
-        print(wfs.eig_n * Ha)
-    import matplotlib.pyplot as plt
-    plt.plot(kpts[:, 2], [wfs.eig_n[0] for wfs in i])
-    plt.show()
+    calc = GPAW(gpw_files[f'li2_pw_{xc.lower()}'],
+                parallel={'kpt': k, 'band': b})
+    eig_in = calc.eigenvalues()[0]
+    kpts = np.zeros((4, 3))
+    kpts[:, 2] = np.linspace(-0.25, 0.5, 4)
+    band_wfs = band_structure(calc.dft, kpts, convergence={'bands': 2})
+    for wfs in band_wfs:
+        i = int(round(abs(wfs.kpt_c[2]) * 4))
+        assert wfs.eig_n[:2] * Ha == pytest.approx(eig_in[i, :2])
 
 
 if __name__ == '__main__':
