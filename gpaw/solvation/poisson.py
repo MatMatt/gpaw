@@ -99,7 +99,10 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
         for i, res in enumerate(self.restrictors):
             for j in range(4):
                 res.apply(weights[i][j], weights[i + 1][j])
-        self.step = 0.66666666 / self.operators[0].get_diagonal_element()
+        
+        # Scale relaxation step size by maximum local dielectric permittivity to prevent divergence
+        eps_max = self.gd.comm.max(float(self.dielectric.eps_gradeps[0].max()))
+        self.step = 0.66666666 / (self.operators[0].get_diagonal_element() * eps_max)
 
     def get_description(self):
         description = SolvationPoissonSolver.get_description(self)
