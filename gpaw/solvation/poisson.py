@@ -116,7 +116,8 @@ class WeightedFDPoissonSolver(SolvationPoissonSolver):
         self.operators[0].set_weights(self.dielectric.eps_gradeps)
         self.op_coarse_weights = []
         for operator in self.operators[1:]:
-            weights = [gd.empty() for gd in (operator.gd, ) * 4]
+            # Allocate coarse grid weights using self.xp to avoid CPU-GPU mismatches in multigrid runs
+            weights = [operator.gd.empty(xp=self.xp) for _ in range(4)]
             self.op_coarse_weights.append(weights)
             operator.set_weights(weights)
         return SolvationPoissonSolver._init(self)

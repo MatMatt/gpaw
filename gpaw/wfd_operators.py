@@ -44,6 +44,8 @@ class WeightedFDOperator(FDOperator):
             assert self.offset_ps[-1].dtype == int
             assert self.coef_ps[-1].dtype == float
 
+        # Ensure weights reside on the correct computational backend device (CPU vs GPU)
+        self.xp = operators[0].xp
         self.nweights = len(operators)
         self.cfd = all([op.cfd for op in operators])
         self.mp = max([op.mp for op in operators])
@@ -64,17 +66,33 @@ class WeightedFDOperator(FDOperator):
     def set_weights(self, weights):
         """Set the operator weights.
 
-        weights   -- List of numpy arrays sized gd.n_c
+        weights   -- List of numpy/cupy arrays sized gd.n_c
                      (weights are not copied).
         """
         assert len(weights) == self.nweights
         for weight in weights:
             assert weight.shape == self.shape
-            assert weight.dtype == float
-            assert weight.flags.c_contiguous
+            
+            # Check type matching dynamically based on computational backend
+            if self.xp is np:
+                assert weight.dtype == float
+                assert weight.flags.c_contiguous
+            else:
+                from gpaw.gpu import cupy as cp
+                assert weight.dtype == cp.float64 if hasattr(cp, 'float64') else float
         self.weights = weights
-        self.operator = cgpaw.WOperator(
-            self.nweights, self.weights,
-            self.coef_ps, self.offset_ps, self.gd.n_c, self.mp,
-            self.gd.neighbor_cd, self.dtype == float, self.comm, self.cfd
-        )
+        
+        # When compiling C level structures, pass correct representation
+        if self.xp is np:
+            self.operator = cgpaw.WOperator(
+                self.nweights, self.weights,
+                self.coef_ps, self.offset_ps, self.gd.n_c, self.mp,
+                self.gd.neighbor_cd, self.dtype == float, self.comm, self.cfd
+            )
+        else:
+            # Under GPU executions, CuPy manages memory allocations dynamically
+            self.operator = cgpaw.WOperator(
+                self.nweights, [w.get() for w in self.weights],
+                self.coef_ps, self.offset_ps, self.gd.n_c, self.mp,
+                self.gd.neighbor_cd, True, self.comm, self.cfd
+            )
