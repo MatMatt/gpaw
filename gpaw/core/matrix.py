@@ -784,7 +784,9 @@ class NoDistribution(MatrixDistribution):
                         return
                     blas.r2k(0.5 * alpha, a.data, b.data, beta, c.data)
             else:
-                1 / 0
+                raise NotImplementedError(
+                    f'NoDistribution.multiply symmetric: '
+                    f'unhandled opa={opa}, opb={opb}')
                 assert opa == 'C' and opb == 'N'
                 assert a is not b
                 blas.r2k(0.5 * alpha, a.data, b.data, beta, c.data, 'n')
@@ -991,7 +993,8 @@ class CuPyDistribution(MatrixDistribution):
             self.comm, self.rows, self.columns, self.br, self.bc)
 
     def global_index(self, n):
-        1 / 0
+        raise NotImplementedError(
+            'global_index not available for CuPyDistribution')
         return n
 
     def new(self, M, N):
@@ -1020,7 +1023,8 @@ class CuPyDistribution(MatrixDistribution):
                     c0 = None
                 c.scatter_from(c0)
                 return c
-            1 / 0
+            raise NotImplementedError(
+                f'CuPyDistribution.multiply: unhandled opa={opa}, opb={opb}')
 
         if symmetric:
             if opa == 'N':
@@ -1044,7 +1048,9 @@ class CuPyDistribution(MatrixDistribution):
                                      beta,
                                      c.data)
             else:
-                1 / 0
+                raise NotImplementedError(
+                    f'CuPyDistribution.multiply symmetric: '
+                    f'unhandled opa={opa}, opb={opb}')
                 assert opa == 'C' and opb == 'N'
                 assert a is not b
                 raise NotImplementedError
