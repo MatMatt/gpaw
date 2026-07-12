@@ -256,10 +256,10 @@ class BasePoissonSolver(_PoissonSolver):
                 borders = np.inner(self.gd.h_cv, self.gd.N_c)
                 borders -= border_offset
                 if np.any(center > borders) or np.any(center < border_offset):
+                    center = np.clip(center, border_offset, borders)
                     raise RuntimeError('Poisson solver: '
                                        'center of charge outside borders '
                                        '- please increase box')
-                    center[np.where(center > borders)] = borders
                 self.load_gauss(center=center)
             else:
                 self.load_gauss()
@@ -456,6 +456,13 @@ class FDPoissonSolver(BasePoissonSolver):
         self.rhos = [gd.empty(xp=self.xp)]
         self.phis = [None]
         self.residuals = [gd.empty(xp=self.xp)]
+
+        if self.levels == 0:
+            self.presmooths[0] = 8
+            self.postsmooths[0] = 8
+            self._initialized = True
+            return
+
         for level in range(self.levels):
             gd2 = gd.coarsen()
             self.phis.append(gd2.empty(xp=self.xp))
@@ -466,7 +473,6 @@ class FDPoissonSolver(BasePoissonSolver):
         level += 1
         assert level == self.levels
 
-        self.step = 0.66666666 / self.operators[0].get_diagonal_element()
         self.presmooths[level] = 8
         self.postsmooths[level] = 8
         self._initialized = True
@@ -870,6 +876,10 @@ class FastPoissonSolver(BasePoissonSolver):
 
     def set_grid_descriptor(self, gd):
         self.gd = gd
+        if self.xp is not np and not all(gd.pbc_c):
+            raise NotImplementedError(
+                'FastPoissonSolver does not support GPU for non-periodic '
+                'boundary conditions — the DST transform requires CPU.')
         axes = np.arange(3)
         pbc_c = np.array(gd.pbc_c, dtype=bool)
         periodic_axes = axes[pbc_c]

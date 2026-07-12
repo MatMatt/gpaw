@@ -60,6 +60,9 @@ class WeightedFDOperator(FDOperator):
                                              for op in operators])
 
         self.xp = np
+        if operators[0].xp is not np:
+            raise NotImplementedError(
+                'WeightedFDOperator does not support GPU (xp=cupy).')
 
     def set_weights(self, weights):
         """Set the operator weights.
