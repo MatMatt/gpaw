@@ -90,7 +90,7 @@ class SJMExtension(Extension):
 
     def create_poisson_solver(self, grid, pw, charge, xp, zero_vacuum=False):
         if isinstance(pw, PWDesc):
-            if self.solvation.psolver in [None, 'FDsolver']:
+            if self.solvation.psolver == 'FDsolver':
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(
                     pw, grid, self.dielectric, dipolelayer=self.dipolelayer,

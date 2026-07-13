@@ -93,7 +93,7 @@ class SolvationExtension(Extension):
                               charge,
                               xp) -> PoissonSolver:
         if isinstance(pw, PWDesc):
-            if self.psolver == 'PWsolver':
+            if self.psolver in [None, 'PWsolver']:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
                     pw, grid, self.dielectric, zero_vacuum=True)
