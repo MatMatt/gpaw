@@ -96,7 +96,9 @@ class SolvationExtension(Extension):
             if self.psolver in [None, 'PWsolver']:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
-                    pw, grid, self.dielectric, zero_vacuum=True)
+                    pw, grid, self.dielectric,
+                    eps=1e-6, maxiter=100,
+                    zero_vacuum=True)
             elif self.psolver == 'FDsolver':
                 from gpaw.new.pw.poisson import FDPWsolver
                 return FDPWsolver(

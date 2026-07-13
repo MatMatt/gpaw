@@ -99,7 +99,9 @@ class SJMExtension(Extension):
             else:
                 from gpaw.new.pw.poisson import ConjugateGradientPoissonSolver
                 return ConjugateGradientPoissonSolver(
-                    pw, grid, self.dielectric, zero_vacuum=zero_vacuum)
+                    pw, grid, self.dielectric,
+                    eps=1e-6, maxiter=100,
+                    zero_vacuum=zero_vacuum)
             # from gpaw.new.sjm import SJMPWPoissonSolver
             # return SJMPWPoissonSolver(pw, environment.dielectric, grid)
 
