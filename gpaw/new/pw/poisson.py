@@ -287,13 +287,12 @@ class FDPWsolver(PWPoissonSolver):
         self.grid = grid
         if real_space_solver is None:
             from gpaw.solvation.poisson import WeightedFDPoissonSolver
-            # Higher-order stencil (nn=6) improves diagonal dominance
-            # of the weighted operator ε∇² + ∇ε·∇ at cavity boundaries,
-            # preventing the Jacobi convergence plateau at ~1e-9.
+            # FDPWsolver is opt-in (default is now CG via PWsolver).
+            # Use nn=4 — Gradient operators don't support nn>4.
             real_space_solver = WeightedFDPoissonSolver(eps=eps,
                                                         maxiter=maxiter,
                                                         relax='J',
-                                                        nn=6)
+                                                        nn=4)
         real_space_solver.set_dielectric(self.dielectric)
         real_space_solver.set_grid_descriptor(self.grid._gd)
         self.real_space_solver = real_space_solver
